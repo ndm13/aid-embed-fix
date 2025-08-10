@@ -36,7 +36,7 @@ jobs:
           cp -r static stg/static
           cp -r templates stg/templates
           mkdir release
-          tar -czvf release/x86_64-unknown-linux-gnu.tar.gz ./stg
+          tar -czvf release/x86_64-unknown-linux-gnu.tar.gz ./stg/*
 
       - uses: ncipollo/release-action@v1
         with:
