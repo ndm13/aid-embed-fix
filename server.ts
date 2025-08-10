@@ -54,7 +54,6 @@ router.get("/scenario/:id/:tail", async ctx => {
             type: "Scenario"
         }).toString();
 
-        ctx.response.status = 404;
         ctx.response.body = njk.render('embed-notfound.njk', {
             type: "scenario",
             id: ctx.params.id,
@@ -97,7 +96,6 @@ router.get("/adventure/:id/:tail", async ctx => {
             type: "Adventure"
         }).toString();
 
-        ctx.response.status = 404;
         ctx.response.body = njk.render('embed-notfound.njk', {
             type: "adventure",
             id: ctx.params.id,
@@ -136,14 +134,13 @@ router.get("/profile/:username", async ctx => {
     const user = await api.getUser(ctx.params.username);
     if (!user) {
         const oembedParams = new URLSearchParams({
-            title: `User Not Found [${ctx.params.id}]`,
+            title: `User Not Found [${ctx.params.username}]`,
             type: "Profile"
         }).toString();
 
-        ctx.response.status = 404;
         ctx.response.body = njk.render('embed-notfound.njk', {
             type: "user",
-            id: ctx.params.id,
+            id: ctx.params.username,
             link,
             oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
         });
