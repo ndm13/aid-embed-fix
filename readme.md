@@ -7,7 +7,7 @@ deserve! Works for user profiles, scenarios, and adventures!
 Running on `play.axdungeon.com` (type `s/i/x` after posting a link) and `aidungeon.link` (replace the
 `play.aidungeon.com` part)!
 
-![A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version](/screenshots/sixfix_demo.gif | height=450)
+![A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version](/screenshots/sixfix_demo.gif){height=450}
 
 ## Examples
 | Type                   | Default Implementation                                                                                                                                                                                                            | Fixed Version                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
