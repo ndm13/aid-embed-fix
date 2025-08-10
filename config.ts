@@ -36,7 +36,8 @@ export const config = {
     // URLs should omit the trailing slash.
     client: {
         // This is used as the origin for all Firebase requests, the referrer
-        // for all GraphQL requests, and the hostname for all redirects.
+        // for all GraphQL requests, and the hostname for all redirects (unless
+        // overridden by a hostname prefix).
         origin:
             flags.origin ||
             Deno.env.get("ORIGIN") ||
