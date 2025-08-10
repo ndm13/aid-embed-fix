@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="theme-color" content="#f8ae2c"/>
+    <meta property="twitter:title" content="{{ type }} not found!"/>
+    <meta property="og:title" content="{{ type }} not found!"/>
+    <meta property="og:description" content="We tried to find a {{ type }} with id {{ id }}, but failed. It's possible that it doesn't exist, or that the API is having issues.\nClick the link to try to go there anyway!"/>
+    <meta property="description" content="We tried to find a {{ type }} with id {{ id }}, but failed. It's possible that it doesn't exist, or that the API is having issues.\nClick the link to try to go there anyway!"/>
+    <meta name="application-name" content="AI Dungeon"/>
+    <meta property="og:site_name" content="AI Dungeon"/>
+
+    <link rel="canonical" href="{{ link }}>"/>
+    <meta property="og:url" content="{{ link }}"/>
+
+    <meta name="redirect" content="{{ link }}"/>
+
+    <title>{{ type }} not found!</title>
+
+    <link type="application/json+oembed" href="{{ oembed }}"/>
+
+    <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
+    <script>window.location.replace("{{ link }}");</script>
+
+    <!-- Okay you heathens, have a nice looking page -->
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/style.css"/>
+</head>
+<body class="embed profile">
+<h2><a href="{{ link }}">{{ type }} {{ id }}</a></h2>
+<p>
+    We tried to find {{ type }} {{ id }}, but failed. It's possible that it doesn't exist, is private, or the API/site
+    is having issues.
+    <br/>
+    <br/>
+    Click the link to try to go there anyway!
+</p>
+</body>
+</html>

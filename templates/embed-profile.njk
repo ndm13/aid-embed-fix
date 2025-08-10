@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="theme-color" content="#f8ae2c"/>
+    <meta property="twitter:title" content="{{ title }}"/>
+    <meta property="og:title" content="{{ title }}"/>
+    <meta property="og:description" content="{{ description }}"/>
+    <meta property="description" content="{{ description }}"/>
+    <meta property="twitter:image" content="{{ icon }}"/>
+    <meta property="og:image" content="{{ icon }}"/>
+    <meta name="application-name" content="AI Dungeon"/>
+    <meta property="og:site_name" content="AI Dungeon"/>
+
+    <link rel="canonical" href="{{ link }}>"/>
+    <meta property="og:url" content="{{ link }}"/>
+
+    <link rel="icon" href="{{ icon }}"/>
+    <meta name="redirect" content="{{ link }}"/>
+
+    <title>{{ title }}</title>
+
+    <link type="application/json+oembed" href="{{ oembed }}"/>
+
+    <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
+    <script>window.location.replace("{{ link }}");</script>
+
+    <!-- Okay you heathens, have a nice looking page -->
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/style.css"/>
+</head>
+<body class="embed profile">
+<h2><a href="{{ link }}">{{ title }}</a></h2>
+<p>{{ description }}</p>
+<img src="{{ icon }}"/>
+</body>
+</html>
