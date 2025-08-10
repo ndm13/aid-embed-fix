@@ -32,9 +32,9 @@ jobs:
           mkdir build
           deno task build-docker-target
           mkdir stg
-          cp build/server stg/server
-          cp static stg/static
-          cp templates stg/templates
+          cp -r build/server stg/server
+          cp -r static stg/static
+          cp -r templates stg/templates
           mkdir release
           tar -czvf release/x86_64-unknown-linux-gnu.tar.gz ./stg
 
