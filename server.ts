@@ -32,8 +32,15 @@ function shouldForwardInstead(ctx: Context) {
     return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
 }
 
+function getRedirectBase(ctx: Context) {
+    const host = ctx.request.url.host;
+    if (host.startsWith('play.')) return "https://play.aidungeon.com";
+    if (host.startsWith('beta.')) return "https://beta.aidungeon.com";
+    return config.client.origin;
+}
+
 router.get("/scenario/:id/:tail", async ctx => {
-    const link = `${config.client.origin}/scenario/${ctx.params.id}/${ctx.params.tail}`;
+    const link = `${getRedirectBase(ctx)}/scenario/${ctx.params.id}/${ctx.params.tail}`;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -76,7 +83,7 @@ router.get("/scenario/:id/:tail", async ctx => {
 });
 
 router.get("/adventure/:id/:tail", async ctx => {
-    const link = `${config.client.origin}/adventure/${ctx.params.id}/${ctx.params.tail}`;
+    const link = `${getRedirectBase(ctx)}/adventure/${ctx.params.id}/${ctx.params.tail}`;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -119,7 +126,7 @@ router.get("/adventure/:id/:tail", async ctx => {
 });
 
 router.get("/profile/:username", async ctx => {
-    const link = `${config.client.origin}/profile/${ctx.params.username}`;
+    const link = `${getRedirectBase(ctx)}/profile/${ctx.params.username}`;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -205,7 +212,7 @@ app.use(router.allowedMethods());
 // All other requests can bounce to AI Dungeon, in case someone proxied an unsupported link
 app.use(ctx => {
     // 302 is fine for this, in case we support it later
-    ctx.response.redirect(config.client.origin + "/" + ctx.request.url.pathname);
+    ctx.response.redirect(getRedirectBase(ctx) + "/" + ctx.request.url.pathname);
 });
 
 console.log("Listening on", config.network.listen);
