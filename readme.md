@@ -4,8 +4,8 @@
 Tired of your AI Dungeon links having zero usable information? This link fixer will give your embeds the detail they
 deserve! Works for user profiles, scenarios, and adventures!
 
-Running on `play.axdungeon.com` (type `s/i/x` after posting a link) and `aidungeon.link` (replace the
-`play.aidungeon.com` part)!
+Running on `play.axdungeon.com`/`beta.axdungeon.com` (type `s/i/x` after posting a link) and `play.aidungeon.link`/
+`beta.aidungeon.link` (replace the `.com` with `.link`)!
 
 <img alt="A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version" src="/screenshots/sixfix_demo.gif" style="max-height:450px"/>
 
