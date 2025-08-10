@@ -62,8 +62,8 @@ These values are visible in `config.ts`.
 | Name                          | Command Line Flag         | Environment Variable      | Description                                                                                                                                                                                                                       |
 |-------------------------------|---------------------------|---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Firebase Identity Toolkit key | `--firebaseITK`           | `FIREBASE_ITK`            | This is passed as the `key=` parameter for Firebase auth requests.                                                                                                                                                                |
-| Firebase Client Version       | `--firebaseClientVersion` | `FIREBASE_CLIENT_VERSION` | This is passed as the X-Client-Version header for Firebase auth requests.                                                                                                                                                         |
-| Firebase Client Token         | `--firebaseClientToken`   | `FIREBASE_CLIENT_TOKEN`   | This is passed as the X-Firebase-Client header for Firebase auth requests.                                                                                                                                                        |
+| Firebase Client Version       | `--firebaseClientVersion` | `FIREBASE_CLIENT_VERSION` | This is passed as the `X-Client-Version` header for Firebase auth requests.                                                                                                                                                       |
+| Firebase Client Token         | `--firebaseClientToken`   | `FIREBASE_CLIENT_TOKEN`   | This is passed as the `X-Firebase-Client` header for Firebase auth requests.                                                                                                                                                      |
 | Origin/Referrer               | `--origin`                | `ORIGIN`                  | This is used as the origin for all Firebase requests, the referrer for all GraphQL requests, and the hostname for all redirects.                                                                                                  |
 | GraphQL Endpoint              | `--gqlEndpoint`           | `GQL_ENDPOINT`            | This is the endpoint for all GraphQL queries.                                                                                                                                                                                     |
 | User Agent                    | `--userAgent`             | `USER_AGENT`              | This is the user agent that will be used for all requests. Docker images will assign the correct version number on build.                                                                                                         |
@@ -72,3 +72,22 @@ These values are visible in `config.ts`.
 
 Note that when changing environments, you will likely need different Firebase credentials (ITK and Token) as each
 instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
+
+## Technical Details
+There are two core components to the project: the [AI Dungeon API](/AIDungeonAPI.ts) and an 
+[Oak middleware webserver](/server.ts) (plus a global [config file](/config.ts) to tie it all together).
+
+THe AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. These queries
+have been stripped to retrieve a minimal amount of information - much less than a typical page load. Firebase sessions
+are reduced by keeping an anonymous session active during high use times and letting it expire/creating a new one
+during off-peak hours. The design is otherwise completely stateless: no persistent storage, easy scalability.
+
+Requests are redirected to the origin site when possible. When a page is requested by a non-Discord user agent, a 301
+redirect is issued (this behavior can be bypassed by adding `no_ua` as a query parameter, if testing another platform).
+If the page *is* loaded by a browser, a JavaScript redirect will take place immediately, with history replacement. And
+if for some reason all logic fails and the user sees the page we present to Discord, it still looks nice enough.
+
+## For Contributors
+My biggest blind spot is testing. Discord is a big community for AI Dungeon, but I'm sure there are other platforms
+where links are shared with subpar embeds. Please go ahead and test them (with `?no_ua` on the end) and let me know if
+they work well or need additional properties. I'm open for pull requests too, if anyone wants to put in some work!
