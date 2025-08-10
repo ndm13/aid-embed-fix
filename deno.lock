@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@oak/commons@1": "1.0.0",
-    "jsr:@oak/oak@^17.1.5": "17.1.5",
+    "jsr:@oak/oak@^17.1.6": "17.1.6",
     "jsr:@std/assert@1": "1.0.6",
     "jsr:@std/bytes@1": "1.0.2",
     "jsr:@std/cli@*": "1.0.9",
@@ -27,8 +27,8 @@
         "jsr:@std/media-types"
       ]
     },
-    "@oak/oak@17.1.5": {
-      "integrity": "676263340dcfd069fb422b4274b4f75f7048a68e605dece6a2897ccfe669e7cc",
+    "@oak/oak@17.1.6": {
+      "integrity": "c7eef2eec733fba8e72b679bba3b8cf2fceccf5ef489a8b8fb43571908c0335d",
       "dependencies": [
         "jsr:@oak/commons",
         "jsr:@std/assert",
@@ -84,9 +84,6 @@
         "asap",
         "commander"
       ],
-      "optionalPeers": [
-        "chokidar@^3.3.0"
-      ],
       "bin": true
     },
     "path-to-regexp@6.3.0": {
@@ -98,7 +95,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oak/oak@^17.1.5"
+      "jsr:@oak/oak@^17.1.6"
     ]
   }
 }

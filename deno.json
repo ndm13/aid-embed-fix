@@ -1,6 +1,6 @@
 {
   "imports": {
-    "@oak/oak": "jsr:@oak/oak@^17.1.5"
+    "@oak/oak": "jsr:@oak/oak@^17.1.6"
   },
   "tasks": {
     "build-docker-target": "deno compile --allow-env --allow-read --allow-net --target x86_64-unknown-linux-gnu --output build/server server.ts"
