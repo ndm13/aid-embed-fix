@@ -105,7 +105,7 @@ export class AIDungeonAPI {
                     "Non-guest API token expired, unable to refresh token",
                 );
             }
-        } else if (this._expires - now < 36000000) {
+        } else if (this._expires - now < 300000) {
             // Less than five minutes left, refresh
             const refresh = await this.refreshToken();
             this._token = refresh.id_token;
