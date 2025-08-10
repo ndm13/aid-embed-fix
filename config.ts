@@ -50,7 +50,7 @@ export const config = {
         userAgent:
             flags.userAgent ||
             Deno.env.get("USER_AGENT") ||
-            "AIDungeonEmbedFix/dev +(https://github.com/ndm13/aid-embed-fix)"
+            "AIDungeonEmbedFix/dev-build +(https://github.com/ndm13/aid-embed-fix)"
     },
     // These settings are used for implementation details around networking.
     network: {

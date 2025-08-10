@@ -8,7 +8,7 @@ const api = await AIDungeonAPI.guest();
 console.log("Using anonymous API access with user agent:", config.client.userAgent);
 
 const router = new Router();
-const njk = new Environment(new FileSystemLoader('../templates'));
+const njk = new Environment(new FileSystemLoader('templates'));
 
 // Naïve attempt to get descriptions to ~500 characters.
 // Discord does its own trimming so we don't need to be strict.
@@ -182,7 +182,7 @@ router.get("/oembed.json", ctx => {
 
 router.get("/style.css", async ctx => {
     await ctx.send({
-        root: '../static'
+        root: './static'
     });
 });
 
