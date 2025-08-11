@@ -1,6 +1,8 @@
 {
   "imports": {
-    "@oak/oak": "jsr:@oak/oak@^17.1.6"
+    "@oak/oak": "jsr:@oak/oak@^17.1.6",
+    "nunjucks": "npm:nunjucks@^3.2.4",
+    "parse-args": "jsr:@std/cli@1.0.21/parse-args"
   },
   "tasks": {
     "build-docker-target": "deno compile --allow-env --allow-read --allow-net --target x86_64-unknown-linux-gnu --output build/server server.ts"

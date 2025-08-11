@@ -1,4 +1,4 @@
-import { parseArgs } from "jsr:@std/cli/parse-args";
+import { parseArgs } from "parse-args";
 const flags = parseArgs(Deno.args, {
     string: [
         "firebaseITK",
@@ -10,7 +10,7 @@ const flags = parseArgs(Deno.args, {
         "oembedProtocol",
         "listen"
     ]
-})
+});
 
 export const config = {
     // These settings are for connecting to Firebase for authentication.

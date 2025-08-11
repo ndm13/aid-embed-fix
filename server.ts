@@ -1,5 +1,5 @@
 import {Application, Context, Router} from "@oak/oak";
-import { Environment, FileSystemLoader } from "npm:nunjucks";
+import { Environment, FileSystemLoader } from "nunjucks";
 
 import {AIDungeonAPI} from "./AIDungeonAPI.ts";
 import {config} from "./config.ts";
