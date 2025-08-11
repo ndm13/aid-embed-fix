@@ -1,0 +1,46 @@
+name: Check for Deno Updates
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.4
+        with:
+          deno-version: vx.x.x
+
+      - name: Check for outdated dependencies and update files
+        id: update_step
+        run: |
+          echo "update_summary<<EOF" >> "$GITHUB_OUTPUT"
+          deno outdated --update >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create Pull Request if changes exist
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update deno dependencies"
+          title: "🤖 Update Deno Dependencies"
+          body: |
+            This pull request was automatically generated to update Deno dependencies.
+            
+            ### Update Summary
+            ```
+            ${{ steps.update_step.outputs.update_summary }}
+            ```
+          branch: "deno-dependency-updates"
+          delete-branch: true
+          labels: dependencies
