@@ -81,8 +81,13 @@ router.get("/scenario/:id/:tail", async ctx => {
     }
 });
 
-router.get("/adventure/:id/:tail", async ctx => {
+router.get("/adventure/:id/:tail/:read?", async ctx => {
     const link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    // Hack to get optional static parameters working with path-to-regexp@v6.3.0
+    if (ctx.params.read && ctx.params.read !== "read") {
+        ctx.response.status = 302;
+        ctx.response.redirect(link);
+    }
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
