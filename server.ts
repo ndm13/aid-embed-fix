@@ -40,7 +40,7 @@ function getRedirectBase(ctx: Context) {
 }
 
 router.get("/scenario/:id/:tail", async ctx => {
-    const link = `${getRedirectBase(ctx)}/scenario/${ctx.params.id}/${ctx.params.tail}`;
+    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -82,7 +82,7 @@ router.get("/scenario/:id/:tail", async ctx => {
 });
 
 router.get("/adventure/:id/:tail", async ctx => {
-    const link = `${getRedirectBase(ctx)}/adventure/${ctx.params.id}/${ctx.params.tail}`;
+    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -124,7 +124,7 @@ router.get("/adventure/:id/:tail", async ctx => {
 });
 
 router.get("/profile/:username", async ctx => {
-    const link = `${getRedirectBase(ctx)}/profile/${ctx.params.username}`;
+    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
