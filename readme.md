@@ -1,5 +1,9 @@
 # Better AI Dungeon Embeds
-[![Release status](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml) ![play.axdungeon.com status](https://img.shields.io/website?url=https%3A%2F%2Fplay.axdungeon.com&label=play.axdungeon.com) ![aidungeon.link status](https://img.shields.io/website?url=https%3A%2F%2Faidungeon.link&label=aidungeon.link)
+[![Release status](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml)
+[![Check for Deno Updates](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml)
+
+![axdungeon.com status](https://img.shields.io/website?url=https%3A%2F%2Faxdungeon.com%2Fprofile%2Faidungeon&logo=digitalocean&label=axdungeon.com&cacheSeconds=1800)
+![aidungeon.link status](https://img.shields.io/website?url=https%3A%2F%2Faidungeon.link%2Fprofile%2Faidungeon&logo=digitalocean&label=aidungeon.link&cacheSeconds=1800)
 
 Tired of your AI Dungeon links having zero usable information? This link fixer will give your embeds the detail they
 deserve! Works for user profiles, scenarios, and adventures!
