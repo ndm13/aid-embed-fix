@@ -82,7 +82,7 @@ instance authenticates as a separate app. Each environment also uses a separate 
 There are two core components to the project: the [AI Dungeon API](/AIDungeonAPI.ts) and an 
 [Oak middleware webserver](/server.ts) (plus a global [config file](/config.ts) to tie it all together).
 
-THe AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. These queries
+The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. These queries
 have been stripped to retrieve a minimal amount of information - much less than a typical page load. Firebase sessions
 are reduced by keeping an anonymous session active during high use times and letting it expire/creating a new one
 during off-peak hours. The design is otherwise completely stateless: no persistent storage, easy scalability.
