@@ -40,7 +40,7 @@ function getRedirectBase(ctx: Context) {
 }
 
 router.get("/scenario/:id/:tail", async ctx => {
-    const link = `${getRedirectBase(ctx)}/scenario/${ctx.params.id}/${ctx.params.tail}`;
+    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -81,8 +81,13 @@ router.get("/scenario/:id/:tail", async ctx => {
     }
 });
 
-router.get("/adventure/:id/:tail", async ctx => {
-    const link = `${getRedirectBase(ctx)}/adventure/${ctx.params.id}/${ctx.params.tail}`;
+router.get("/adventure/:id/:tail/:read?", async ctx => {
+    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    // Hack to get optional static parameters working with path-to-regexp@v6.3.0
+    if (ctx.params.read && ctx.params.read !== "read") {
+        ctx.response.status = 302;
+        ctx.response.redirect(link);
+    }
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -124,7 +129,11 @@ router.get("/adventure/:id/:tail", async ctx => {
 });
 
 router.get("/profile/:username", async ctx => {
-    const link = `${getRedirectBase(ctx)}/profile/${ctx.params.username}`;
+    let link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    // Preserve selected profile tab on redirect
+    if (ctx.request.url.searchParams.has("contentType")) {
+        link += "?contentType=" + ctx.request.url.searchParams.get("contentType");
+    }
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
