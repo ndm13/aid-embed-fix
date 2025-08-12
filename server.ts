@@ -129,7 +129,11 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
 });
 
 router.get("/profile/:username", async ctx => {
-    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    let link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    // Preserve selected profile tab on redirect
+    if (ctx.request.url.searchParams.has("contentType")) {
+        link += "?contentType=" + ctx.request.url.searchParams.get("contentType");
+    }
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
