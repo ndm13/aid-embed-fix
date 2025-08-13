@@ -39,7 +39,40 @@ function getRedirectBase(ctx: Context) {
     return config.client.origin;
 }
 
+const last = {
+    healthcheck: 0,
+    scenario: 0,
+    adventure: 0,
+    profile: 0,
+    oembed: 0,
+    static: 0,
+    root: 0,
+    other: 0
+};
+const error: number[] = [];
+
+router.get("/healthcheck", ctx => {
+    const status = {
+        api: {
+            last: {
+                request: api.lastRequestAt ? new Date(api.lastRequestAt) : null,
+                refresh: api.lastRefreshAt ? new Date(api.lastRefreshAt) : null
+            },
+            tokenValid: !api.isExpired
+        },
+        server: {
+            last: Object.fromEntries(Object.entries(last).map(([k,v]) => [k, v ? new Date(v) : null])),
+            errorRate: (a => a.reduce((a, c) => a + c, 0) / error.length)(error || [0])
+        }
+    };
+    last.healthcheck = Date.now();
+    ctx.response.status = status.server.errorRate > 0.5 ? 503 : 200;
+    ctx.response.type = "application/json";
+    ctx.response.body = JSON.stringify(status);
+});
+
 router.get("/scenario/:id/:tail", async ctx => {
+    last.scenario = Date.now();
     const link = getRedirectBase(ctx) + ctx.request.url.pathname;
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
@@ -48,7 +81,9 @@ router.get("/scenario/:id/:tail", async ctx => {
     }
 
     const scenario = await api.getScenario(ctx.params.id);
+    if (error.length > 99) error.shift();
     if (!scenario) {
+        error.push(1);
         const oembedParams = new URLSearchParams({
             title: `Scenario Not Found [${ctx.params.id}]`,
             type: "Scenario"
@@ -61,6 +96,7 @@ router.get("/scenario/:id/:tail", async ctx => {
             oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
         });
     } else {
+        error.push(0);
         const oembedParams = new URLSearchParams({
             title: scenario.title,
             author: scenario.user.profile.title,
@@ -82,6 +118,7 @@ router.get("/scenario/:id/:tail", async ctx => {
 });
 
 router.get("/adventure/:id/:tail/:read?", async ctx => {
+    last.adventure = Date.now();
     const link = getRedirectBase(ctx) + ctx.request.url.pathname;
     // Hack to get optional static parameters working with path-to-regexp@v6.3.0
     if (ctx.params.read && ctx.params.read !== "read") {
@@ -95,7 +132,9 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
     }
 
     const adventure = await api.getAdventure(ctx.params.id);
+    if (error.length > 99) error.shift();
     if (!adventure) {
+        error.push(1);
         const oembedParams = new URLSearchParams({
             title: `Adventure Not Found [${ctx.params.id}]`,
             type: "Adventure"
@@ -108,6 +147,7 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
             oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
         });
     } else {
+        error.push(0);
         const oembedParams = new URLSearchParams({
             title: adventure.title,
             author: adventure.user.profile.title,
@@ -129,6 +169,7 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
 });
 
 router.get("/profile/:username", async ctx => {
+    last.profile = Date.now();
     let link = getRedirectBase(ctx) + ctx.request.url.pathname;
     // Preserve selected profile tab on redirect
     if (ctx.request.url.searchParams.has("contentType")) {
@@ -141,7 +182,9 @@ router.get("/profile/:username", async ctx => {
     }
 
     const user = await api.getUser(ctx.params.username);
+    if (error.length > 99) error.shift();
     if (!user) {
+        error.push(1);
         const oembedParams = new URLSearchParams({
             title: `User Not Found [${ctx.params.username}]`,
             type: "Profile"
@@ -154,6 +197,7 @@ router.get("/profile/:username", async ctx => {
             oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
         });
     } else {
+        error.push(0);
         const oembedParams = new URLSearchParams({
             title: user.profile.title,
             author: user.profile.title,
@@ -171,6 +215,7 @@ router.get("/profile/:username", async ctx => {
 });
 
 router.get("/oembed.json", ctx => {
+    last.oembed = Date.now();
     const params = ctx.request.url.searchParams;
     if (!params.has("type")) {
         ctx.response.status = 400;
@@ -194,12 +239,14 @@ router.get("/oembed.json", ctx => {
 });
 
 router.get("/(style.css|robots.txt)", async ctx => {
+    last.static = Date.now();
     await ctx.send({
         root: './static'
     });
 });
 
 router.get("/", ctx => {
+    last.root = Date.now();
     ctx.response.status = 301;
     ctx.response.redirect("https://github.com/ndm13/aid-embed-fix");
 });
@@ -208,7 +255,12 @@ const app = new Application();
 // Logging
 app.use(async (ctx, next) => {
     await next();
-    console.log(ctx.response.status, ctx.request.method, ctx.request.url.pathname, ctx.request.userAgent.ua);
+    console.log(
+        ctx.response.status,
+        ctx.request.method,
+        `${ctx.request.url.pathname}${ctx.request.url.search}`,
+        ctx.request.userAgent.ua
+    );
 });
 
 // Router
@@ -217,8 +269,9 @@ app.use(router.allowedMethods());
 
 // All other requests can bounce to AI Dungeon, in case someone proxied an unsupported link
 app.use(ctx => {
+    last.other = Date.now();
     // 302 is fine for this, in case we support it later
-    ctx.response.redirect(getRedirectBase(ctx) + "/" + ctx.request.url.pathname);
+    ctx.response.redirect(getRedirectBase(ctx) + ctx.request.url.pathname);
 });
 
 console.log("Listening on", config.network.listen);
