@@ -21,7 +21,7 @@
 
     <title>{{ title }} (@{{ author }})</title>
 
-    <link type="application/json+oembed" href="{{ oembed }}"/>
+    <link type="application/json+oembed" href="{{ oembed | safe }}"/>
 
     <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
     <script>window.location.replace("{{ link }}");</script>
