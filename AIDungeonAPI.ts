@@ -22,12 +22,23 @@ export type GraphQLQuery = {
 };
 
 export class AIDungeonAPI {
+    private _lastRequestAt = 0;
+    public get lastRequestAt() {
+        return this._lastRequestAt;
+    }
+    private _lastRefreshAt = 0;
+    public get lastRefreshAt() {
+        return this._lastRefreshAt;
+    }
     private _token: string;
     public get firebaseToken() {
         return this._token;
     }
     private _refresh: string;
     private _expires: number;
+    public get isExpired() {
+        return this._expires < Date.now();
+    }
     private readonly _guest: boolean;
 
     constructor(
@@ -44,25 +55,32 @@ export class AIDungeonAPI {
 
     async query(gql: GraphQLQuery) {
         await this.keepTokenAlive();
-        return (await fetch(config.client.gqlEndpoint, {
-            "credentials": "include",
-            "headers": {
-                "User-Agent": config.client.userAgent,
-                "Accept": "application/json",
-                "Accept-Language": "en-US,en;q=0.5",
-                "content-type": "application/json",
-                "x-gql-operation-name": gql.operationName,
-                "authorization": `firebase ${this._token}`,
-                "Priority": "u=4",
-            },
-            "referrer": config.client.origin,
-            "body": JSON.stringify({
-                "operationName": gql.operationName,
-                "variables": gql.variables,
-                "query": gql.query,
-            }),
-            "method": "POST",
-        })).json();
+        try {
+            return (await fetch(config.client.gqlEndpoint, {
+                "credentials": "include",
+                "headers": {
+                    "User-Agent": config.client.userAgent,
+                    "Accept": "application/json",
+                    "Accept-Language": "en-US,en;q=0.5",
+                    "content-type": "application/json",
+                    "x-gql-operation-name": gql.operationName,
+                    "authorization": `firebase ${this._token}`,
+                    "Priority": "u=4",
+                },
+                "referrer": config.client.origin,
+                "body": JSON.stringify({
+                    "operationName": gql.operationName,
+                    "variables": gql.variables,
+                    "query": gql.query,
+                }),
+                "method": "POST",
+            })).json();
+        } catch (error) {
+            console.error("Error running GraphQL query", gql.operationName, error);
+            return null;
+        } finally {
+            this._lastRequestAt = Date.now();
+        }
     }
 
     async getScenario(shortId: string) {
@@ -91,26 +109,27 @@ export class AIDungeonAPI {
     }
 
     private async keepTokenAlive() {
-        const now = Date.now();
-        if (now > this._expires) {
+        if (this.isExpired) {
             // Already expired: generate a new token if guest, otherwise error out
             if (this._guest) {
                 const replace = await AIDungeonAPI.getNewGuestToken();
                 this._token = replace.idToken;
                 this._refresh = replace.refreshToken;
                 this._expires = Date.now() + (Number.parseInt(replace.expiresIn) * 1000);
+                this._lastRefreshAt = 0;
                 console.info("Created new user token");
             } else {
-                throw new Error(
-                    "Non-guest API token expired, unable to refresh token",
-                );
+                this._token = "";
+                throw new Error("Non-guest API token expired, unable to refresh token");
             }
-        } else if (this._expires - now < 300000) {
+        } else if (this._expires - Date.now() < 300000) {
             // Less than five minutes left, refresh
             const refresh = await this.refreshToken();
+            const now = Date.now();
             this._token = refresh.id_token;
             this._refresh = refresh.refresh_token;
-            this._expires = Date.now() + (Number.parseInt(refresh.expires_in) * 1000);
+            this._expires = now + (Number.parseInt(refresh.expires_in) * 1000);
+            this._lastRefreshAt = now;
             console.info("Refreshed user token");
         }
     }
@@ -129,8 +148,7 @@ export class AIDungeonAPI {
                     "X-Firebase-Client": config.firebase.clientToken,
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
-                "body": "grant_type=refresh_token&refresh_token=" +
-                    this._refresh,
+                "body": `grant_type=refresh_token&refresh_token=${this._refresh}`,
                 "method": "POST",
             },
         )).json() as Promise<RefreshTokenResponse>;
