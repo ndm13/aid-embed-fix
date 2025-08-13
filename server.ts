@@ -193,7 +193,7 @@ router.get("/oembed.json", ctx => {
     ctx.response.body = JSON.stringify(oembed);
 });
 
-router.get("/style.css", async ctx => {
+router.get("/(style.css|robots.txt)", async ctx => {
     await ctx.send({
         root: './static'
     });

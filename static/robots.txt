@@ -1,0 +1,3 @@
+# We have nothing interesting to crawl. Every page should be a redirect.
+User-agent: *
+Disallow: /
