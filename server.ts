@@ -10,17 +10,24 @@ console.log("Using anonymous API access with user agent:", config.client.userAge
 const router = new Router();
 const njk = new Environment(new FileSystemLoader('templates'));
 
-// Naïve attempt to get descriptions to ~500 characters.
+// Naïve attempt to get descriptions to ~1000 characters.
 // Discord does its own trimming so we don't need to be strict.
 function trimDescription(text: string) {
-    if (text.length < 500) return text;
-    const parts = text.split('\n');
+    const limit = 1000;
+    if (text.length < limit) return text;
+    const paragraphs = text.split('\n');
     text = '';
-    let i = 0;
-    for (; i < parts.length && parts[i].length + text.length < 500; i++)
-        text += '\n' + parts[i];
-    if (i < parts.length)
-        text += '\n...';
+    let p = 0;
+    for (; p < paragraphs.length && paragraphs[p].length + text.length < limit; p++)
+        text += text === '' ? paragraphs[p] : '\n' + paragraphs[p];
+    if (p < paragraphs.length) {
+        // We can trim the remaining paragraph by sentences if we have room
+        const sentences = paragraphs[p].split('. ');
+        for (let s = 0; s < sentences.length && sentences[s].length + text.length < limit; s++) {
+            text += text === '' ? sentences[s] : '. ' + sentences[s];
+        }
+        text += '...';
+    }
     return text;
 }
 
