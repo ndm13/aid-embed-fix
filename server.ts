@@ -46,6 +46,17 @@ function getRedirectBase(ctx: Context) {
     return config.client.origin;
 }
 
+function buildRedirectTarget(ctx: Context, passKeys: string[]) {
+    const urlParams = ctx.request.url.searchParams;
+    const linkParams = urlParams.entries()
+        .filter(([k,_]) => passKeys.includes(k))
+        .reduce((a, [k, v]) => {
+            a.set(k, v);
+            return a;
+        }, new URLSearchParams());
+    return getRedirectBase(ctx) + ctx.request.url.pathname + (linkParams.size > 0 ? '?' + linkParams.toString() : '');
+}
+
 const last = {
     healthcheck: 0,
     scenario: 0,
@@ -80,7 +91,7 @@ router.get("/healthcheck", ctx => {
 
 router.get("/scenario/:id/:tail", async ctx => {
     last.scenario = Date.now();
-    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    const link = buildRedirectTarget(ctx, ['share']);
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
@@ -126,7 +137,7 @@ router.get("/scenario/:id/:tail", async ctx => {
 
 router.get("/adventure/:id/:tail/:read?", async ctx => {
     last.adventure = Date.now();
-    const link = getRedirectBase(ctx) + ctx.request.url.pathname;
+    const link = buildRedirectTarget(ctx, ['share']);
     // Hack to get optional static parameters working with path-to-regexp@v6.3.0
     if (ctx.params.read && ctx.params.read !== "read") {
         ctx.response.status = 302;
@@ -177,11 +188,7 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
 
 router.get("/profile/:username", async ctx => {
     last.profile = Date.now();
-    let link = getRedirectBase(ctx) + ctx.request.url.pathname;
-    // Preserve selected profile tab on redirect
-    if (ctx.request.url.searchParams.has("contentType")) {
-        link += "?contentType=" + ctx.request.url.searchParams.get("contentType");
-    }
+    const link = buildRedirectTarget(ctx, ['contentType', 'share']);
     if (shouldForwardInstead(ctx)) {
         ctx.response.status = 301;
         ctx.response.redirect(link);
