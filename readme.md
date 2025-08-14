@@ -1,8 +1,8 @@
 # Better AI Dungeon Embeds
 [![Release status](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml)
 [![Check for Deno Updates](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml)
-![axdungeon.com status](https://img.shields.io/website?url=https%3A%2F%2Faxdungeon.com%2Fprofile%2Faidungeon&logo=digitalocean&label=axdungeon.com&cacheSeconds=1800)
-![aidungeon.link status](https://img.shields.io/website?url=https%3A%2F%2Faidungeon.link%2Fprofile%2Faidungeon&logo=digitalocean&label=aidungeon.link&cacheSeconds=1800)
+![axdungeon.com status](https://img.shields.io/website?url=https%3A%2F%2Faxdungeon.com%2Fhealthcheck&logo=digitalocean&label=axdungeon.com&cacheSeconds=300)
+![aidungeon.link status](https://img.shields.io/website?url=https%3A%2F%2Faidungeon.link%2Fhealthcheck&logo=digitalocean&label=aidungeon.link&cacheSeconds=300)
 
 Tired of your AI Dungeon links having zero usable information? This link fixer will give your embeds the detail they
 deserve! Works for user profiles, scenarios, and adventures!
@@ -81,6 +81,9 @@ These values are visible in `config.ts`.
 Note that when changing environments, you will likely need different Firebase credentials (ITK and Token) as each
 instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
 
+When the server launches, it will print the interface and port on which it's listening. Query `/healthcheck` to get
+stats!
+
 ## Technical Details
 There are two core components to the project: the [AI Dungeon API](/AIDungeonAPI.ts) and an 
 [Oak middleware webserver](/server.ts) (plus a global [config file](/config.ts) to tie it all together).
@@ -94,6 +97,10 @@ Requests are redirected to the origin site when possible. When a page is request
 redirect is issued (this behavior can be bypassed by adding `no_ua` as a query parameter, if testing another platform).
 If the page *is* loaded by a browser, a JavaScript redirect will take place immediately, with history replacement. And
 if for some reason all logic fails and the user sees the page we present to Discord, it still looks nice enough.
+
+### Query Parameters
+We pass `share` for profile, scenario, and adventure queries, and `contentType` for profile queries. All other query
+parameters are discarded when forwarding the request.
 
 ## For Contributors
 My biggest blind spot is testing. Discord is a big community for AI Dungeon, but I'm sure there are other platforms
