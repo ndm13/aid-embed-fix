@@ -237,7 +237,7 @@ router.get("/oembed.json", ctx => {
     }
     const oembed = {
         provider_name: 'AI Dungeon ' + params.get("type"),
-        provider_url: config.client.origin,
+        provider_url: params.get('type') === "Embed Fix" ? "https://github.com/ndm13/aid-embed-fix" : config.client.origin,
         title: "Embed",
         type: 'rich',
         version: '1.0'
@@ -261,8 +261,30 @@ router.get("/(style.css|robots.txt)", async ctx => {
 
 router.get("/", ctx => {
     last.root = Date.now();
-    ctx.response.status = 301;
-    ctx.response.redirect("https://github.com/ndm13/aid-embed-fix");
+    if (shouldForwardInstead(ctx)) {
+        ctx.response.status = 301;
+        ctx.response.redirect("https://github.com/ndm13/aid-embed-fix");
+        return;
+    }
+    // Otherwise generate embed demo
+    const oembedParams = new URLSearchParams({
+        title: "Fix AI Dungeon Link Previews!",
+        type: "Embed Fix"
+    });
+    ctx.response.body = njk.render("demo.njk", {
+        title: "Fix AI Dungeon Link Previews!",
+        description: `Get more details in your AI Dungeon links!
+ • Change .com to .link, or
+ • Post a link and type s/i/x!
+
+Now you can see the link type, description, and image!
+
+Fully open source, click the link for details!`,
+        cover: 'https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true',
+        oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`,
+        link: "https://github.com/ndm13/aid-embed-fix",
+        author: "ndm13"
+    });
 });
 
 const app = new Application();
