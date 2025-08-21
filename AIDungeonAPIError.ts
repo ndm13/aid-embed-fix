@@ -12,6 +12,10 @@ export class AIDungeonAPIError extends Error {
         this.response = response;
     }
 
+    static isInstance(obj: any): obj is AIDungeonAPIError {
+        return obj instanceof AIDungeonAPIError;
+    }
+
     static onUnpack(message: string, query: GraphQLQuery, response: GraphQLResponse<string, any>) {
         return new AIDungeonAPIError(message, query, response);
     }

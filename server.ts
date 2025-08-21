@@ -6,9 +6,10 @@ import {config} from "./config.ts";
 import Renderer from "./Renderer.ts";
 import * as RouterUtils from "./router_utils.ts";
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
+import log from "./logger.ts";
 
 const api = await AIDungeonAPI.guest();
-console.log("Using anonymous API access with user agent:", config.client.userAgent);
+log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
 const router = new Router();
 const renderer = new Renderer(new Environment(new FileSystemLoader('templates')));
@@ -58,13 +59,7 @@ router.get("/scenario/:id/:tail", async ctx => {
         })
         .catch((e: AIDungeonAPIError) => {
             error.push(1);
-            console.error(e.message);
-            const errors = e.response?.errors;
-            if (errors)
-                errors.forEach((error: {message:string,extensions:Record<string,any>}) =>
-                    console.error('\t', error.message, error.extensions));
-            else if (e.cause)
-                console.error(e.cause);
+            log.error("Error getting scenario", e);
             ctx.response.body = renderer.scenarioNotFound(ctx, ctx.params.id, link);
         });
 });
@@ -87,13 +82,7 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
         })
         .catch((e: AIDungeonAPIError) => {
             error.push(1);
-            console.error(e.message);
-            const errors = e.response?.errors;
-            if (errors)
-                errors.forEach((error: {message:string,extensions:Record<string,any>}) =>
-                    console.error('\t', error.message, error.extensions));
-            else if (e.cause)
-                console.error(e.cause);
+            log.error("Error getting adventure", e);
             ctx.response.body = renderer.adventureNotFound(ctx, ctx.params.id, link);
         });
 });
@@ -111,13 +100,7 @@ router.get("/profile/:username", async ctx => {
         })
         .catch((e: AIDungeonAPIError) => {
             error.push(1);
-            console.error(e.message);
-            const errors = e.response?.errors;
-            if (errors)
-                errors.forEach((error: {message:string,extensions:Record<string,any>}) =>
-                    console.error('\t', error.message, error.extensions));
-            else if (e.cause)
-                console.error(e.cause);
+            log.error("Error getting profile", e);
             ctx.response.body = renderer.profileNotFound(ctx, ctx.params.username, link);
         });
 });
@@ -165,12 +148,7 @@ const app = new Application();
 // Logging
 app.use(async (ctx, next) => {
     await next();
-    console.log(
-        ctx.response.status,
-        ctx.request.method,
-        `${ctx.request.url.pathname}${ctx.request.url.search}`,
-        ctx.request.userAgent.ua
-    );
+    log.info("Served", ctx);
 });
 
 // Router
@@ -184,5 +162,5 @@ app.use(ctx => {
     ctx.response.redirect(RouterUtils.redirectLinkBase(ctx) + ctx.request.url.pathname);
 });
 
-console.log("Listening on", config.network.listen);
+log.info("Listening on", config.network.listen);
 await app.listen(config.network.listen);

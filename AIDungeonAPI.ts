@@ -7,6 +7,7 @@ import {
     RefreshTokenResponse
 } from "./types/AIDungeonAPITypes.ts";
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
+import log from "./logger.ts";
 
 export class AIDungeonAPI {
     private _lastRequestAt = 0;
@@ -110,7 +111,7 @@ export class AIDungeonAPI {
                 this._refresh = replace.refreshToken;
                 this._expires = Date.now() + (Number.parseInt(replace.expiresIn) * 1000);
                 this._lastRefreshAt = 0;
-                console.info("Created new user token");
+                log.debug("Created new user token", {expires: this._expires});
             } else {
                 this._token = "";
                 throw new Error("Non-guest API token expired, unable to refresh token");
@@ -123,7 +124,7 @@ export class AIDungeonAPI {
             this._refresh = refresh.refresh_token;
             this._expires = now + (Number.parseInt(refresh.expires_in) * 1000);
             this._lastRefreshAt = now;
-            console.info("Refreshed user token");
+            log.debug("Refreshed user token", {expires: this._expires});
         }
     }
 
