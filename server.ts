@@ -1,61 +1,16 @@
-import {Application, Context, Router} from "@oak/oak";
-import { Environment, FileSystemLoader } from "nunjucks";
+import {Application, Router} from "@oak/oak";
+import {Environment, FileSystemLoader} from "nunjucks";
 
 import {AIDungeonAPI} from "./AIDungeonAPI.ts";
 import {config} from "./config.ts";
+import Renderer from "./Renderer.ts";
+import * as RouterUtils from "./router_utils.ts";
 
 const api = await AIDungeonAPI.guest();
 console.log("Using anonymous API access with user agent:", config.client.userAgent);
 
 const router = new Router();
-const njk = new Environment(new FileSystemLoader('templates'));
-
-// Naïve attempt to get descriptions to ~1000 characters.
-// Discord does its own trimming so we don't need to be strict.
-function trimDescription(text: string) {
-    const limit = 1000;
-    if (text.length < limit) return text;
-    const paragraphs = text.split('\n');
-    text = '';
-    let p = 0;
-    for (; p < paragraphs.length && paragraphs[p].length + text.length < limit; p++)
-        text += text === '' ? paragraphs[p] : '\n' + paragraphs[p];
-    if (p < paragraphs.length) {
-        // We can trim the remaining paragraph by sentences if we have room
-        const sentences = paragraphs[p].split('. ');
-        for (let s = 0; s < sentences.length && sentences[s].length + text.length < limit; s++) {
-            text += text === '' ? sentences[s] : '. ' + sentences[s];
-        }
-        text += '...';
-    }
-    return text;
-}
-
-function shouldForwardInstead(ctx: Context) {
-    // Bypass check with ?no_ua
-    if (ctx.request.url.searchParams.has("no_ua"))
-        return false;
-    // Otherwise check if it's coming from Discordbot
-    return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
-}
-
-function getRedirectBase(ctx: Context) {
-    const host = ctx.request.url.host;
-    if (host.startsWith('play.')) return "https://play.aidungeon.com";
-    if (host.startsWith('beta.')) return "https://beta.aidungeon.com";
-    return config.client.origin;
-}
-
-function buildRedirectTarget(ctx: Context, passKeys: string[]) {
-    const urlParams = ctx.request.url.searchParams;
-    const linkParams = urlParams.entries()
-        .filter(([k,_]) => passKeys.includes(k))
-        .reduce((a, [k, v]) => {
-            a.set(k, v);
-            return a;
-        }, new URLSearchParams());
-    return getRedirectBase(ctx) + ctx.request.url.pathname + (linkParams.size > 0 ? '?' + linkParams.toString() : '');
-}
+const renderer = new Renderer(new Environment(new FileSystemLoader('templates')));
 
 const last = {
     healthcheck: 0,
@@ -91,140 +46,54 @@ router.get("/healthcheck", ctx => {
 
 router.get("/scenario/:id/:tail", async ctx => {
     last.scenario = Date.now();
-    const link = buildRedirectTarget(ctx, ['share']);
-    if (shouldForwardInstead(ctx)) {
-        ctx.response.status = 301;
-        ctx.response.redirect(link);
-        return;
-    }
+    const link = RouterUtils.redirectLink(ctx, ['share']);
+    if (RouterUtils.tryForward(ctx, link)) return;
 
     const scenario = await api.getScenario(ctx.params.id);
     if (error.length > 99) error.shift();
     if (!scenario) {
         error.push(1);
-        const oembedParams = new URLSearchParams({
-            title: `Scenario Not Found [${ctx.params.id}]`,
-            type: "Scenario"
-        }).toString();
-
-        ctx.response.body = njk.render('embed-notfound.njk', {
-            type: "scenario",
-            id: ctx.params.id,
-            link,
-            oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
-        });
+        ctx.response.body = renderer.scenarioNotFound(ctx, ctx.params.id, link);
     } else {
         error.push(0);
-        const oembedParams = new URLSearchParams({
-            title: scenario.title,
-            author: scenario.user.profile.title,
-            type: "Scenario"
-        }).toString();
-
-        ctx.response.body = njk.render('embed.njk', {
-            type: "scenario",
-            title: scenario.title,
-            author: scenario.user.profile.title,
-            profile_link: `${config.client.origin}/profile/${scenario.user.profile.title}`,
-            description: trimDescription(scenario.description ?? scenario.prompt),
-            cover: ctx.request.url.searchParams.get("bi") ?? `${scenario.image}/public`,
-            link,
-            icon: scenario.user.profile.thumbImageUrl,
-            oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
-        });
+        ctx.response.body = renderer.scenario(ctx, scenario, link);
     }
 });
 
 router.get("/adventure/:id/:tail/:read?", async ctx => {
     last.adventure = Date.now();
-    const link = buildRedirectTarget(ctx, ['share']);
+    const link = RouterUtils.redirectLink(ctx, ['share']);
     // Hack to get optional static parameters working with path-to-regexp@v6.3.0
     if (ctx.params.read && ctx.params.read !== "read") {
-        ctx.response.status = 302;
-        ctx.response.redirect(link);
-    }
-    if (shouldForwardInstead(ctx)) {
-        ctx.response.status = 301;
         ctx.response.redirect(link);
         return;
     }
+    if (RouterUtils.tryForward(ctx, link)) return;
 
     const adventure = await api.getAdventure(ctx.params.id);
     if (error.length > 99) error.shift();
     if (!adventure) {
         error.push(1);
-        const oembedParams = new URLSearchParams({
-            title: `Adventure Not Found [${ctx.params.id}]`,
-            type: "Adventure"
-        }).toString();
-
-        ctx.response.body = njk.render('embed-notfound.njk', {
-            type: "adventure",
-            id: ctx.params.id,
-            link,
-            oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
-        });
+        ctx.response.body = renderer.adventureNotFound(ctx, ctx.params.id, link);
     } else {
         error.push(0);
-        const oembedParams = new URLSearchParams({
-            title: adventure.title,
-            author: adventure.user.profile.title,
-            type: "Adventure"
-        }).toString();
-
-        ctx.response.body = njk.render('embed.njk', {
-            type: "adventure",
-            title: adventure.title,
-            author: adventure.user.profile.title,
-            profile_link: `${config.client.origin}/profile/${adventure.user.profile.title}`,
-            description: trimDescription(adventure.description),
-            cover: ctx.request.url.searchParams.get("bi") ?? `${adventure.image}/public`,
-            link,
-            icon: adventure.user.profile.thumbImageUrl,
-            oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
-        });
+        ctx.response.body = renderer.adventure(ctx, adventure, link);
     }
 });
 
 router.get("/profile/:username", async ctx => {
     last.profile = Date.now();
-    const link = buildRedirectTarget(ctx, ['contentType', 'share']);
-    if (shouldForwardInstead(ctx)) {
-        ctx.response.status = 301;
-        ctx.response.redirect(link);
-        return;
-    }
+    const link = RouterUtils.redirectLink(ctx, ['contentType', 'share']);
+    if (RouterUtils.tryForward(ctx, link)) return;
 
     const user = await api.getUser(ctx.params.username);
     if (error.length > 99) error.shift();
     if (!user) {
         error.push(1);
-        const oembedParams = new URLSearchParams({
-            title: `User Not Found [${ctx.params.username}]`,
-            type: "Profile"
-        }).toString();
-
-        ctx.response.body = njk.render('embed-notfound.njk', {
-            type: "user",
-            id: ctx.params.username,
-            link,
-            oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
-        });
+        ctx.response.body = renderer.profileNotFound(ctx, ctx.params.username, link);
     } else {
         error.push(0);
-        const oembedParams = new URLSearchParams({
-            title: user.profile.title,
-            author: user.profile.title,
-            type: "Profile"
-        }).toString();
-
-        ctx.response.body = njk.render('embed-profile.njk', {
-            title: user.profile.title,
-            description: user.profile.description,
-            link,
-            icon: user.profile.thumbImageUrl,
-            oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`
-        });
+        ctx.response.body = renderer.profile(ctx, user, link);
     }
 });
 
@@ -261,30 +130,10 @@ router.get("/(style.css|robots.txt)", async ctx => {
 
 router.get("/", ctx => {
     last.root = Date.now();
-    if (shouldForwardInstead(ctx)) {
-        ctx.response.status = 301;
-        ctx.response.redirect("https://github.com/ndm13/aid-embed-fix");
-        return;
-    }
+    const link = "https://github.com/ndm13/aid-embed-fix";
+    if (RouterUtils.tryForward(ctx, link)) return;
     // Otherwise generate embed demo
-    const oembedParams = new URLSearchParams({
-        title: "Fix AI Dungeon Link Previews!",
-        type: "Embed Fix"
-    });
-    ctx.response.body = njk.render("demo.njk", {
-        title: "Fix AI Dungeon Link Previews!",
-        description: `Get more details in your AI Dungeon links!
- • Change .com to .link, or
- • Post a link and type s/i/x!
-
-Now you can see the link type, description, and image!
-
-Fully open source, click the link for details!`,
-        cover: 'https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true',
-        oembed: `${config.network.oembedProtocol}://${ctx.request.url.host}/oembed.json?${oembedParams}`,
-        link: "https://github.com/ndm13/aid-embed-fix",
-        author: "ndm13"
-    });
+    ctx.response.body = renderer.demo(ctx, link);
 });
 
 const app = new Application();
@@ -307,7 +156,7 @@ app.use(router.allowedMethods());
 app.use(ctx => {
     last.other = Date.now();
     // 302 is fine for this, in case we support it later
-    ctx.response.redirect(getRedirectBase(ctx) + ctx.request.url.pathname);
+    ctx.response.redirect(RouterUtils.redirectLinkBase(ctx) + ctx.request.url.pathname);
 });
 
 console.log("Listening on", config.network.listen);
