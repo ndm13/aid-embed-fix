@@ -5,6 +5,7 @@ import {AIDungeonAPI} from "./AIDungeonAPI.ts";
 import {config} from "./config.ts";
 import Renderer from "./Renderer.ts";
 import * as RouterUtils from "./router_utils.ts";
+import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 
 const api = await AIDungeonAPI.guest();
 console.log("Using anonymous API access with user agent:", config.client.userAgent);
@@ -49,15 +50,23 @@ router.get("/scenario/:id/:tail", async ctx => {
     const link = RouterUtils.redirectLink(ctx, ['share']);
     if (RouterUtils.tryForward(ctx, link)) return;
 
-    const scenario = await api.getScenario(ctx.params.id);
     if (error.length > 99) error.shift();
-    if (!scenario) {
-        error.push(1);
-        ctx.response.body = renderer.scenarioNotFound(ctx, ctx.params.id, link);
-    } else {
-        error.push(0);
-        ctx.response.body = renderer.scenario(ctx, scenario, link);
-    }
+    await api.getScenarioEmbed(ctx.params.id)
+        .then(scenario => {
+            error.push(0);
+            ctx.response.body = renderer.scenario(ctx, scenario, link);
+        })
+        .catch((e: AIDungeonAPIError) => {
+            error.push(1);
+            console.error(e.message);
+            const errors = e.response?.errors;
+            if (errors)
+                errors.forEach((error: {message:string,extensions:Record<string,any>}) =>
+                    console.error('\t', error.message, error.extensions));
+            else if (e.cause)
+                console.error(e.cause);
+            ctx.response.body = renderer.scenarioNotFound(ctx, ctx.params.id, link);
+        });
 });
 
 router.get("/adventure/:id/:tail/:read?", async ctx => {
@@ -70,15 +79,23 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
     }
     if (RouterUtils.tryForward(ctx, link)) return;
 
-    const adventure = await api.getAdventure(ctx.params.id);
     if (error.length > 99) error.shift();
-    if (!adventure) {
-        error.push(1);
-        ctx.response.body = renderer.adventureNotFound(ctx, ctx.params.id, link);
-    } else {
-        error.push(0);
-        ctx.response.body = renderer.adventure(ctx, adventure, link);
-    }
+    await api.getAdventureEmbed(ctx.params.id)
+        .then(adventure => {
+            error.push(0);
+            ctx.response.body = renderer.adventure(ctx, adventure, link);
+        })
+        .catch((e: AIDungeonAPIError) => {
+            error.push(1);
+            console.error(e.message);
+            const errors = e.response?.errors;
+            if (errors)
+                errors.forEach((error: {message:string,extensions:Record<string,any>}) =>
+                    console.error('\t', error.message, error.extensions));
+            else if (e.cause)
+                console.error(e.cause);
+            ctx.response.body = renderer.adventureNotFound(ctx, ctx.params.id, link);
+        });
 });
 
 router.get("/profile/:username", async ctx => {
@@ -86,15 +103,23 @@ router.get("/profile/:username", async ctx => {
     const link = RouterUtils.redirectLink(ctx, ['contentType', 'share']);
     if (RouterUtils.tryForward(ctx, link)) return;
 
-    const user = await api.getUser(ctx.params.username);
     if (error.length > 99) error.shift();
-    if (!user) {
-        error.push(1);
-        ctx.response.body = renderer.profileNotFound(ctx, ctx.params.username, link);
-    } else {
-        error.push(0);
-        ctx.response.body = renderer.profile(ctx, user, link);
-    }
+    await api.getUserEmbed(ctx.params.username)
+        .then(user => {
+            error.push(0);
+            ctx.response.body = renderer.profile(ctx, user, link);
+        })
+        .catch((e: AIDungeonAPIError) => {
+            error.push(1);
+            console.error(e.message);
+            const errors = e.response?.errors;
+            if (errors)
+                errors.forEach((error: {message:string,extensions:Record<string,any>}) =>
+                    console.error('\t', error.message, error.extensions));
+            else if (e.cause)
+                console.error(e.cause);
+            ctx.response.body = renderer.profileNotFound(ctx, ctx.params.username, link);
+        });
 });
 
 router.get("/oembed.json", ctx => {

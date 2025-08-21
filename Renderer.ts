@@ -1,6 +1,7 @@
 import {Context} from "@oak/oak";
 import {Environment} from "nunjucks";
 import {config} from "./config.ts";
+import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "./types/EmbedDataTypes.ts";
 
 // Naïve attempt to get descriptions to ~1000 characters.
 // Discord does its own trimming so we don't need to be strict.
@@ -66,13 +67,13 @@ export default class Renderer {
         });
     }
 
-    scenario(ctx: Context, scenario, link: string) {
+    scenario(ctx: Context, scenario: ScenarioEmbedData, link: string) {
         return this._njk.render('embed.njk', {
             type: "scenario",
             title: scenario.title,
             author: scenario.user.profile.title,
             profile_link: `${config.client.origin}/profile/${scenario.user.profile.title}`,
-            description: trimDescription(scenario.description ?? scenario.prompt),
+            description: trimDescription(scenario.description ?? scenario.prompt ?? ""),
             cover: ctx.request.url.searchParams.get("bi") ?? `${scenario.image}/public`,
             link,
             icon: scenario.user.profile.thumbImageUrl,
@@ -84,13 +85,13 @@ export default class Renderer {
         });
     }
 
-    adventure(ctx: Context, adventure, link: string) {
+    adventure(ctx: Context, adventure: AdventureEmbedData, link: string) {
         return this._njk.render('embed.njk', {
             type: "adventure",
             title: adventure.title,
             author: adventure.user.profile.title,
             profile_link: `${config.client.origin}/profile/${adventure.user.profile.title}`,
-            description: trimDescription(adventure.description),
+            description: trimDescription(adventure.description ?? ""),
             cover: ctx.request.url.searchParams.get("bi") ?? `${adventure.image}/public`,
             link,
             icon: adventure.user.profile.thumbImageUrl,
@@ -102,7 +103,7 @@ export default class Renderer {
         });
     }
 
-    profile(ctx: Context, user, link: string) {
+    profile(ctx: Context, user: UserEmbedData, link: string) {
         return this._njk.render('embed-profile.njk', {
             title: user.profile.title,
             description: user.profile.description,
