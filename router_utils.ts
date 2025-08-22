@@ -3,6 +3,7 @@ import {config} from "./config.ts";
 
 export function tryForward(ctx: Context, link: string) {
     if (shouldForward(ctx)) {
+        ctx.state.metrics.type = "redirect";
         ctx.response.status = 301;
         ctx.response.redirect(link);
         return true;

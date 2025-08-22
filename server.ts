@@ -7,6 +7,7 @@ import Renderer from "./Renderer.ts";
 import * as RouterUtils from "./router_utils.ts";
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 import log from "./logger.ts";
+import metrics from "./metrics.ts";
 
 const api = await AIDungeonAPI.guest();
 log.info("Using anonymous API access with user agent:", config.client.userAgent);
@@ -14,19 +15,9 @@ log.info("Using anonymous API access with user agent:", config.client.userAgent)
 const router = new Router();
 const renderer = new Renderer(new Environment(new FileSystemLoader('templates')));
 
-const last = {
-    healthcheck: 0,
-    scenario: 0,
-    adventure: 0,
-    profile: 0,
-    oembed: 0,
-    static: 0,
-    root: 0,
-    other: 0
-};
-const error: number[] = [];
-
 router.get("/healthcheck", ctx => {
+    ctx.state.metrics.endpoint = "healthcheck";
+    ctx.state.metrics.type = "static";
     const status = {
         api: {
             last: {
@@ -35,78 +26,72 @@ router.get("/healthcheck", ctx => {
             },
             tokenValid: !api.isExpired
         },
-        server: {
-            last: Object.fromEntries(Object.entries(last).map(([k,v]) => [k, v ? new Date(v) : null])),
-            errorRate: (a => a.reduce((a, c) => a + c, 0) / error.length)(error || [0])
-        }
+        router: metrics.router
     };
-    last.healthcheck = Date.now();
-    ctx.response.status = status.server.errorRate > 0.5 ? 503 : 200;
     ctx.response.type = "application/json";
     ctx.response.body = JSON.stringify(status);
 });
 
 router.get("/scenario/:id/:tail", async ctx => {
-    last.scenario = Date.now();
+    ctx.state.metrics.endpoint = "scenario";
     const link = RouterUtils.redirectLink(ctx, ['share']);
     if (RouterUtils.tryForward(ctx, link)) return;
 
-    if (error.length > 99) error.shift();
     await api.getScenarioEmbed(ctx.params.id)
         .then(scenario => {
-            error.push(0);
+            ctx.state.metrics.type = "success";
             ctx.response.body = renderer.scenario(ctx, scenario, link);
         })
         .catch((e: AIDungeonAPIError) => {
-            error.push(1);
+            ctx.state.metrics.type = "error";
             log.error("Error getting scenario", e);
             ctx.response.body = renderer.scenarioNotFound(ctx, ctx.params.id, link);
         });
 });
 
 router.get("/adventure/:id/:tail/:read?", async ctx => {
-    last.adventure = Date.now();
+    ctx.state.metrics.endpoint = "adventure";
     const link = RouterUtils.redirectLink(ctx, ['share']);
     // Hack to get optional static parameters working with path-to-regexp@v6.3.0
     if (ctx.params.read && ctx.params.read !== "read") {
+        ctx.state.metrics.type = "redirect";
         ctx.response.redirect(link);
         return;
     }
     if (RouterUtils.tryForward(ctx, link)) return;
 
-    if (error.length > 99) error.shift();
     await api.getAdventureEmbed(ctx.params.id)
         .then(adventure => {
-            error.push(0);
+            ctx.state.metrics.type = "success";
             ctx.response.body = renderer.adventure(ctx, adventure, link);
         })
         .catch((e: AIDungeonAPIError) => {
-            error.push(1);
+            ctx.state.metrics.type = "error";
             log.error("Error getting adventure", e);
             ctx.response.body = renderer.adventureNotFound(ctx, ctx.params.id, link);
         });
 });
 
 router.get("/profile/:username", async ctx => {
-    last.profile = Date.now();
+    ctx.state.metrics.endpoint = "profile";
     const link = RouterUtils.redirectLink(ctx, ['contentType', 'share']);
     if (RouterUtils.tryForward(ctx, link)) return;
 
-    if (error.length > 99) error.shift();
     await api.getUserEmbed(ctx.params.username)
         .then(user => {
-            error.push(0);
+            ctx.state.metrics.type = "success";
             ctx.response.body = renderer.profile(ctx, user, link);
         })
         .catch((e: AIDungeonAPIError) => {
-            error.push(1);
+            ctx.state.metrics.type = "error";
             log.error("Error getting profile", e);
             ctx.response.body = renderer.profileNotFound(ctx, ctx.params.username, link);
         });
 });
 
 router.get("/oembed.json", ctx => {
-    last.oembed = Date.now();
+    ctx.state.metrics.endpoint = "oembed";
+    ctx.state.metrics.type = "static";
     const params = ctx.request.url.searchParams;
     if (!params.has("type")) {
         ctx.response.status = 400;
@@ -130,21 +115,30 @@ router.get("/oembed.json", ctx => {
 });
 
 router.get("/(style.css|robots.txt)", async ctx => {
-    last.static = Date.now();
+    ctx.state.metrics.endpoint = "static";
+    ctx.state.metrics.type = "static";
     await ctx.send({
         root: './static'
     });
 });
 
 router.get("/", ctx => {
-    last.root = Date.now();
+    ctx.state.metrics.endpoint = "root";
     const link = "https://github.com/ndm13/aid-embed-fix";
     if (RouterUtils.tryForward(ctx, link)) return;
     // Otherwise generate embed demo
+    ctx.state.metrics.type = "static";
     ctx.response.body = renderer.demo(ctx, link);
 });
 
 const app = new Application();
+// Metrics
+app.use(async (ctx, next) => {
+    const start = Date.now();
+    ctx.state.metrics = {};
+    await next();
+    metrics.record(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
+});
 // Logging
 app.use(async (ctx, next) => {
     await next();
@@ -157,7 +151,8 @@ app.use(router.allowedMethods());
 
 // All other requests can bounce to AI Dungeon, in case someone proxied an unsupported link
 app.use(ctx => {
-    last.other = Date.now();
+    ctx.state.metrics.endpoint = "unsupported";
+    ctx.state.metrics.type = "redirect";
     // 302 is fine for this, in case we support it later
     ctx.response.redirect(RouterUtils.redirectLinkBase(ctx) + ctx.request.url.pathname);
 });
