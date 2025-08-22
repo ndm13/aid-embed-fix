@@ -131,7 +131,7 @@ export class AIDungeonAPI {
                 this._token = replace.idToken;
                 this._refresh = replace.refreshToken;
                 this._expires = Date.now() + (Number.parseInt(replace.expiresIn) * 1000);
-                log.debug("Created new user token", {expires: this._expires});
+                log.debug(`Created new user token (valid until ${new Date(this._expires)})`);
             } else {
                 this._token = "";
                 throw new Error("Non-guest API token expired, unable to refresh token");
@@ -143,7 +143,7 @@ export class AIDungeonAPI {
             this._token = refresh.id_token;
             this._refresh = refresh.refresh_token;
             this._expires = now + (Number.parseInt(refresh.expires_in) * 1000);
-            log.debug("Refreshed user token", {expires: this._expires});
+            log.debug(`Refreshed user token (valid until ${new Date(this._expires)})`);
         }
     }
 

@@ -14,7 +14,7 @@ if (config.metrics.enable !== "none") {
     if (config.metrics.key) {
         log.info("Metrics available at /metrics?key=" + config.metrics.key);
     } else {
-        log.warn("Metrics enabled, but empty supplied. This may allow unauthorized access to system status.");
+        log.warn("Metrics enabled, but empty key supplied. This may allow unauthorized access to system status.");
         log.info("Metrics available at /metrics");
     }
 } else {

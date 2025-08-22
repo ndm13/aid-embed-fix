@@ -1,5 +1,7 @@
 import {countByKey, groupByKey} from "./utils/metrics.ts";
 
+import config from "./config.ts";
+
 import {
     APIDataPoint,
     APIMetrics,
@@ -15,11 +17,13 @@ export class Metrics {
     private apiData: APIDataPoint[] = [];
 
     recordEndpoint(endpoint: string, duration: number, type: EndpointResponseType) {
-        this.routerData.push({timestamp: Date.now(), endpoint, duration, type});
+        if (config.metrics.enable === "all" || config.metrics.enable.includes("router"))
+            this.routerData.push({timestamp: Date.now(), endpoint, duration, type});
     }
 
     recordAPICall(method: string, duration: number, result: APIResult) {
-        this.apiData.push({timestamp: Date.now(), method, duration, result});
+        if (config.metrics.enable === "all" || config.metrics.enable.includes("api"))
+            this.apiData.push({timestamp: Date.now(), method, duration, result});
     }
 
     readonly window = 3600000;
