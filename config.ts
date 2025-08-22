@@ -1,4 +1,5 @@
-import { parseArgs } from "parse-args";
+import {parseArgs} from "parse-args";
+
 const flags = parseArgs(Deno.args, {
     string: [
         "firebaseITK",
@@ -12,7 +13,7 @@ const flags = parseArgs(Deno.args, {
     ]
 });
 
-export const config = {
+const config = {
     // These settings are for connecting to Firebase for authentication.
     // The defaults are used for the origin https://play.aidungeon.com.
     firebase: {
@@ -69,3 +70,4 @@ export const config = {
             "0.0.0.0:8000"
     }
 };
+export default config;

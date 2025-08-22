@@ -1,12 +1,13 @@
 import {getLogger, LogRecord, setup} from "log";
 import {ConsoleHandler} from "log/console-handler";
-import {formatters} from "./formatters.ts";
+
+import formatters from "./formatters.ts";
 
 setup({
     handlers: {
         console: new ConsoleHandler("DEBUG", {
             formatter: (record: LogRecord) => {
-                let message =  `[${record.levelName}] ${record.msg} ${record.args.map(formatters.format).join('\n')}`;
+                const message =  `[${record.levelName}] ${record.msg} ${record.args.map(formatters.format).join('\n')}`;
                 return message.replace('\n', `\n[${record.levelName}] `);
             }
         })

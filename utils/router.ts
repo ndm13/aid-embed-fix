@@ -1,5 +1,6 @@
 import {Context} from "@oak/oak";
-import {config} from "../config.ts";
+
+import config from "../config.ts";
 
 export function tryForward(ctx: Context, link: string) {
     if (shouldForward(ctx)) {

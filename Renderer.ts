@@ -1,6 +1,8 @@
 import {Context} from "@oak/oak";
 import {Environment} from "nunjucks";
-import {config} from "./config.ts";
+
+import config from "./config.ts";
+
 import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "./types/EmbedDataTypes.ts";
 
 // Naïve attempt to get descriptions to ~1000 characters.
@@ -24,7 +26,7 @@ function trimDescription(text: string) {
     return text;
 }
 
-export default class Renderer {
+export class Renderer {
     private _njk: Environment;
 
     constructor(nunjucks: Environment) {

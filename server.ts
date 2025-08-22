@@ -2,10 +2,11 @@ import {Application, Router} from "@oak/oak";
 import {Environment, FileSystemLoader} from "nunjucks";
 
 import {AIDungeonAPI} from "./AIDungeonAPI.ts";
-import {config} from "./config.ts";
-import Renderer from "./Renderer.ts";
-import {redirectLink, redirectLinkBase, tryForward} from "./utils/router.ts";
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
+import {Renderer} from "./Renderer.ts";
+import {redirectLink, redirectLinkBase, tryForward} from "./utils/router.ts";
+
+import config from "./config.ts";
 import log from "./logger.ts";
 import metrics from "./metrics.ts";
 

@@ -24,7 +24,7 @@ class FormatterRegistry {
   };
 }
 
-export const formatters = new FormatterRegistry()
+const formatters = new FormatterRegistry()
   .add({
     matches: AIDungeonAPIError.isInstance,
     format: (error) => {
@@ -47,3 +47,4 @@ export const formatters = new FormatterRegistry()
       return `${ctx.response.status} ${ctx.request.method} ${ctx.request.url.pathname}${ctx.request.url.search} ${ctx.request.userAgent.ua}`;
     },
   });
+export default formatters;

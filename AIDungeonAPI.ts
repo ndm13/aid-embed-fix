@@ -1,15 +1,17 @@
-import {config} from "./config.ts";
-import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "./types/EmbedDataTypes.ts";
+import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
+
+import config from "./config.ts";
+import log from "./logger.ts";
+import metrics from "./metrics.ts";
+
 import {
     GraphQLQuery,
     GraphQLResponse,
     IdentityKitCredentials,
     RefreshTokenResponse
 } from "./types/AIDungeonAPITypes.ts";
-import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
-import log from "./logger.ts";
-import metrics from "./metrics.ts";
 import {APIResult} from "./types/MetricsTypes.ts";
+import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "./types/EmbedDataTypes.ts";
 
 async function withMetrics<T>(method: string, action: () => Promise<T>) {
     const start = Date.now();
