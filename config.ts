@@ -1,4 +1,5 @@
 import {parseArgs} from "parse-args";
+import {crypto} from "crypto";
 
 const flags = parseArgs(Deno.args, {
     string: [
@@ -9,7 +10,9 @@ const flags = parseArgs(Deno.args, {
         "gqlEndpoint",
         "userAgent",
         "oembedProtocol",
-        "listen"
+        "listen",
+        "metrics",
+        "metricsKey"
     ]
 });
 
@@ -68,6 +71,16 @@ const config = {
             flags.listen ||
             Deno.env.get("LISTEN") ||
             "0.0.0.0:8000"
+    },
+    metrics: {
+        enable:
+            flags.metrics ||
+            Deno.env.get("METRICS") ||
+            "all",
+        key:
+            flags.metricsKey ||
+            Deno.env.get("METRICS_KEY") ||
+            crypto.randomUUID()
     }
 };
 export default config;

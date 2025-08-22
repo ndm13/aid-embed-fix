@@ -10,6 +10,17 @@ import config from "./config.ts";
 import log from "./logger.ts";
 import metrics from "./metrics.ts";
 
+if (config.metrics.enable !== "none") {
+    if (config.metrics.key) {
+        log.info("Metrics available at /metrics?key=" + config.metrics.key);
+    } else {
+        log.warn("Metrics enabled, but empty supplied. This may allow unauthorized access to system status.");
+        log.info("Metrics available at /metrics");
+    }
+} else {
+    log.info("Metrics disabled");
+}
+
 const api = await AIDungeonAPI.guest();
 log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
@@ -19,6 +30,28 @@ const renderer = new Renderer(new Environment(new FileSystemLoader('templates'))
 router.get("/healthcheck", ctx => {
     ctx.state.metrics.endpoint = "healthcheck";
     ctx.state.metrics.type = "static";
+    ctx.response.body = "ok";
+});
+
+router.get("/metrics", ctx => {
+    ctx.state.metrics.endpoint = "metrics";
+
+    if (config.metrics.key) {
+        const params = ctx.request.url.searchParams;
+        if (!params.has("key") || params.get("key") !== config.metrics.key) {
+            ctx.state.metrics.type = "error";
+            ctx.response.status = 401;
+            ctx.response.type = "application/json";
+            ctx.response.body = {
+                error: {
+                    details: "Incorrect or missing metrics key. If using the default config, a key has been generated for you and will be in the log."
+                }
+            }
+            return;
+        }
+    }
+
+    ctx.state.metrics.type = "success";
     const status = {
         api: metrics.api,
         router: metrics.router,
