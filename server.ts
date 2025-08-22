@@ -4,7 +4,7 @@ import {Environment, FileSystemLoader} from "nunjucks";
 import {AIDungeonAPI} from "./AIDungeonAPI.ts";
 import {config} from "./config.ts";
 import Renderer from "./Renderer.ts";
-import * as RouterUtils from "./router_utils.ts";
+import {redirectLink, redirectLinkBase, tryForward} from "./utils/router.ts";
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 import log from "./logger.ts";
 import metrics from "./metrics.ts";
@@ -19,14 +19,9 @@ router.get("/healthcheck", ctx => {
     ctx.state.metrics.endpoint = "healthcheck";
     ctx.state.metrics.type = "static";
     const status = {
-        api: {
-            last: {
-                request: api.lastRequestAt ? new Date(api.lastRequestAt) : null,
-                refresh: api.lastRefreshAt ? new Date(api.lastRefreshAt) : null
-            },
-            tokenValid: !api.isExpired
-        },
-        router: metrics.router
+        api: metrics.api,
+        router: metrics.router,
+        window: metrics.window
     };
     ctx.response.type = "application/json";
     ctx.response.body = JSON.stringify(status);
@@ -34,8 +29,8 @@ router.get("/healthcheck", ctx => {
 
 router.get("/scenario/:id/:tail", async ctx => {
     ctx.state.metrics.endpoint = "scenario";
-    const link = RouterUtils.redirectLink(ctx, ['share']);
-    if (RouterUtils.tryForward(ctx, link)) return;
+    const link = redirectLink(ctx, ['share']);
+    if (tryForward(ctx, link)) return;
 
     await api.getScenarioEmbed(ctx.params.id)
         .then(scenario => {
@@ -51,14 +46,14 @@ router.get("/scenario/:id/:tail", async ctx => {
 
 router.get("/adventure/:id/:tail/:read?", async ctx => {
     ctx.state.metrics.endpoint = "adventure";
-    const link = RouterUtils.redirectLink(ctx, ['share']);
+    const link = redirectLink(ctx, ['share']);
     // Hack to get optional static parameters working with path-to-regexp@v6.3.0
     if (ctx.params.read && ctx.params.read !== "read") {
         ctx.state.metrics.type = "redirect";
         ctx.response.redirect(link);
         return;
     }
-    if (RouterUtils.tryForward(ctx, link)) return;
+    if (tryForward(ctx, link)) return;
 
     await api.getAdventureEmbed(ctx.params.id)
         .then(adventure => {
@@ -74,8 +69,8 @@ router.get("/adventure/:id/:tail/:read?", async ctx => {
 
 router.get("/profile/:username", async ctx => {
     ctx.state.metrics.endpoint = "profile";
-    const link = RouterUtils.redirectLink(ctx, ['contentType', 'share']);
-    if (RouterUtils.tryForward(ctx, link)) return;
+    const link = redirectLink(ctx, ['contentType', 'share']);
+    if (tryForward(ctx, link)) return;
 
     await api.getUserEmbed(ctx.params.username)
         .then(user => {
@@ -125,7 +120,7 @@ router.get("/(style.css|robots.txt)", async ctx => {
 router.get("/", ctx => {
     ctx.state.metrics.endpoint = "root";
     const link = "https://github.com/ndm13/aid-embed-fix";
-    if (RouterUtils.tryForward(ctx, link)) return;
+    if (tryForward(ctx, link)) return;
     // Otherwise generate embed demo
     ctx.state.metrics.type = "static";
     ctx.response.body = renderer.demo(ctx, link);
@@ -137,7 +132,7 @@ app.use(async (ctx, next) => {
     const start = Date.now();
     ctx.state.metrics = {};
     await next();
-    metrics.record(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
+    metrics.recordEndpoint(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
 });
 // Logging
 app.use(async (ctx, next) => {
@@ -154,7 +149,7 @@ app.use(ctx => {
     ctx.state.metrics.endpoint = "unsupported";
     ctx.state.metrics.type = "redirect";
     // 302 is fine for this, in case we support it later
-    ctx.response.redirect(RouterUtils.redirectLinkBase(ctx) + ctx.request.url.pathname);
+    ctx.response.redirect(redirectLinkBase(ctx) + ctx.request.url.pathname);
 });
 
 log.info("Listening on", config.network.listen);

@@ -1,77 +1,83 @@
-export type ResponseType = "success" | "error" | "redirect" | "static" | "unknown";
-
-export type Timings = {
-    avg: number,
-    max: number,
-    requests: number,
-    lastRequest: Date
-};
-
-export type EndpointMetrics = {
-    timings: Timings,
-    type: Record<ResponseType, number>
-};
-
-export type RouterMetrics = {
-    timings: Timings,
-    endpoints: Record<string, EndpointMetrics>
-};
-
-type RouterDataPoint = {
-    timestamp: number,
-    endpoint: string,
-    duration: number,
-    type: ResponseType
-};
+import {countByKey, groupByKey} from "./utils/metrics.ts";
+import {
+    APIDataPoint,
+    APIMetrics,
+    APIResult,
+    EndpointResponseType,
+    RouterDataPoint,
+    RouterMetrics,
+    Timings
+} from "./types/MetricsTypes.ts";
 
 export class Metrics {
     private routerData: RouterDataPoint[] = [];
+    private apiData: APIDataPoint[] = [];
 
-    record(endpoint: string, duration: number, type: ResponseType) {
+    recordEndpoint(endpoint: string, duration: number, type: EndpointResponseType) {
         this.routerData.push({timestamp: Date.now(), endpoint, duration, type});
     }
 
-    get router(): RouterMetrics | {} {
-        // Trim old data
-        const oneHourAgo = Date.now() - 3600000;
-        const cutoff = this.routerData.findIndex(d => d.timestamp >= oneHourAgo);
-        if (cutoff === -1 && this.routerData.length > 0) {
-            this.routerData = [];
-        } else {
-            this.routerData.splice(0, cutoff);
-        }
-        if (this.routerData.length === 0) return {};
-
-        // Otherwise summarize requests
-        const routerTimings = Metrics.calculateTimings(this.routerData);
-        const endpointsData = this.routerData.reduce((agg, d) => {
-            if (!agg[d.endpoint]) {
-                agg[d.endpoint] = [];
-            }
-            agg[d.endpoint].push(d);
-            return agg;
-        }, {} as Record<string, RouterDataPoint[]>);
-        const endpoints = Object.fromEntries(
-            Object.entries(endpointsData).map(([endpointName, dataPoints]) => {
-                const endpointTimings = Metrics.calculateTimings(dataPoints);
-                const byType = dataPoints.reduce((acc, d) => {
-                    acc[d.type] = (acc[d.type] || 0) + 1;
-                    return acc;
-                }, {} as Record<ResponseType, number>);
-
-                return [endpointName, { timings: endpointTimings, type: byType }];
-            })
-        );
-        return { timings: routerTimings, endpoints };
+    recordAPICall(method: string, duration: number, result: APIResult) {
+        this.apiData.push({timestamp: Date.now(), method, duration, result});
     }
 
-    private static calculateTimings(data: RouterDataPoint[]) {
+    readonly window = 3600000;
+
+    constructor() {
+        Deno.unrefTimer(setInterval(() => {
+            this.prune(this.routerData);
+            this.prune(this.apiData);
+        }, this.window));
+    }
+
+    get router(): RouterMetrics | Record<PropertyKey, never> {
+        this.prune(this.routerData);
+        if (this.routerData.length === 0) return {};
+
+        return {
+            timings: Metrics.calculateTimings(this.routerData),
+            endpoints: Object.fromEntries(
+                Object.entries(groupByKey(this.routerData, "endpoint"))
+                    .map(([k, data]) => [k, {
+                        timings: Metrics.calculateTimings(data),
+                        type: countByKey(data, "type")
+                    }])
+            )
+        };
+    }
+
+    get api(): APIMetrics | Record<PropertyKey, never> {
+        this.prune(this.apiData);
+        if (this.apiData.length === 0) return {};
+
+        return {
+            timings: Metrics.calculateTimings(this.apiData),
+            methods: Object.fromEntries(
+                Object.entries(groupByKey(this.apiData, "method"))
+                    .map(([k, data]) => [k, {
+                        timings: Metrics.calculateTimings(data),
+                        results: countByKey(data, "result")
+                    }])
+            )
+        };
+    }
+
+    private prune(data: {timestamp: number}[]) {
+        const cutoff = data.findIndex(d => d.timestamp >= Date.now() - this.window);
+        if (cutoff === -1 && data.length > 0) {
+            data.length = 0;
+        } else {
+            data.splice(0, cutoff);
+        }
+    }
+
+    private static calculateTimings(data: {timestamp: number, duration: number}[]): Timings {
         if (data.length === 0) {
             return { avg: 0, max: 0, requests: 0, lastRequest: new Date(0) };
         }
         const responseTimes = data.map(d => d.duration);
         const totalResponseTime = responseTimes.reduce((sum, time) => sum + time, 0);
-        const lastRequestTimestamp = Math.max(...data.map(d => d.timestamp));
+        const lastRequestTimestamp = data[data.length - 1].timestamp;
 
         return {
             avg: parseFloat((totalResponseTime / data.length).toFixed(2)),
@@ -79,7 +85,7 @@ export class Metrics {
             requests: data.length,
             lastRequest: new Date(lastRequestTimestamp)
         };
-    };
+    }
 }
 
 const metrics = new Metrics();
