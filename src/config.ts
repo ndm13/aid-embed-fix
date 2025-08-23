@@ -1,4 +1,6 @@
-import { parseArgs } from "parse-args";
+import {parseArgs} from "parse-args";
+import {crypto} from "crypto";
+
 const flags = parseArgs(Deno.args, {
     string: [
         "firebaseITK",
@@ -8,11 +10,13 @@ const flags = parseArgs(Deno.args, {
         "gqlEndpoint",
         "userAgent",
         "oembedProtocol",
-        "listen"
+        "listen",
+        "metrics",
+        "metricsKey"
     ]
 });
 
-export const config = {
+const config = {
     // These settings are for connecting to Firebase for authentication.
     // The defaults are used for the origin https://play.aidungeon.com.
     firebase: {
@@ -67,5 +71,24 @@ export const config = {
             flags.listen ||
             Deno.env.get("LISTEN") ||
             "0.0.0.0:8000"
+    },
+    // These settings are related to metrics capture.
+    metrics: {
+        // Determines which metrics are in scope. `none` disables capture,
+        // `api` or `router` enable those respectively, and `all` enables
+        // everything.
+        enable:
+            flags.metrics ||
+            Deno.env.get("METRICS") ||
+            "all",
+        // A secret URL parameter (?key=) that will be used to access the
+        // `/metrics` endpoint. If omitted, a random UUID will be used and
+        // output to the console on startup. To disable the key, pass an empty
+        // string.
+        key:
+            flags.metricsKey ??
+            Deno.env.get("METRICS_KEY") ??
+            crypto.randomUUID()
     }
 };
+export default config;

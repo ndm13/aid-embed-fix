@@ -5,7 +5,7 @@ on:
     types: ['published']
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 env:
@@ -13,36 +13,17 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-deploy:
-    name: Build and deploy
+  release:
+    name: Release New Docker Image
     runs-on: ubuntu-latest
 
     steps:
       - name: Setup repo
         uses: actions/checkout@v3
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.4
-        with:
-          deno-version: vx.x.x
-
-      - name: Prepare release
+      - name: Set default version string
         run: |
           sed -i -e 's/dev-build/${{ github.event.release.tag_name }}/g' config.ts
-          mkdir build
-          deno task build-docker-target
-          mkdir stg
-          cp -r build/server stg/server
-          cp -r static stg/static
-          cp -r templates stg/templates
-          mkdir release
-          tar -czvf release/x86_64-unknown-linux-gnu.tar.gz -C ./stg ./
-
-      - uses: ncipollo/release-action@v1
-        with:
-          artifacts: "release/*"
-          allowUpdates: true
-          omitBodyDuringUpdate: true
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9

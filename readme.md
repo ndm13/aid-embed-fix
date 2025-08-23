@@ -20,9 +20,8 @@ Running on `play.axdungeon.com`/`beta.axdungeon.com` (type `s/i/x` after posting
 | `/profile/:username`   | ![A screenshot of a Discord embed: title text 'AI Dungeon'; description 'AI Dungeon, an infinitely generated text adventure...'; a small image to the right side showing a screenshot of the homepage](/screenshots/standard.png) | ![A screenshot of a Discord embed: site name 'AI Dungeon Profile': title text 'aidungeon'; description 'Official AI Dungeon account.'; a small image to the right side showing the AI Dungeon logo profile icon'](/screenshots/aidungeon.png)                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Releases
-This project is currently being built for Linux, with a `.tar.gz` configured and ready to go on the
-[latest release](https://github.com/ndm13/aid-embed-fix/releases/latest). This is used to build a
-[Docker image](https://github.com/ndm13/aid-embed-fix/pkgs/container/aid-embed-fix) hosted on `ghcr.io`.
+This project builds a [Docker image](https://github.com/ndm13/aid-embed-fix/pkgs/container/aid-embed-fix) for every
+[release](https://github.com/ndm13/aid-embed-fix/releases/latest). These images are hosted on `ghcr.io`.
 
 ## Deployment
 ### Docker (preferred)
@@ -51,12 +50,12 @@ deno compile --allow-env --allow-read --allow-net server.ts
 ```
 
 ### Run the `server.ts` file directly
-The server additionally requires the `AIDungeonAPI.ts`, `config.ts`, and `server.ts` files when being run through Deno.
+The server additionally requires the contents of the `src` folder when being run through Deno.
 ```shell
 git clone https://github.com/ndm13/aid-embed-fix.git  # or download files manually
 cd aid-embed-fix
 deno install
-deno run --allow-env --allow-read --allow-net server.ts
+deno run --allow-env --allow-read --allow-net ./src/server.ts
 ```
 
 ## Configuration
@@ -77,6 +76,8 @@ These values are visible in `config.ts`.
 | User Agent                    | `--userAgent`             | `USER_AGENT`              | This is the user agent that will be used for all requests. Docker images will assign the correct version number on build.                                                                                                         |
 | OEmbed Protocol               | `--oembedProtocol`        | `OEMBED_PROTOCOL`         | When running behind some reverse proxies, protocol detection can return an http link instead of https. This ensures that the links to oembed.json use the correct protocol. **Change this to http if serving the app over http.** |
 | Listening Interface           | `--listen`                | `LISTEN`                  | The interface to use for incoming requests.                                                                                                                                                                                       |
+| Enabled Metrics               | `--metrics`               | `METRICS`                 | Determines which metrics are in scope. `none` disables capture, `api` or `router` enable those respectively, and `all` enables everything.                                                                                        |
+| Metrics Key                   | `--metricsKey`            | `METRICS_KEY`             | A secret URL parameter (?key=) that will be used to access the `/metrics` endpoint. If omitted, a random UUID will be used and output to the console on startup. To disable the key, pass an empty string.                        |
 
 Note that when changing environments, you will likely need different Firebase credentials (ITK and Token) as each
 instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
@@ -85,8 +86,8 @@ When the server launches, it will print the interface and port on which it's lis
 stats!
 
 ## Technical Details
-There are two core components to the project: the [AI Dungeon API](/AIDungeonAPI.ts) and an 
-[Oak middleware webserver](/server.ts) (plus a global [config file](/config.ts) to tie it all together).
+There are two core components to the project: the [AI Dungeon API](/src/api/AIDungeonAPI.ts) and an 
+[Oak middleware webserver](/src/server.ts). Everything else is scaffolding.
 
 The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. These queries
 have been stripped to retrieve a minimal amount of information - much less than a typical page load. Firebase sessions
