@@ -1,7 +1,7 @@
 import {Application} from "@oak/oak";
 import {Environment, FileSystemLoader} from "nunjucks";
 
-import {AIDungeonAPI} from "./AIDungeonAPI.ts";
+import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
 import {Renderer} from "./Renderer.ts";
 
 import config from "./config.ts";
@@ -16,8 +16,9 @@ log.info("Using anonymous API access with user agent:", config.client.userAgent)
 
 const app = new Application();
 
-// Logging
+// Logging and state
 app.use(async (ctx, next) => {
+    ctx.state.metrics = {};
     await next();
     log.info("Served", ctx);
 });

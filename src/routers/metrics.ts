@@ -8,7 +8,6 @@ export function createMetricsRouter() {
 
     router.use(async (ctx, next) => {
         const start = Date.now();
-        ctx.state.metrics = {};
         await next();
         metrics.recordEndpoint(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
     });

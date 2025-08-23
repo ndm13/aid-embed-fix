@@ -1,4 +1,4 @@
-import { AIDungeonAPIError } from "./AIDungeonAPIError.ts";
+import { AIDungeonAPIError } from "./api/AIDungeonAPIError.ts";
 import { Context } from "@oak/oak";
 
 interface Formatters<T> {
@@ -35,7 +35,7 @@ const formatters = new FormatterRegistry()
           message += `\n\tfrom GraphQL: ${e.message} ${JSON.stringify(e.extensions)}`
         );
       }
-      if (error.cause) {
+      if (error.cause instanceof Error) {
         message += `\n\tcaused by:${error.cause.name}: ${error.cause.message}`;
       }
       return message;

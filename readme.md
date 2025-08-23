@@ -20,9 +20,8 @@ Running on `play.axdungeon.com`/`beta.axdungeon.com` (type `s/i/x` after posting
 | `/profile/:username`   | ![A screenshot of a Discord embed: title text 'AI Dungeon'; description 'AI Dungeon, an infinitely generated text adventure...'; a small image to the right side showing a screenshot of the homepage](/screenshots/standard.png) | ![A screenshot of a Discord embed: site name 'AI Dungeon Profile': title text 'aidungeon'; description 'Official AI Dungeon account.'; a small image to the right side showing the AI Dungeon logo profile icon'](/screenshots/aidungeon.png)                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Releases
-This project is currently being built for Linux, with a `.tar.gz` configured and ready to go on the
-[latest release](https://github.com/ndm13/aid-embed-fix/releases/latest). This is used to build a
-[Docker image](https://github.com/ndm13/aid-embed-fix/pkgs/container/aid-embed-fix) hosted on `ghcr.io`.
+This project builds a [Docker image](https://github.com/ndm13/aid-embed-fix/pkgs/container/aid-embed-fix) for every
+[release](https://github.com/ndm13/aid-embed-fix/releases/latest). These images are hosted on `ghcr.io`.
 
 ## Deployment
 ### Docker (preferred)
@@ -87,8 +86,8 @@ When the server launches, it will print the interface and port on which it's lis
 stats!
 
 ## Technical Details
-There are two core components to the project: the [AI Dungeon API](/AIDungeonAPI.ts) and an 
-[Oak middleware webserver](/server.ts) (plus a global [config file](/config.ts) to tie it all together).
+There are two core components to the project: the [AI Dungeon API](/src/api/AIDungeonAPI.ts) and an 
+[Oak middleware webserver](/src/server.ts). Everything else is scaffolding.
 
 The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. These queries
 have been stripped to retrieve a minimal amount of information - much less than a typical page load. Firebase sessions

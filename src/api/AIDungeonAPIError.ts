@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import {GraphQLQuery, GraphQLResponse} from "./types/AIDungeonAPITypes.ts";
+import {GraphQLQuery, GraphQLResponse} from "../types/AIDungeonAPITypes.ts";
 
 export class AIDungeonAPIError extends Error {
     readonly query: GraphQLQuery;

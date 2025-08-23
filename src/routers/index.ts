@@ -5,7 +5,7 @@ import {createEmbedRouter} from "./embed.ts";
 import {createStaticRouter} from "./static.ts";
 import {createMetricsRouter} from "./metrics.ts";
 import {Router} from "@oak/oak";
-import {AIDungeonAPI} from "../AIDungeonAPI.ts";
+import {AIDungeonAPI} from "../api/AIDungeonAPI.ts";
 
 export function createRouter(api: AIDungeonAPI, renderer: Renderer) {
     const router = new Router();

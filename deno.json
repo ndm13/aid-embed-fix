@@ -5,8 +5,5 @@
     "parse-args": "jsr:@std/cli@1.0.21/parse-args",
     "log": "jsr:@std/log@^0.224.14",
     "crypto": "jsr:@std/crypto@^1.0.5"
-  },
-  "tasks": {
-    "build-docker-target": "deno compile --allow-env --allow-read --allow-net --target x86_64-unknown-linux-gnu --output build/server server.ts"
   }
 }
