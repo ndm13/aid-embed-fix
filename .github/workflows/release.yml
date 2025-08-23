@@ -23,7 +23,7 @@ jobs:
 
       - name: Set default version string
         run: |
-          sed -i -e 's/dev-build/${{ github.event.release.tag_name }}/g' config.ts
+          sed -i -e 's/dev-build/${{ github.event.release.tag_name }}/g' src/config.ts
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
