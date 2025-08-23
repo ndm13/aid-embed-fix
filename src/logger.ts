@@ -7,8 +7,8 @@ setup({
     handlers: {
         console: new ConsoleHandler("DEBUG", {
             formatter: (record: LogRecord) => {
-                const message =  `[${record.levelName}] ${record.msg} ${record.args.map(formatters.format).join('\n')}`;
-                return message.replace('\n', `\n[${record.levelName}] `);
+                return `[${record.levelName}] ${record.msg} ${record.args.map(formatters.format).join('\n')}`
+                    .replaceAll('\n', `\n[${record.levelName}] `);
             }
         })
     },
