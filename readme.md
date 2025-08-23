@@ -50,12 +50,12 @@ deno compile --allow-env --allow-read --allow-net server.ts
 ```
 
 ### Run the `server.ts` file directly
-The server additionally requires the `AIDungeonAPI.ts`, `config.ts`, and `server.ts` files when being run through Deno.
+The server additionally requires the contents of the `src` folder when being run through Deno.
 ```shell
 git clone https://github.com/ndm13/aid-embed-fix.git  # or download files manually
 cd aid-embed-fix
 deno install
-deno run --allow-env --allow-read --allow-net server.ts
+deno run --allow-env --allow-read --allow-net ./src/server.ts
 ```
 
 ## Configuration
