@@ -3,7 +3,7 @@ import {Renderer} from "../Renderer.ts";
 import { AIDungeonAPI } from "../api/AIDungeonAPI.ts";
 import {AIDungeonAPIError} from "../api/AIDungeonAPIError.ts";
 
-import log from "../logger.ts";
+import log from "../logging/logger.ts";
 import config from "../config.ts";
 import {redirectLink, tryForward} from "../utils/router.ts";
 

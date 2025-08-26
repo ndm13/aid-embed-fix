@@ -1,5 +1,5 @@
 import {Renderer} from "../Renderer.ts";
-import log from "../logger.ts";
+import log from "../logging/logger.ts";
 import config from "../config.ts";
 import {createEmbedRouter} from "./embed.ts";
 import {createStaticRouter} from "./static.ts";

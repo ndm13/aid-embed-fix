@@ -1,7 +1,7 @@
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 
 import config from "../config.ts";
-import log from "../logger.ts";
+import log from "../logging/logger.ts";
 import metrics from "../metrics.ts";
 
 import {

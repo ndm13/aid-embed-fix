@@ -1,5 +1,6 @@
 import {parseArgs} from "parse-args";
 import {crypto} from "crypto";
+import {LevelName} from "log/levels";
 
 const flags = parseArgs(Deno.args, {
     string: [
@@ -12,7 +13,8 @@ const flags = parseArgs(Deno.args, {
         "oembedProtocol",
         "listen",
         "metrics",
-        "metricsKey"
+        "metricsKey",
+        "logLevel"
     ]
 });
 
@@ -89,6 +91,11 @@ const config = {
             flags.metricsKey ??
             Deno.env.get("METRICS_KEY") ??
             crypto.randomUUID()
-    }
+    },
+    // The logging level for the application.
+    logLevel:
+        (flags.logLevel ||
+        Deno.env.get("LOG_LEVEL") ||
+        "INFO") as LevelName
 };
 export default config;

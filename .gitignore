@@ -1,3 +1,4 @@
 /.idea/
-/pulls/
-/build/
+/local/
+/*.env
+/compose.yml
