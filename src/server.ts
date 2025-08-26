@@ -5,7 +5,7 @@ import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
 import {Renderer} from "./Renderer.ts";
 
 import config from "./config.ts";
-import log from "./logger.ts";
+import log from "./logging/logger.ts";
 import {redirectLinkBase} from "./utils/router.ts";
 import {createRouter} from "./routers/index.ts";
 

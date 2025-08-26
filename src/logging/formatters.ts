@@ -1,5 +1,6 @@
-import { AIDungeonAPIError } from "./api/AIDungeonAPIError.ts";
 import { Context } from "@oak/oak";
+
+import { AIDungeonAPIError } from "../api/AIDungeonAPIError.ts";
 
 interface Formatters<T> {
   // deno-lint-ignore no-explicit-any
