@@ -1,5 +1,6 @@
 import {parseArgs} from "parse-args";
 import {crypto} from "crypto";
+import {LevelName} from "log/levels";
 
 const flags = parseArgs(Deno.args, {
     string: [
@@ -93,8 +94,8 @@ const config = {
     },
     // The logging level for the application.
     logLevel:
-        flags.logLevel ||
+        (flags.logLevel ||
         Deno.env.get("LOG_LEVEL") ||
-        "INFO"
+        "INFO") as LevelName
 };
 export default config;
