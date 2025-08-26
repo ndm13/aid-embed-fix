@@ -1,2 +1,4 @@
 /.idea/
 /local/
+/*.env
+/compose.yml
