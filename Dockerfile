@@ -1,13 +1,14 @@
 FROM denoland/deno:2.4.5 AS builder
 WORKDIR /app
 
+COPY src/config.ts ./src/config.ts
 COPY src/healthcheck.ts ./src/healthcheck.ts
-
-RUN deno compile --allow-net=localhost:8000 --target x86_64-unknown-linux-gnu --output /healthcheck ./src/healthcheck.ts
-
-COPY src/ ./src/
 COPY deno.json .
 COPY deno.lock .
+
+RUN deno compile --allow-net --allow-env --target x86_64-unknown-linux-gnu --output /healthcheck ./src/healthcheck.ts
+
+COPY src/ ./src/
 
 RUN deno compile --allow-env --allow-read --allow-net --target x86_64-unknown-linux-gnu --output /server ./src/server.ts
 
