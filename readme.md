@@ -78,6 +78,7 @@ These values are visible in `config.ts`.
 | Listening Interface           | `--listen`                | `LISTEN`                  | The interface to use for incoming requests.                                                                                                                                                                                       |
 | Enabled Metrics               | `--metrics`               | `METRICS`                 | Determines which metrics are in scope. `none` disables capture, `api` or `router` enable those respectively, and `all` enables everything.                                                                                        |
 | Metrics Key                   | `--metricsKey`            | `METRICS_KEY`             | A secret URL parameter (?key=) that will be used to access the `/metrics` endpoint. If omitted, a random UUID will be used and output to the console on startup. To disable the key, pass an empty string.                        |
+| Log Level                     | `--logLevel`              | `LOG_LEVEL`               | The logging level for the application.                                                                                                                                                                                            |
 
 Note that when changing environments, you will likely need different Firebase credentials (ITK and Token) as each
 instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.

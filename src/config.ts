@@ -12,7 +12,8 @@ const flags = parseArgs(Deno.args, {
         "oembedProtocol",
         "listen",
         "metrics",
-        "metricsKey"
+        "metricsKey",
+        "logLevel"
     ]
 });
 
@@ -89,6 +90,11 @@ const config = {
             flags.metricsKey ??
             Deno.env.get("METRICS_KEY") ??
             crypto.randomUUID()
-    }
+    },
+    // The logging level for the application.
+    logLevel:
+        flags.logLevel ||
+        Deno.env.get("LOG_LEVEL") ||
+        "INFO"
 };
 export default config;
