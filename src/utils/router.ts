@@ -36,5 +36,6 @@ export function redirectLinkBase(ctx: Context) {
     const host = ctx.request.url.host;
     if (host.startsWith('play.')) return "https://play.aidungeon.com";
     if (host.startsWith('beta.')) return "https://beta.aidungeon.com";
+    if (host.startsWith('alpha.')) return "https://alpha.aidungeon.com";
     return config.client.origin;
 }
