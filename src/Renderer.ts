@@ -76,7 +76,8 @@ export class Renderer {
             author: scenario.user.profile.title,
             profile_link: `${config.client.origin}/profile/${scenario.user.profile.title}`,
             description: trimDescription(scenario.description ?? scenario.prompt ?? ""),
-            cover: ctx.request.url.searchParams.get("bi") ?? `${scenario.image}/public`,
+            cover: ctx.request.url.searchParams.get("bi") ??
+                        scenario.image.endsWith('.png') ? scenario.image : `${scenario.image}/public`,
             link,
             icon: scenario.user.profile.thumbImageUrl,
             oembed: Renderer.oembedLink(ctx, {
@@ -94,7 +95,8 @@ export class Renderer {
             author: adventure.user.profile.title,
             profile_link: `${config.client.origin}/profile/${adventure.user.profile.title}`,
             description: trimDescription(adventure.description ?? ""),
-            cover: ctx.request.url.searchParams.get("bi") ?? `${adventure.image}/public`,
+            cover: ctx.request.url.searchParams.get("bi") ??
+                        adventure.image.endsWith('.png') ? adventure.image :  `${adventure.image}/public`,
             link,
             icon: adventure.user.profile.thumbImageUrl,
             oembed: Renderer.oembedLink(ctx, {
