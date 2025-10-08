@@ -12,7 +12,7 @@ export function createEmbedRouter(api: AIDungeonAPI, renderer: Renderer) {
 
     router.get("/scenario/:id/:tail", async ctx => {
         ctx.state.metrics.endpoint = "scenario";
-        const link = redirectLink(ctx, ['share']);
+        const link = redirectLink(ctx, ['share', 'source', 'published', 'unlisted']);
         if (tryForward(ctx, link)) return;
 
         await api.getScenarioEmbed(ctx.params.id)
@@ -29,7 +29,7 @@ export function createEmbedRouter(api: AIDungeonAPI, renderer: Renderer) {
 
     router.get("/adventure/:id/:tail/:read?", async ctx => {
         ctx.state.metrics.endpoint = "adventure";
-        const link = redirectLink(ctx, ['share']);
+        const link = redirectLink(ctx, ['share', 'source', 'page', 'size']);
         // Hack to get optional static parameters working with path-to-regexp@v6.3.0
         if (ctx.params.read && ctx.params.read !== "read") {
             ctx.state.metrics.type = "redirect";
@@ -52,7 +52,7 @@ export function createEmbedRouter(api: AIDungeonAPI, renderer: Renderer) {
 
     router.get("/profile/:username", async ctx => {
         ctx.state.metrics.endpoint = "profile";
-        const link = redirectLink(ctx, ['contentType', 'share']);
+        const link = redirectLink(ctx, ['contentType', 'share', 'sort']);
         if (tryForward(ctx, link)) return;
 
         await api.getUserEmbed(ctx.params.username)
