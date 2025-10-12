@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="theme-color" content="#f8ae2c"/>
     <meta property="twitter:title" content="{{ type | capitalize }} Not Found!"/>
@@ -13,24 +13,24 @@ Click the link to try to go there anyway!"/>
     <meta name="application-name" content="AI Dungeon"/>
     <meta property="og:site_name" content="AI Dungeon"/>
 
-    <link rel="canonical" href="{{ link }}>"/>
-    <meta property="og:url" content="{{ link }}"/>
+    <link rel="canonical" href="{{ link | safe }}>"/>
+    <meta property="og:url" content="{{ link | safe}}"/>
 
-    <meta name="redirect" content="{{ link }}"/>
+    <meta name="redirect" content="{{ link | safe }}"/>
 
     <title>{{ type | capitalize }} Not Found!</title>
 
-    <link type="application/json+oembed" href="{{ oembed }}"/>
+    <link type="application/json+oembed" href="{{ oembed | safe }}"/>
 
     <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
-    <script>window.location.replace("{{ link }}");</script>
+    <script>window.location.replace("{{ link | safe }}");</script>
 
     <!-- Okay you heathens, have a nice looking page -->
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="/style.css"/>
 </head>
 <body class="embed profile">
-<h2><a href="{{ link }}">{{ type }} {{ id }}</a></h2>
+<h2><a href="{{ link | safe }}">{{ type }} {{ id }}</a></h2>
 <p>
     We tried to find a{% if type === "adventure" %}n{% endif %} {{ type }} with id <kbd>{{ id }}</kbd>, but failed. It's
     possible that it doesn't exist, is private, or the API/site is having issues.

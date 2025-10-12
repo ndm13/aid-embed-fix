@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="theme-color" content="#f8ae2c"/>
     <meta name="twitter:card" content="summary_large_image"/>
@@ -13,27 +13,27 @@
     <meta name="application-name" content="AI Dungeon"/>
     <meta property="og:site_name" content="AI Dungeon"/>
 
-    <link rel="canonical" href="{{ link }}>"/>
-    <meta property="og:url" content="{{ link }}"/>
+    <link rel="canonical" href="{{ link | safe }}>"/>
+    <meta property="og:url" content="{{ link | safe }}"/>
 
     <link rel="icon" href="{{ icon }}"/>
-    <meta name="redirect" content="{{ link }}"/>
+    <meta name="redirect" content="{{ link | safe }}"/>
 
     <title>{{ title }} (@{{ author }})</title>
 
     <link type="application/json+oembed" href="{{ oembed | safe }}"/>
 
     <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
-    <script>window.location.replace("{{ link }}");</script>
+    <script>window.location.replace("{{ link | safe }}");</script>
 
     <!-- Okay you heathens, have a nice looking page -->
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="/style.css"/>
 </head>
 <body class="embed">
-<h2><a href="{{ link }}">{{ title }}</a></h2>
-<h5>{% if type === "scenario" %}a scenario{% elif type === "adventure" %}an adventure{% endif %} by <img src="{{ icon }}" style="height: 1.5ex"/> <a href="{{ profile_link }}">{{ author }}</a></h5>
+<h2><a href="{{ link | safe }}">{{ title }}</a></h2>
+<h5>{% if type === "scenario" %}a scenario{% elif type === "adventure" %}an adventure{% endif %} by <img alt="Profile icon for user '{{ author }}'" src="{{ icon }}" style="height: 1.5ex"/> <a href="{{ profile_link }}">{{ author }}</a></h5>
 <p>{{ description }}</p>
-<img src="{{ cover }}"/>
+<img alt="Cover image for {{ type }} '{{ title }}'" src="{{ cover }}"/>
 </body>
 </html>
