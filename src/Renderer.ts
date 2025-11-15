@@ -26,6 +26,21 @@ function trimDescription(text: string) {
     return text;
 }
 
+function getCover(ctx, image) {
+    const betterImage = ctx.request.url.searchParams.get("bi");
+    if (betterImage) return betterImage;
+    const url = new URL(image);
+    if (url.hostname === "imagedelivery.net") {
+        // Check if the last segment is a UUID
+        const split = url.pathname.split("/");
+        const last = split[split.length - 1];
+        if (/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(last.toLowerCase())) {
+            return image + '/public';
+        }
+    }
+    return image;
+}
+
 export class Renderer {
     private _njk: Environment;
 
@@ -76,8 +91,7 @@ export class Renderer {
             author: scenario.user.profile.title,
             profile_link: `${config.client.origin}/profile/${scenario.user.profile.title}`,
             description: trimDescription(scenario.description ?? scenario.prompt ?? ""),
-            cover: ctx.request.url.searchParams.get("bi") ??
-                        scenario.image.endsWith('.png') ? scenario.image : `${scenario.image}/public`,
+            cover: getCover(ctx, scenario.image),
             link,
             icon: scenario.user.profile.thumbImageUrl,
             oembed: Renderer.oembedLink(ctx, {
@@ -95,8 +109,7 @@ export class Renderer {
             author: adventure.user.profile.title,
             profile_link: `${config.client.origin}/profile/${adventure.user.profile.title}`,
             description: trimDescription(adventure.description ?? ""),
-            cover: ctx.request.url.searchParams.get("bi") ??
-                        adventure.image.endsWith('.png') ? adventure.image :  `${adventure.image}/public`,
+            cover: getCover(ctx, adventure.image),
             link,
             icon: adventure.user.profile.thumbImageUrl,
             oembed: Renderer.oembedLink(ctx, {
