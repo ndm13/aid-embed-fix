@@ -26,7 +26,7 @@ function trimDescription(text: string) {
     return text;
 }
 
-function getCover(ctx, image) {
+function getCover(ctx: Context, image: string) {
     const betterImage = ctx.request.url.searchParams.get("bi");
     if (betterImage) return betterImage;
     const url = new URL(image);
