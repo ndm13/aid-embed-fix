@@ -30,13 +30,11 @@ function getCover(ctx: Context, image: string) {
     const betterImage = ctx.request.url.searchParams.get("bi");
     if (betterImage) return betterImage;
     const url = new URL(image);
-    if (url.hostname === "imagedelivery.net") {
-        // Check if the last segment is a UUID
-        const split = url.pathname.split("/");
-        const last = split[split.length - 1];
-        if (/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(last.toLowerCase())) {
-            return image + '/public';
-        }
+    // Check if the last segment is a UUID
+    const split = url.pathname.split("/");
+    const last = split[split.length - 1];
+    if (/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(last.toLowerCase())) {
+        return image + '/public';
     }
     return image;
 }
