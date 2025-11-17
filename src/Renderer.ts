@@ -33,7 +33,7 @@ function getCover(ctx: Context, image: string) {
     // Check if the last segment is a UUID
     const split = url.pathname.split("/");
     const last = split[split.length - 1];
-    if (/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(last.toLowerCase())) {
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(last.toLowerCase())) {
         return image + '/public';
     }
     return image;
