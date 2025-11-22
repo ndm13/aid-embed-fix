@@ -1,6 +1,6 @@
 {
   "imports": {
-    "@oak/oak": "jsr:@oak/oak@^17.1.6",
+    "@oak/oak": "jsr:@oak/oak@^17.2.0",
     "nunjucks": "npm:nunjucks@^3.2.4",
     "parse-args": "jsr:@std/cli@1.0.21/parse-args",
     "log": "jsr:@std/log@^0.224.14",
