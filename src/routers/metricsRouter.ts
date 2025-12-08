@@ -3,7 +3,7 @@ import {Router} from "@oak/oak";
 import config from "../config.ts";
 import metrics from "../metrics.ts";
 
-export function createMetricsRouter() {
+export default function metricsRouter() {
     const router = new Router();
 
     router.use(async (ctx, next) => {

@@ -1,18 +1,11 @@
 import {Application} from "@oak/oak";
-import {Environment, FileSystemLoader} from "nunjucks";
-
-import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
-import {Renderer} from "./Renderer.ts";
 
 import config from "./config.ts";
 import log from "./logging/logger.ts";
-import {redirectLinkBase} from "./utils/router.ts";
+import {redirectLinkBase} from "./utils/routing.ts";
 import {createRouter} from "./routers/index.ts";
 
 log.info("Setting things up...");
-
-const api = await AIDungeonAPI.guest();
-log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
 const app = new Application();
 
@@ -28,8 +21,7 @@ app.use(async (ctx, next) => {
 });
 
 // Business logic
-const renderer = new Renderer(new Environment(new FileSystemLoader('templates')));
-const router = createRouter(api, renderer);
+const router = await createRouter();
 app.use(router.routes(), router.allowedMethods());
 
 // Fallback redirect to AI Dungeon

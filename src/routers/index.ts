@@ -1,18 +1,16 @@
-import {Renderer} from "../Renderer.ts";
 import log from "../logging/logger.ts";
 import config from "../config.ts";
-import {createEmbedRouter} from "./embed.ts";
-import {createStaticRouter} from "./static.ts";
-import {createMetricsRouter} from "./metrics.ts";
+import embedRouter from "./embedRouter.ts";
+import staticRouter from "./staticRouter.ts";
+import metricsRouter from "./metricsRouter.ts";
 import {Router} from "@oak/oak";
-import {AIDungeonAPI} from "../api/AIDungeonAPI.ts";
 
-export function createRouter(api: AIDungeonAPI, renderer: Renderer) {
+export async function createRouter() {
     const router = new Router();
 
     // Process metrics first, if enabled
     if (config.metrics.enable !== "none") {
-        const metrics = createMetricsRouter();
+        const metrics = metricsRouter();
         router.use(metrics.routes(), metrics.allowedMethods());
 
         if (config.metrics.key) {
@@ -26,8 +24,8 @@ export function createRouter(api: AIDungeonAPI, renderer: Renderer) {
     }
 
     // Standard requests
-    const embeds = createEmbedRouter(api, renderer);
-    const statics = createStaticRouter(renderer);
+    const embeds = await embedRouter();
+    const statics = staticRouter();
 
     router.use(embeds.routes(), embeds.allowedMethods());
     router.use(statics.routes(), statics.allowedMethods());
