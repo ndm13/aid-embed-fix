@@ -21,7 +21,7 @@ export class DemoHandler extends EmbedHandler<void> {
         return Promise.resolve();
     }
 
-    protected prepareContext(ctx: Context, _: void, link: string) {
+    protected prepareContext(ctx: Context, _: void) {
         return {
             title: "Fix AI Dungeon Link Previews!",
             author: "ndm13",
@@ -33,7 +33,7 @@ Now you can see the link type, description, and image!
 
 Fully open source, click the link for details!`,
             cover: 'https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true',
-            link,
+            link: ctx.state.redirectLink,
             oembed: oembedLink(ctx, {
                 title: "Fix AI Dungeon Link Previews!",
                 type: this.oembedType
