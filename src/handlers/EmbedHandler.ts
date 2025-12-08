@@ -15,7 +15,7 @@ export abstract class EmbedHandler<T> {
     protected successTemplate: Template;
     protected errorTemplate: Template;
 
-    constructor(
+    protected constructor(
         protected api: AIDungeonAPI,
         env: Environment,
         successTemplateFile: string,
@@ -58,14 +58,12 @@ export abstract class EmbedHandler<T> {
             ctx.state.metrics.type = "error";
             log.error(`Error getting ${this.name}`, e);
 
-            const titleSubject = this.errorType.charAt(0).toUpperCase() + this.errorType.slice(1);
-
             ctx.response.body = this.errorTemplate.render({
                 type: this.errorType,
                 id,
                 link,
                 oembed: oembedLink(ctx, {
-                    title: `${titleSubject} Not Found [${id}]`,
+                    title: `${(this.errorType.charAt(0).toUpperCase() + this.errorType.slice(1))} Not Found [${id}]`,
                     type: this.oembedType
                 })
             });
