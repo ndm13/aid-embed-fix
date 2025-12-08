@@ -3,7 +3,7 @@ import {Application} from "@oak/oak";
 import config from "./config.ts";
 import log from "./logging/logger.ts";
 import {redirectLinkBase} from "./utils/routing.ts";
-import {createRouter} from "./routers/index.ts";
+import router from "./routers/index.ts";
 
 log.info("Setting things up...");
 
@@ -21,7 +21,6 @@ app.use(async (ctx, next) => {
 });
 
 // Business logic
-const router = await createRouter();
 app.use(router.routes(), router.allowedMethods());
 
 // Fallback redirect to AI Dungeon
