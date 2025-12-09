@@ -4,9 +4,9 @@ import { AdventureHandler } from "../handlers/AdventureHandler.ts";
 import { ProfileHandler } from "../handlers/ProfileHandler.ts";
 import { DemoHandler } from "../handlers/DemoHandler.ts";
 import { Environment, FileSystemLoader } from "nunjucks";
-import type {AppState} from "../types/AppState.ts";
+import type { AppState } from "../types/AppState.ts";
 
-const router = new Router();
+const router = new Router<AppState>();
 const njk = new Environment(new FileSystemLoader('templates'));
 
 const scenario = new ScenarioHandler(njk);
@@ -32,7 +32,7 @@ router.get("/profile/:username", async ctx => {
 });
 
 router.get("/oembed.json", ctx => {
-    const {links} = ctx.state as AppState;
+    const {links} = ctx.state;
     ctx.state.metrics.endpoint = "oembed";
     ctx.state.metrics.type = "static";
     const params = ctx.request.url.searchParams;

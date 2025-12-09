@@ -2,20 +2,31 @@ import {Application} from "@oak/oak";
 
 import config from "./config.ts";
 import log from "./logging/logger.ts";
-import router from "./routers/index.ts";
 import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
 import type {AppState} from "./types/AppState.ts";
 
 import {RelatedLinks} from "./utils/RelatedLinks.ts";
+import {Metrics} from "./metrics.ts";
+import metricsRouter from "./routers/metricsRouter.ts";
+import embedRouter from "./routers/embedRouter.ts";
+import staticRouter from "./routers/staticRouter.ts";
 
 log.info("Setting things up...");
+
+const metrics = config.metrics.enable !== "none" ? new Metrics({
+    window: 3600000,
+    scopes: {
+        api: config.metrics.enable === "all" || config.metrics.enable.includes("api"),
+        router: config.metrics.enable === "all" || config.metrics.enable.includes("router")
+    }
+}) : null;
 
 const api = await AIDungeonAPI.create({
     gqlEndpoint: config.client.gqlEndpoint,
     userAgent: config.client.userAgent,
     origin: config.client.origin,
     firebase: config.firebase
-});
+}, metrics);
 log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
 const app = new Application<AppState>();
@@ -38,8 +49,24 @@ app.use(async (ctx, next) => {
     }
 });
 
-// Business logic
-app.use(router.routes(), router.allowedMethods());
+// Metrics and Business Logic
+if (metrics) {
+    const router = metricsRouter(metrics, config.metrics.key);
+    router.use(embedRouter.routes(), embedRouter.allowedMethods());
+    router.use(staticRouter.routes(), staticRouter.allowedMethods());
+    app.use(router.routes(), router.allowedMethods());
+
+    if (config.metrics.key) {
+        log.info(`Metrics available at /metrics?key=${config.metrics.key}`);
+    } else {
+        log.warn("Metrics enabled, but empty key supplied. This may allow unauthorized access to system status.");
+        log.info("Metrics available at /metrics");
+    }
+} else {
+    log.info("Metrics disabled");
+    app.use(embedRouter.routes(), embedRouter.allowedMethods());
+    app.use(staticRouter.routes(), staticRouter.allowedMethods());
+}
 
 // Fallback redirect to AI Dungeon
 app.use(ctx => {

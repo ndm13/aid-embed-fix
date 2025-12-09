@@ -1,6 +1,7 @@
 import {Router} from "@oak/oak";
+import type {AppState} from "../types/AppState.ts";
 
-const router = new Router();
+const router = new Router<AppState>();
 
 router.get("/healthcheck", ctx => {
     ctx.state.metrics.endpoint = "healthcheck";

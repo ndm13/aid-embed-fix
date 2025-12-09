@@ -1,7 +1,5 @@
 import {countByKey, groupByKey} from "./utils/metrics.ts";
 
-import config from "./config.ts";
-
 import {
     APIDataPoint,
     APIMetrics,
@@ -17,22 +15,26 @@ export class Metrics {
     private apiData: APIDataPoint[] = [];
 
     recordEndpoint(endpoint: string, duration: number, type: EndpointResponseType) {
-        if (config.metrics.enable === "all" || config.metrics.enable.includes("router"))
+        if (this.config.scopes.router)
             this.routerData.push({timestamp: Date.now(), endpoint, duration, type});
     }
 
     recordAPICall(method: string, duration: number, result: APIResult) {
-        if (config.metrics.enable === "all" || config.metrics.enable.includes("api"))
+        if (this.config.scopes.api)
             this.apiData.push({timestamp: Date.now(), method, duration, result});
     }
 
-    readonly window = 3600000;
+    get window() {
+        return this.config.window;
+    }
 
-    constructor() {
+    constructor(
+        private readonly config: MetricsConfig
+    ) {
         Deno.unrefTimer(setInterval(() => {
             this.prune(this.routerData);
             this.prune(this.apiData);
-        }, this.window));
+        }, config.window));
     }
 
     get router(): RouterMetrics | Record<PropertyKey, never> {
@@ -93,5 +95,10 @@ export class Metrics {
     }
 }
 
-const metrics = new Metrics();
-export default metrics;
+export type MetricsConfig = {
+    scopes: {
+        api: boolean,
+        router: boolean
+    },
+    window: number
+}
