@@ -4,7 +4,7 @@ import config from "./config.ts";
 import log from "./logging/logger.ts";
 import router from "./routers/index.ts";
 import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
-import {AppState} from "./types/AppState.ts";
+import type {AppState} from "./types/AppState.ts";
 
 import {RelatedLinks} from "./utils/RelatedLinks.ts";
 
