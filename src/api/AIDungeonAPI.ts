@@ -42,7 +42,7 @@ export class AIDungeonAPI {
     }
 
     private constructor(
-        private config: AIDungeonAPIConfig,
+        private readonly config: AIDungeonAPIConfig,
         credentials: IdentityKitCredentials,
         generated: number,
         private readonly guest = false,
