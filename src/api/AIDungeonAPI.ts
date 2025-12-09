@@ -182,7 +182,7 @@ export class AIDungeonAPI {
         }, metrics);
     }
 
-    private static async withMetrics<T>(method: string, action: () => Promise<T>, metrics: Metrics) {
+    private static async withMetrics<T>(method: string, action: () => Promise<T>, metrics?: Metrics) {
         if (!metrics) return action();
 
         const start = Date.now();

@@ -19,7 +19,7 @@ const metrics = config.metrics.enable !== "none" ? new Metrics({
         api: config.metrics.enable === "all" || config.metrics.enable.includes("api"),
         router: config.metrics.enable === "all" || config.metrics.enable.includes("router")
     }
-}) : null;
+}) : undefined;
 
 const api = await AIDungeonAPI.create({
     gqlEndpoint: config.client.gqlEndpoint,
