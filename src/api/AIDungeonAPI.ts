@@ -183,7 +183,7 @@ export class AIDungeonAPI {
     }
 
     private static async withMetrics<T>(method: string, action: () => Promise<T>, metrics: Metrics) {
-        if (!metrics) return await action();
+        if (!metrics) return action();
 
         const start = Date.now();
         let result: APIResult = "unknown";
