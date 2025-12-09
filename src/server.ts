@@ -20,7 +20,10 @@ app.use(async (ctx, next) => {
     ctx.state = {
         api,
         metrics: {},
-        links: new RelatedLinks(ctx)
+        links: new RelatedLinks(ctx, {
+            oembedProtocol: config.network.oembedProtocol,
+            defaultRedirectBase: config.client.origin
+        })
     };
     await next();
     if (ctx.state.metrics.endpoint === "healthcheck") {

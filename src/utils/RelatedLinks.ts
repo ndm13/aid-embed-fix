@@ -1,8 +1,7 @@
 import { AppState } from "../types/AppState.ts";
-import config from "../config.ts";
 
 export class RelatedLinks {
-  constructor(private readonly ctx: Context<AppState>) {}
+  constructor(private readonly ctx: Context<AppState>, private readonly config: RelatedLinksConfig) {}
 
   cover(image: string) {
     const betterImage = this.ctx.request.url.searchParams.get("bi");
@@ -26,7 +25,7 @@ export class RelatedLinks {
   }
 
   oembed(params: Record<string, string>) {
-    return `${config.network.oembedProtocol}://${this.ctx.request.url.host}/oembed.json?${
+    return `${this.config.oembedProtocol}://${this.ctx.request.url.host}/oembed.json?${
       new URLSearchParams(params).toString()
     }`;
   }
@@ -48,6 +47,11 @@ export class RelatedLinks {
     if (host.startsWith("play.")) return "https://play.aidungeon.com";
     if (host.startsWith("beta.")) return "https://beta.aidungeon.com";
     if (host.startsWith("alpha.")) return "https://alpha.aidungeon.com";
-    return config.client.origin;
+    return this.config.defaultRedirectBase;
   }
 }
+
+export type RelatedLinksConfig = {
+    oembedProtocol: string,
+    defaultRedirectBase: string
+};

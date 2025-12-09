@@ -2,9 +2,9 @@ import { Router } from "@oak/oak";
 import { ScenarioHandler } from "../handlers/ScenarioHandler.ts";
 import { AdventureHandler } from "../handlers/AdventureHandler.ts";
 import { ProfileHandler } from "../handlers/ProfileHandler.ts";
-import config from "../config.ts";
-import {DemoHandler} from "../handlers/DemoHandler.ts";
-import {Environment, FileSystemLoader} from "nunjucks";
+import { DemoHandler } from "../handlers/DemoHandler.ts";
+import { Environment, FileSystemLoader } from "nunjucks";
+import type {AppState} from "../types/AppState.ts";
 
 const router = new Router();
 const njk = new Environment(new FileSystemLoader('templates'));
@@ -32,6 +32,7 @@ router.get("/profile/:username", async ctx => {
 });
 
 router.get("/oembed.json", ctx => {
+    const {links} = ctx.state as AppState;
     ctx.state.metrics.endpoint = "oembed";
     ctx.state.metrics.type = "static";
     const params = ctx.request.url.searchParams;
@@ -41,7 +42,7 @@ router.get("/oembed.json", ctx => {
     }
     const oembed = {
         provider_name: 'AI Dungeon ' + params.get("type"),
-        provider_url: params.get('type') === "Embed Fix" ? "https://github.com/ndm13/aid-embed-fix" : config.client.origin,
+        provider_url: params.get('type') === "Embed Fix" ? "https://github.com/ndm13/aid-embed-fix" : links.redirectBase,
         title: "Embed",
         type: 'rich',
         version: '1.0'
@@ -49,7 +50,7 @@ router.get("/oembed.json", ctx => {
 
     if (params.get("type") !== "Profile" && params.has('author')) {
         oembed.author_name = params.get("author") as string;
-        oembed.author_url = `${config.client.origin}/profile/${params.get("author")}`;
+        oembed.author_url = `${links.redirectBase}/profile/${params.get("author")}`;
     }
 
     ctx.response.headers.set("content-type", "application/json");
