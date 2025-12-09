@@ -3,8 +3,9 @@ import {Environment, Template} from "nunjucks";
 import log from "../logging/logger.ts";
 import type {AppState} from "../types/AppState.ts";
 import {capitalize} from "../support/text.ts";
+import {Handler} from "./Handler.ts";
 
-export abstract class EmbedHandler<T> {
+export abstract class EmbedHandler<T> implements Handler {
     abstract readonly name: string;
     abstract readonly redirectKeys: string[];
 
