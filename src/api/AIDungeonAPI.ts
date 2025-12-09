@@ -1,6 +1,5 @@
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 
-import config from "../config.ts";
 import log from "../logging/logger.ts";
 import metrics from "../metrics.ts";
 
@@ -35,27 +34,33 @@ async function withMetrics<T>(method: string, action: () => Promise<T>) {
 }
 
 export class AIDungeonAPI {
-    private _token: string;
-    public get firebaseToken() {
-        return this._token;
-    }
-    private _refresh: string;
-    private _expires: number;
+    private token: string;
+    private refresh: string;
+    private expires: number;
     public get isExpired() {
-        return this._expires < Date.now();
+        return this.expires < Date.now();
     }
-    private readonly _guest: boolean;
 
-    constructor(
+    private constructor(
+        private config: AIDungeonAPIConfig,
         credentials: IdentityKitCredentials,
         generated: number,
-        guest = false,
+        private readonly guest = false,
     ) {
-        this._token = credentials.idToken;
-        this._refresh = credentials.refreshToken;
-        this._expires = generated +
-            (Number.parseInt(credentials.expiresIn) * 1000);
-        this._guest = guest;
+        this.updateCredentials(credentials, generated);
+    }
+
+    static async create(
+        config: AIDungeonAPIConfig,
+        credentials?: IdentityKitCredentials,
+        generated?: number
+    ): Promise<AIDungeonAPI> {
+        if (credentials) {
+            if (!generated) throw new AIDungeonAPIError("Invalid generated time");
+
+            return new AIDungeonAPI(config, credentials, generated, false);
+        }
+        return new AIDungeonAPI(config, await AIDungeonAPI.getNewGuestToken(config), Date.now(), true);
     }
 
     async query<T extends Record<string, unknown>>(gql: GraphQLQuery): Promise<GraphQLResponse<string, T>> {
@@ -65,18 +70,18 @@ export class AIDungeonAPI {
             throw AIDungeonAPIError.onRequest("Error refreshing token", gql, error);
         }
         try {
-            return await (await fetch(config.client.gqlEndpoint, {
+            return await (await fetch(this.config.gqlEndpoint, {
                 "credentials": "include",
                 "headers": {
-                    "User-Agent": config.client.userAgent,
+                    "User-Agent": this.config.userAgent,
                     "Accept": "application/json",
                     "Accept-Language": "en-US,en;q=0.5",
                     "content-type": "application/json",
                     "x-gql-operation-name": gql.operationName,
-                    "authorization": `firebase ${this._token}`,
+                    "authorization": `firebase ${this.token}`,
                     "Priority": "u=4",
                 },
-                "referrer": config.client.origin,
+                "referrer": this.config.origin,
                 "body": JSON.stringify({
                     "operationName": gql.operationName,
                     "variables": gql.variables,
@@ -126,54 +131,54 @@ export class AIDungeonAPI {
     private async keepTokenAlive() {
         if (this.isExpired) {
             // Already expired: generate a new token if guest, otherwise error out
-            if (this._guest) {
-                const replace = await AIDungeonAPI.getNewGuestToken();
-                this._token = replace.idToken;
-                this._refresh = replace.refreshToken;
-                this._expires = Date.now() + (Number.parseInt(replace.expiresIn) * 1000);
-                log.debug(`Created new user token (valid until ${new Date(this._expires)})`);
+            if (this.guest) {
+                const replace = await AIDungeonAPI.getNewGuestToken(this.config);
+                this.updateCredentials(replace, Date.now());
+                log.debug(`Created new user token (valid until ${new Date(this.expires)})`);
             } else {
-                this._token = "";
+                this.token = "";
                 throw new Error("Non-guest API token expired, unable to refresh token");
             }
-        } else if (this._expires - Date.now() < 300000) {
+        } else if (this.expires - Date.now() < 300000) {
             // Less than five minutes left, refresh
             const refresh = await this.refreshToken();
             const now = Date.now();
-            this._token = refresh.id_token;
-            this._refresh = refresh.refresh_token;
-            this._expires = now + (Number.parseInt(refresh.expires_in) * 1000);
-            log.debug(`Refreshed user token (valid until ${new Date(this._expires)})`);
+            this.token = refresh.id_token;
+            this.refresh = refresh.refresh_token;
+            this.expires = now + (Number.parseInt(refresh.expires_in) * 1000);
+            log.debug(`Refreshed user token (valid until ${new Date(this.expires)})`);
         }
+    }
+
+    private updateCredentials(credentials: IdentityKitCredentials, generated: number) {
+        this.token = credentials.idToken;
+        this.refresh = credentials.refreshToken;
+        this.expires = generated + (Number.parseInt(credentials.expiresIn) * 1000);
     }
 
     private refreshToken() {
         return withMetrics("refresh_token", async () => {
             return await (await fetch(
                 "https://securetoken.googleapis.com/v1/token?key=" +
-                config.firebase.identityToolkitKey,
+                this.config.firebase.identityToolkitKey,
                 {
                     "headers": {
-                        "User-Agent": config.client.userAgent,
-                        "Origin": config.client.origin,
+                        "User-Agent": this.config.userAgent,
+                        "Origin": this.config.origin,
                         "Accept": "*/*",
                         "Accept-Language": "en-US,en;q=0.5",
-                        "X-Client-Version": config.firebase.clientVersion,
-                        "X-Firebase-Client": config.firebase.clientToken,
+                        "X-Client-Version": this.config.firebase.clientVersion,
+                        "X-Firebase-Client": this.config.firebase.clientToken,
                         "Content-Type": "application/x-www-form-urlencoded",
                     },
-                    "body": `grant_type=refresh_token&refresh_token=${this._refresh}`,
+                    "body": `grant_type=refresh_token&refresh_token=${this.refresh}`,
                     "method": "POST",
                 },
             )).json() as Promise<RefreshTokenResponse>;
         });
     }
 
-    static async guest() {
-        return new AIDungeonAPI(await AIDungeonAPI.getNewGuestToken(), Date.now(), true);
-    }
-
-    private static getNewGuestToken() {
+    private static getNewGuestToken(config: AIDungeonAPIConfig) {
         return withMetrics("new_token", async () => {
             return await (await fetch(
                 "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +
@@ -181,8 +186,8 @@ export class AIDungeonAPI {
                 {
                     "credentials": "omit",
                     "headers": {
-                        "User-Agent": config.client.userAgent,
-                        "Origin": config.client.origin,
+                        "User-Agent": config.userAgent,
+                        "Origin": config.origin,
                         "Accept": "*/*",
                         "Accept-Language": "en-US,en;q=0.5",
                         "X-Client-Version": config.firebase.clientVersion,
@@ -206,3 +211,14 @@ export class AIDungeonAPI {
         return output;
     }
 }
+
+export type AIDungeonAPIConfig = {
+    gqlEndpoint: string,
+    userAgent: string,
+    origin: string,
+    firebase: {
+        identityToolkitKey: string,
+        clientToken: string,
+        clientVersion: string,
+    }
+};

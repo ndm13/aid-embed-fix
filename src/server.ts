@@ -10,7 +10,12 @@ import {RelatedLinks} from "./utils/RelatedLinks.ts";
 
 log.info("Setting things up...");
 
-const api = await AIDungeonAPI.guest();
+const api = await AIDungeonAPI.create({
+    gqlEndpoint: config.client.gqlEndpoint,
+    userAgent: config.client.userAgent,
+    origin: config.client.origin,
+    firebase: config.firebase
+});
 log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
 const app = new Application<AppState>();
