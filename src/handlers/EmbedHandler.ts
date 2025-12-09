@@ -2,7 +2,7 @@ import {Context} from "@oak/oak";
 import {Environment, Template} from "nunjucks";
 import log from "../logging/logger.ts";
 import type {AppState} from "../types/AppState.ts";
-import {capitalize} from "../utils/text.ts";
+import {capitalize} from "../support/text.ts";
 
 export abstract class EmbedHandler<T> {
     abstract readonly name: string;

@@ -5,11 +5,11 @@ import log from "./logging/logger.ts";
 import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
 import type {AppState} from "./types/AppState.ts";
 
-import {RelatedLinks} from "./utils/RelatedLinks.ts";
-import {Metrics} from "./metrics.ts";
-import metricsRouter from "./routers/metricsRouter.ts";
-import embedRouter from "./routers/embedRouter.ts";
-import staticRouter from "./routers/staticRouter.ts";
+import {RelatedLinks} from "./support/RelatedLinks.ts";
+import {Metrics} from "./support/Metrics.ts";
+import {metricsMiddleware, metricsRouter} from "./middleware/metrics.ts";
+import embedRouter from "./middleware/embedRouter.ts";
+import staticRouter from "./middleware/staticRouter.ts";
 
 log.info("Setting things up...");
 
@@ -49,11 +49,10 @@ app.use(async (ctx, next) => {
     }
 });
 
-// Metrics and Business Logic
+// Metrics
 if (metrics) {
+    app.use(metricsMiddleware(metrics));
     const router = metricsRouter(metrics, config.metrics.key);
-    router.use(embedRouter.routes(), embedRouter.allowedMethods());
-    router.use(staticRouter.routes(), staticRouter.allowedMethods());
     app.use(router.routes(), router.allowedMethods());
 
     if (config.metrics.key) {
@@ -64,9 +63,11 @@ if (metrics) {
     }
 } else {
     log.info("Metrics disabled");
-    app.use(embedRouter.routes(), embedRouter.allowedMethods());
-    app.use(staticRouter.routes(), staticRouter.allowedMethods());
 }
+
+// Business logic
+app.use(embedRouter.routes(), embedRouter.allowedMethods());
+app.use(staticRouter.routes(), staticRouter.allowedMethods());
 
 // Fallback redirect to AI Dungeon
 app.use(ctx => {

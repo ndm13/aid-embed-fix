@@ -1,6 +1,6 @@
-import {countByKey, groupByKey} from "./utils/metrics.ts";
+import {countByKey, groupByKey} from "./aggregate.ts";
 
-import {
+import type {
     APIDataPoint,
     APIMetrics,
     APIResult,
@@ -8,7 +8,7 @@ import {
     RouterDataPoint,
     RouterMetrics,
     Timings
-} from "./types/MetricsTypes.ts";
+} from "../types/MetricsTypes.ts";
 
 export class Metrics {
     private routerData: RouterDataPoint[] = [];

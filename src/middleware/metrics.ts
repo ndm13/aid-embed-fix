@@ -2,14 +2,16 @@ import {Router} from "@oak/oak";
 
 import type { AppState } from "../types/AppState.ts";
 
-export default function metricsRouter(metrics: Metrics, key?: string) {
-    const router = new Router<AppState>();
-
-    router.use(async (ctx, next) => {
+export function metricsMiddleware(metrics: Metrics) {
+    return async (ctx, next) => {
         const start = Date.now();
         await next();
         metrics.recordEndpoint(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
-    });
+    };
+}
+
+export function metricsRouter(metrics: Metrics, key?: string) {
+    const router = new Router<AppState>();
 
     router.get("/metrics", ctx => {
         ctx.state.metrics.endpoint = "metrics";

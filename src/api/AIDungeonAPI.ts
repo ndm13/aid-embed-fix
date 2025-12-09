@@ -1,7 +1,7 @@
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 
 import log from "../logging/logger.ts";
-import { Metrics } from "../metrics.ts";
+import { Metrics } from "../support/Metrics.ts";
 
 import {
     GraphQLQuery,

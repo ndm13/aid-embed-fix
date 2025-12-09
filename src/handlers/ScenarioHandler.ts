@@ -1,7 +1,7 @@
 import { EmbedHandler } from "./EmbedHandler.ts";
 import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
 import { Context } from "@oak/oak";
-import { trimDescription } from "../utils/text.ts";
+import { trimDescription } from "../support/text.ts";
 import type { AppState } from "../types/AppState.ts";
 
 export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
