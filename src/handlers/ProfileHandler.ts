@@ -1,36 +1,37 @@
 import { EmbedHandler } from "./EmbedHandler.ts";
 import { UserEmbedData } from "../types/EmbedDataTypes.ts";
 import { Context } from "@oak/oak";
-import { oembedLink } from "../utils/rendering.ts";
+import type { AppState } from "../types/AppState.ts";
 
 export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     readonly name = "profile";
     readonly redirectKeys = ['contentType', 'share', 'sort'];
-    protected readonly errorType = "user";
+    protected readonly responseType = "user";
     protected readonly oembedType = "Profile";
 
-    constructor(api: AIDungeonAPI, env: Environment) {
-        super(api, env, "embed-profile.njk", "embed-notfound.njk");
+    constructor(env: Environment) {
+        super(env, "embed-profile.njk", "embed-notfound.njk");
     }
 
-    protected getResourceId(ctx: Context) {
+    protected getResourceId(ctx: Context<AppState>) {
         return ctx.params.username || "";
     }
 
-    fetch(id: string) {
-        return this.api.getUserEmbed(id);
+    fetch(ctx: Context<AppState>, id: string) {
+        return ctx.state.api.getUserEmbed(id);
     }
 
-    protected prepareContext(ctx: Context, data: UserEmbedData) {
+    protected prepareContext(ctx: Context<AppState>, data: UserEmbedData) {
+        const {redirectLink, links} = ctx.state;
         return {
             title: data.profile.title,
             description: data.profile.description,
-            link: ctx.state.redirectLink,
+            link: redirectLink,
             icon: data.profile.thumbImageUrl,
-            oembed: oembedLink(ctx, {
+            oembed: links.oembed(ctx, {
                 title: data.profile.title,
                 author: data.profile.title,
-                type: "Profile"
+                type: this.oembedType
             })
         };
     }

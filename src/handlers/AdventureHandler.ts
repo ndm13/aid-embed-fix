@@ -1,38 +1,38 @@
 import { EmbedHandler } from "./EmbedHandler.ts";
 import { AdventureEmbedData } from "../types/EmbedDataTypes.ts";
 import { Context } from "@oak/oak";
-import { getCover, oembedLink, trimDescription } from "../utils/rendering.ts";
-import {redirectLinkBase} from "../utils/routing.ts";
+import { trimDescription } from "../utils/text.ts";
+import type { AppState } from "../types/AppState.ts";
 
 export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
     readonly name = "adventure";
     readonly redirectKeys = ['share', 'source', 'page', 'size'];
-
-    protected readonly errorType = "adventure";
+    protected readonly responseType = "adventure";
     protected readonly oembedType = "Adventure";
 
-    constructor(api: AIDungeonAPI, env: Environment) {
-        super(api, env, "embed.njk", "embed-notfound.njk");
+    constructor(env: Environment) {
+        super(env, "embed.njk", "embed-notfound.njk");
     }
 
-    fetch(id: string) {
-        return this.api.getAdventureEmbed(id);
+    fetch(ctx: Context<AppState>, id: string) {
+        return ctx.state.api.getAdventureEmbed(id);
     }
 
-    protected prepareContext(ctx: Context, data: AdventureEmbedData) {
+    protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData) {
+        const {redirectLink, links} = ctx.state;
         return {
-            type: "adventure",
+            type: this.responseType,
             title: data.title,
             author: data.user.profile.title,
-            profile_link: `${redirectLinkBase(ctx)}/profile/${data.user.profile.title}`,
+            profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
             description: trimDescription(data.description ?? ""),
-            cover: getCover(ctx, data.image),
-            link: ctx.state.redirectLink,
+            cover: links.cover(data.image),
+            link: redirectLink,
             icon: data.user.profile.thumbImageUrl,
-            oembed: oembedLink(ctx, {
+            oembed: links.oembed({
                 title: data.title,
                 author: data.user.profile.title,
-                type: "Adventure"
+                type: this.oembedType
             })
         };
     }

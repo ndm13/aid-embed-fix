@@ -1,27 +1,28 @@
 import { EmbedHandler } from "./EmbedHandler.ts";
 import { Context } from "@oak/oak";
-import { oembedLink } from "../utils/rendering.ts";
+import type { AppState } from "../types/AppState.ts";
 
 export class DemoHandler extends EmbedHandler<void> {
     readonly name = "root";
     readonly redirectKeys = [];
 
-    protected readonly errorType = "demo";
+    protected readonly responseType = "demo";
     protected readonly oembedType = "Embed Fix";
 
-    constructor(api: AIDungeonAPI, env: Environment) {
-        super(api, env, "demo.njk", "embed-notfound.njk");
+    constructor(env: Environment) {
+        super(env, "demo.njk", "embed-notfound.njk");
     }
 
-    protected getRedirectLink(_: Context): string {
+    protected getRedirectLink(_: Context<AppState>): string {
         return "https://github.com/ndm13/aid-embed-fix";
     }
 
-    fetch(_: string): Promise<void> {
+    fetch(_ctx: Context<AppState>, _id: string): Promise<void> {
         return Promise.resolve();
     }
 
-    protected prepareContext(ctx: Context, _: void) {
+    protected prepareContext(ctx: Context<AppState>, _: void) {
+        const {redirectLink, links} = ctx.state;
         return {
             title: "Fix AI Dungeon Link Previews!",
             author: "ndm13",
@@ -33,8 +34,8 @@ Now you can see the link type, description, and image!
 
 Fully open source, click the link for details!`,
             cover: 'https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true',
-            link: ctx.state.redirectLink,
-            oembed: oembedLink(ctx, {
+            link: redirectLink,
+            oembed: links.oembed({
                 title: "Fix AI Dungeon Link Previews!",
                 type: this.oembedType
             })

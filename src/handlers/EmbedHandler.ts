@@ -1,22 +1,20 @@
 import {Context} from "@oak/oak";
 import {Environment, Template} from "nunjucks";
-import {AIDungeonAPI} from "../api/AIDungeonAPI.ts";
-import {oembedLink} from "../utils/rendering.ts";
-import {redirectLink} from "../utils/routing.ts";
 import log from "../logging/logger.ts";
+import {AppState} from "../types/AppState.ts";
+import {capitalize} from "../utils/text.ts";
 
 export abstract class EmbedHandler<T> {
     abstract readonly name: string;
     abstract readonly redirectKeys: string[];
 
-    protected abstract readonly errorType: string;
+    protected abstract readonly responseType: string;
     protected abstract readonly oembedType: string;
 
     protected successTemplate: Template;
     protected errorTemplate: Template;
 
     protected constructor(
-        protected api: AIDungeonAPI,
         env: Environment,
         successTemplateFile: string,
         errorTemplateFile: string
@@ -25,19 +23,19 @@ export abstract class EmbedHandler<T> {
         this.errorTemplate = env.getTemplate(errorTemplateFile);
     }
 
-    abstract fetch(id: string): Promise<T>;
+    abstract fetch(ctx: Context<AppState>, id: string): Promise<T>;
 
-    protected abstract prepareContext(ctx: Context, data: T): object;
+    protected abstract prepareContext(ctx: Context<AppState>, data: T): object;
 
-    protected getRedirectLink(ctx: Context): string {
-        return redirectLink(ctx, this.redirectKeys);
+    protected getRedirectLink(ctx: Context<AppState>): string {
+        return ctx.state.links.redirect(this.redirectKeys);
     }
 
-    protected getResourceId(ctx: Context): string {
+    protected getResourceId(ctx: Context<AppState>): string {
         return ctx.params.id || "";
     }
 
-    async handle(ctx: Context) {
+    async handle(ctx: Context<AppState>) {
         ctx.state.metrics.endpoint = this.name;
 
         const id = this.getResourceId(ctx);
@@ -48,22 +46,19 @@ export abstract class EmbedHandler<T> {
         if (tryForward(ctx, link)) return;
 
         try {
-            const data = await this.fetch(id);
+            const data = await this.fetch(ctx, id);
             ctx.state.metrics.type = "success";
-
-            ctx.response.body = this.successTemplate.render(
-                this.prepareContext(ctx, data)
-            );
+            ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data));
         } catch (e) {
             ctx.state.metrics.type = "error";
             log.error(`Error getting ${this.name}`, e);
 
             ctx.response.body = this.errorTemplate.render({
-                type: this.errorType,
+                type: this.responseType,
                 id,
                 link,
-                oembed: oembedLink(ctx, {
-                    title: `${(this.errorType.charAt(0).toUpperCase() + this.errorType.slice(1))} Not Found [${id}]`,
+                oembed: ctx.state.links.oembed({
+                    title: `${capitalize(this.responseType)} Not Found [${id}]`,
                     type: this.oembedType
                 })
             });
@@ -71,7 +66,7 @@ export abstract class EmbedHandler<T> {
     }
 }
 
-function tryForward(ctx: Context, link: string) {
+function tryForward(ctx: Context<AppState>, link: string) {
     if (shouldForward(ctx)) {
         ctx.state.metrics.type = "redirect";
         ctx.response.status = 301;
@@ -81,7 +76,7 @@ function tryForward(ctx: Context, link: string) {
     return false;
 }
 
-function shouldForward(ctx: Context) {
+function shouldForward(ctx: Context<AppState>) {
     // Bypass check with ?no_ua
     if (ctx.request.url.searchParams.has("no_ua"))
         return false;

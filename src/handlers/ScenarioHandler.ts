@@ -1,37 +1,38 @@
 import { EmbedHandler } from "./EmbedHandler.ts";
 import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
 import { Context } from "@oak/oak";
-import { getCover, oembedLink, trimDescription } from "../utils/rendering.ts";
-import {redirectLinkBase} from "../utils/routing.ts";
+import { trimDescription } from "../utils/text.ts";
+import type { AppState } from "../types/AppState.ts";
 
 export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     readonly name = "scenario";
     readonly redirectKeys = ['share', 'source', 'published', 'unlisted'];
-    protected readonly errorType = "scenario";
+    protected readonly responseType = "scenario";
     protected readonly oembedType = "Scenario";
 
-    constructor(api: AIDungeonAPI, env: Environment) {
-        super(api, env, "embed.njk", "embed-notfound.njk");
+    constructor(env: Environment) {
+        super(env, "embed.njk", "embed-notfound.njk");
     }
 
-    fetch(id: string) {
-        return this.api.getScenarioEmbed(id);
+    fetch(ctx: Context<AppState>, id: string) {
+        return ctx.state.api.getScenarioEmbed(id);
     }
 
-    protected prepareContext(ctx: Context, data: ScenarioEmbedData) {
+    protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData) {
+        const {redirectLink, links} = ctx.state;
         return {
-            type: "scenario",
+            type: this.responseType,
             title: data.title,
             author: data.user.profile.title,
-            profile_link: `${redirectLinkBase(ctx)}/profile/${data.user.profile.title}`,
+            profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
             description: trimDescription(data.description ?? data.prompt ?? ""),
-            cover: getCover(ctx, data.image),
-            link: ctx.state.redirectLink,
+            cover: links.cover(data.image),
+            link: redirectLink,
             icon: data.user.profile.thumbImageUrl,
-            oembed: oembedLink(ctx, {
+            oembed: links.oembed({
                 title: data.title,
                 author: data.user.profile.title,
-                type: "Scenario"
+                type: this.oembedType
             })
         };
     }
