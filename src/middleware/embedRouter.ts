@@ -33,7 +33,7 @@ router.get("/profile/:username", async ctx => {
 });
 
 const oembed = new OEmbedHandler();
-router.get("/oembed.json", ctx => {
+router.get("/oembed.json", async ctx => {
     await oembed.handle(ctx);
 });
 

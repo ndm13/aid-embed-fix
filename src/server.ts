@@ -5,11 +5,12 @@ import log from "./logging/logger.ts";
 import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
 import type {AppState} from "./types/AppState.ts";
 
-import {RelatedLinks} from "./support/RelatedLinks.ts";
 import {Metrics} from "./support/Metrics.ts";
 import {metricsMiddleware, metricsRouter} from "./middleware/metrics.ts";
 import embedRouter from "./middleware/embedRouter.ts";
 import staticRouter from "./middleware/staticRouter.ts";
+import {stateMiddleware} from "./middleware/stateMiddleware.ts";
+import loggingMiddleware from "./middleware/loggingMiddleware.ts";
 
 log.info("Setting things up...");
 
@@ -32,22 +33,11 @@ log.info("Using anonymous API access with user agent:", config.client.userAgent)
 const app = new Application<AppState>();
 
 // Logging and state
-app.use(async (ctx, next) => {
-    ctx.state = {
-        api,
-        metrics: {},
-        links: new RelatedLinks(ctx, {
-            oembedProtocol: config.network.oembedProtocol,
-            defaultRedirectBase: config.client.origin
-        })
-    };
-    await next();
-    if (ctx.state.metrics.endpoint === "healthcheck") {
-        log.debug("Served", ctx);
-    } else {
-        log.info("Served", ctx);
-    }
-});
+app.use(stateMiddleware(api, {
+    oembedProtocol: config.network.oembedProtocol,
+    defaultRedirectBase: config.client.origin
+}));
+app.use(loggingMiddleware);
 
 // Metrics
 if (metrics) {
