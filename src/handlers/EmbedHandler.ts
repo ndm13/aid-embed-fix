@@ -1,7 +1,7 @@
 import {Context} from "@oak/oak";
 import {Environment, Template} from "nunjucks";
 import log from "../logging/logger.ts";
-import {AppState} from "../types/AppState.ts";
+import type {AppState} from "../types/AppState.ts";
 import {capitalize} from "../utils/text.ts";
 
 export abstract class EmbedHandler<T> {
