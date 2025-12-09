@@ -6,6 +6,5 @@ import {RelatedLinks} from "../utils/RelatedLinks.ts";
 export type AppState = {
     api: AIDungeonAPI,
     metrics: Partial<RouterDataPoint>,
-    links: RelatedLinks,
-    redirectLink: string
+    links: RelatedLinks
 }

@@ -25,7 +25,7 @@ export abstract class EmbedHandler<T> {
 
     abstract fetch(ctx: Context<AppState>, id: string): Promise<T>;
 
-    protected abstract prepareContext(ctx: Context<AppState>, data: T): object;
+    protected abstract prepareContext(ctx: Context<AppState>, data: T, link: string): object;
 
     protected getRedirectLink(ctx: Context<AppState>): string {
         return ctx.state.links.redirect(this.redirectKeys);
@@ -41,14 +41,12 @@ export abstract class EmbedHandler<T> {
         const id = this.getResourceId(ctx);
         const link = this.getRedirectLink(ctx);
 
-        ctx.state.redirectLink = link;
-
         if (tryForward(ctx, link)) return;
 
         try {
             const data = await this.fetch(ctx, id);
             ctx.state.metrics.type = "success";
-            ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data));
+            ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data, link));
         } catch (e) {
             ctx.state.metrics.type = "error";
             log.error(`Error getting ${this.name}`, e);

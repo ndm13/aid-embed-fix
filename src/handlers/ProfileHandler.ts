@@ -1,7 +1,7 @@
-import { EmbedHandler } from "./EmbedHandler.ts";
-import { UserEmbedData } from "../types/EmbedDataTypes.ts";
-import { Context } from "@oak/oak";
-import type { AppState } from "../types/AppState.ts";
+import {EmbedHandler} from "./EmbedHandler.ts";
+import {UserEmbedData} from "../types/EmbedDataTypes.ts";
+import {Context} from "@oak/oak";
+import type {AppState} from "../types/AppState.ts";
 
 export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     readonly name = "profile";
@@ -21,14 +21,13 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
         return ctx.state.api.getUserEmbed(id);
     }
 
-    protected prepareContext(ctx: Context<AppState>, data: UserEmbedData) {
-        const {redirectLink, links} = ctx.state;
+    protected prepareContext(ctx: Context<AppState>, data: UserEmbedData, link: string): object {
         return {
             title: data.profile.title,
             description: data.profile.description,
-            link: redirectLink,
+            link,
             icon: data.profile.thumbImageUrl,
-            oembed: links.oembed({
+            oembed: ctx.state.links.oembed({
                 title: data.profile.title,
                 author: data.profile.title,
                 type: this.oembedType

@@ -18,8 +18,8 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
         return ctx.state.api.getScenarioEmbed(id);
     }
 
-    protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData) {
-        const {redirectLink, links} = ctx.state;
+    protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
+        const {links} = ctx.state;
         return {
             type: this.responseType,
             title: data.title,
@@ -27,7 +27,7 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
             profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
             description: trimDescription(data.description ?? data.prompt ?? ""),
             cover: links.cover(data.image),
-            link: redirectLink,
+            link,
             icon: data.user.profile.thumbImageUrl,
             oembed: links.oembed({
                 title: data.title,

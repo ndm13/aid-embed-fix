@@ -17,10 +17,11 @@ const app = new Application<AppState>();
 
 // Logging and state
 app.use(async (ctx, next) => {
-    ctx.state.api = api;
-    ctx.state.metrics = {};
-    ctx.state.links = new RelatedLinks(ctx);
-
+    ctx.state = {
+        api,
+        metrics: {},
+        links: new RelatedLinks(ctx)
+    };
     await next();
     if (ctx.state.metrics.endpoint === "healthcheck") {
         log.debug("Served", ctx);

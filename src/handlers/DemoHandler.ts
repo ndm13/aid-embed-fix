@@ -1,6 +1,6 @@
-import { EmbedHandler } from "./EmbedHandler.ts";
-import { Context } from "@oak/oak";
-import type { AppState } from "../types/AppState.ts";
+import {EmbedHandler} from "./EmbedHandler.ts";
+import {Context} from "@oak/oak";
+import type {AppState} from "../types/AppState.ts";
 
 export class DemoHandler extends EmbedHandler<void> {
     readonly name = "root";
@@ -21,8 +21,7 @@ export class DemoHandler extends EmbedHandler<void> {
         return Promise.resolve();
     }
 
-    protected prepareContext(ctx: Context<AppState>, _: void) {
-        const {redirectLink, links} = ctx.state;
+    protected prepareContext(ctx: Context<AppState>, _: void, link: string): object {
         return {
             title: "Fix AI Dungeon Link Previews!",
             author: "ndm13",
@@ -34,8 +33,8 @@ Now you can see the link type, description, and image!
 
 Fully open source, click the link for details!`,
             cover: 'https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true',
-            link: redirectLink,
-            oembed: links.oembed({
+            link,
+            oembed: ctx.state.links.oembed({
                 title: "Fix AI Dungeon Link Previews!",
                 type: this.oembedType
             })

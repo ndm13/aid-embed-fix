@@ -18,8 +18,8 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
         return ctx.state.api.getAdventureEmbed(id);
     }
 
-    protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData) {
-        const {redirectLink, links} = ctx.state;
+    protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData, link: string): object {
+        const {links} = ctx.state;
         return {
             type: this.responseType,
             title: data.title,
@@ -27,7 +27,7 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
             profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
             description: trimDescription(data.description ?? ""),
             cover: links.cover(data.image),
-            link: redirectLink,
+            link,
             icon: data.user.profile.thumbImageUrl,
             oembed: links.oembed({
                 title: data.title,
