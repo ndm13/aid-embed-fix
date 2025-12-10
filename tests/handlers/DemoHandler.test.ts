@@ -22,7 +22,7 @@ class MockEnvironment {
 describe("DemoHandler", () => {
     it("should render the demo page", async () => {
         const handler = new DemoHandler(new MockEnvironment() as unknown as Environment);
-        const context = createMockContext<AppState>({
+        const context = createMockContext({
             state: {
                 metrics: {
                     endpoint: "",
@@ -40,7 +40,7 @@ describe("DemoHandler", () => {
             ua: "Discordbot/2.0",
         };
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);

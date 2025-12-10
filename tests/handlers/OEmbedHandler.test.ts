@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { createMockContext, MockContext } from "@oak/oak/testing";
+import { createMockContext } from "@oak/oak/testing";
 import { OEmbedHandler } from "@/src/handlers/OEmbedHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
@@ -9,8 +9,8 @@ import { Context } from "@oak/oak";
 describe("OEmbedHandler", () => {
     const handler = new OEmbedHandler();
 
-    function createTestContext(params: Record<string, string>): MockContext<AppState> {
-        const context = createMockContext<AppState>({
+    function createTestContext(params: Record<string, string>) {
+        const context = createMockContext({
             state: {
                 metrics: {
                     endpoint: "",
@@ -27,6 +27,7 @@ describe("OEmbedHandler", () => {
         for (const [key, value] of Object.entries(params)) {
             url.searchParams.set(key, value);
         }
+        // @ts-ignore: read-only property
         context.request.url = url;
 
         return context;
@@ -34,13 +35,13 @@ describe("OEmbedHandler", () => {
 
     it("should return 400 if type is missing", async () => {
         const context = createTestContext({});
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
         assertEquals(context.response.status, 400);
     });
 
     it("should return oembed for Embed Fix", async () => {
         const context = createTestContext({ type: "Embed Fix" });
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         const body = JSON.parse(context.response.body as string);
         assertEquals(body.provider_name, "AI Dungeon Embed Fix");
@@ -49,7 +50,7 @@ describe("OEmbedHandler", () => {
 
     it("should return oembed for other types", async () => {
         const context = createTestContext({ type: "Scenario", author: "testuser" });
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         const body = JSON.parse(context.response.body as string);
         assertEquals(body.provider_name, "AI Dungeon Scenario");
@@ -60,7 +61,7 @@ describe("OEmbedHandler", () => {
 
     it("should not include author for Profile type", async () => {
         const context = createTestContext({ type: "Profile", author: "testuser" });
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         const body = JSON.parse(context.response.body as string);
         assertEquals(body.provider_name, "AI Dungeon Profile");

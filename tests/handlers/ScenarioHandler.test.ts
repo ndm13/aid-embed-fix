@@ -1,12 +1,13 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { createMockContext, MockContext } from "@oak/oak/testing";
+import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
 import { ScenarioHandler } from "@/src/handlers/ScenarioHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { ScenarioEmbedData } from "@/src/types/EmbedDataTypes.ts";
 import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
+import {AIDungeonAPI} from "@/src/api/AIDungeonAPI.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -25,8 +26,8 @@ function createTestContext(
     params: Record<string, string>,
     url: URL,
     userAgent = "Discordbot/2.0"
-): MockContext<AppState> {
-    const context = createMockContext<AppState>({
+) {
+    const context = createMockContext({
         state: {
             metrics: {
                 endpoint: "",
@@ -36,6 +37,7 @@ function createTestContext(
         },
         params,
     });
+    // @ts-ignore: read-only property
     context.request.url = url;
     context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
         oembedProtocol: "https",
@@ -56,24 +58,25 @@ describe("ScenarioHandler", () => {
         prompt: "This is a prompt.",
         image: "https://example.com/image.jpg",
         user: {
+            isMember: false,
             profile: {
                 title: "Test User",
                 thumbImageUrl: "https://example.com/thumb.jpg",
             }
         }
-    };
+    } as ScenarioEmbedData;
 
     it("should render a scenario", async () => {
         const handler = new ScenarioHandler(env);
         const context = createTestContext({
             api: {
                 getScenarioEmbed: () => Promise.resolve(mockScenarioData),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "test-scenario",
         }, new URL("https://example.com/scenario/test-scenario"));
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);
@@ -94,12 +97,12 @@ describe("ScenarioHandler", () => {
         const context = createTestContext({
             api: {
                 getScenarioEmbed: () => Promise.resolve(scenarioWithUuidImage),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "test-scenario",
         }, new URL("https://example.com/scenario/test-scenario"));
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);
@@ -116,12 +119,12 @@ describe("ScenarioHandler", () => {
         const context = createTestContext({
             api: {
                 getScenarioEmbed: () => Promise.resolve(scenarioWithInvalidImage),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "test-scenario",
         }, new URL("https://example.com/scenario/test-scenario"));
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);
@@ -136,12 +139,12 @@ describe("ScenarioHandler", () => {
         const context = createTestContext({
             api: {
                 getScenarioEmbed: () => Promise.resolve(mockScenarioData),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "test-scenario",
         }, url);
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);
@@ -156,10 +159,10 @@ describe("ScenarioHandler", () => {
             const context = createTestContext({
                 api: {
                     getScenarioEmbed: () => Promise.resolve(mockScenarioData),
-                },
+                } as unknown as AIDungeonAPI,
             }, { id: "test-scenario" }, new URL("https://example.com/scenario/test-scenario"));
 
-            await handler.handle(context);
+            await handler.handle(context as unknown as Context<AppState>);
             const responseBody = JSON.parse(context.response.body as string);
             assertEquals(responseBody.description, "A test scenario.");
         });
@@ -167,15 +170,15 @@ describe("ScenarioHandler", () => {
         it("should use prompt when description is undefined", async () => {
             const scenarioWithoutDescription: ScenarioEmbedData = {
                 ...mockScenarioData,
-                description: undefined,
+                description: null,
             };
             const context = createTestContext({
                 api: {
                     getScenarioEmbed: () => Promise.resolve(scenarioWithoutDescription),
-                },
+                } as unknown as AIDungeonAPI,
             }, { id: "test-scenario" }, new URL("https://example.com/scenario/test-scenario"));
 
-            await handler.handle(context);
+            await handler.handle(context as unknown as Context<AppState>);
             const responseBody = JSON.parse(context.response.body as string);
             assertEquals(responseBody.description, "This is a prompt.");
         });
@@ -183,16 +186,16 @@ describe("ScenarioHandler", () => {
         it("should use empty string when both description and prompt are undefined", async () => {
             const scenarioWithoutDescriptionOrPrompt: ScenarioEmbedData = {
                 ...mockScenarioData,
-                description: undefined,
-                prompt: undefined,
+                description: null,
+                prompt: null,
             };
             const context = createTestContext({
                 api: {
                     getScenarioEmbed: () => Promise.resolve(scenarioWithoutDescriptionOrPrompt),
-                },
+                } as unknown as AIDungeonAPI,
             }, { id: "test-scenario" }, new URL("https://example.com/scenario/test-scenario"));
 
-            await handler.handle(context);
+            await handler.handle(context as unknown as Context<AppState>);
             const responseBody = JSON.parse(context.response.body as string);
             assertEquals(responseBody.description, "");
         });
@@ -203,16 +206,16 @@ describe("ScenarioHandler", () => {
 
         const testRedirect = async (requestUrl: string, expectedRedirect: string) => {
             const context = createTestContext(
-                { api: { getScenarioEmbed: () => Promise.resolve(mockScenarioData) } },
+                { api: { getScenarioEmbed: () => Promise.resolve(mockScenarioData) } as unknown as AIDungeonAPI },
                 { id: "test-scenario" },
                 new URL(requestUrl),
                 "Mozilla/5.0"
             );
 
             let redirectedUrl = "";
-            context.response.redirect = (url: string | URL) => { redirectedUrl = url.toString(); return url; };
+            context.response.redirect = ((url: string | URL) => { redirectedUrl = url.toString(); }) as any;
 
-            await handler.handle(context);
+            await handler.handle(context as unknown as Context<AppState>);
 
             assertEquals(context.response.status, 301);
             assertEquals(redirectedUrl, expectedRedirect);
@@ -245,18 +248,17 @@ describe("ScenarioHandler", () => {
             const context = createTestContext({
                 api: {
                     getScenarioEmbed: () => Promise.resolve(mockScenarioData),
-                },
+                } as unknown as AIDungeonAPI,
             }, {
                 id: "test-scenario",
             }, url, "Mozilla/5.0");
 
             let redirectedUrl = "";
-            context.response.redirect = (url: string | URL) => {
+            context.response.redirect = ((url: string | URL) => {
                 redirectedUrl = url.toString();
-                return url;
-            };
+            }) as any;
 
-            await handler.handle(context);
+            await handler.handle(context as unknown as Context<AppState>);
 
             assertEquals(redirectedUrl, "https://aid.com/scenario/test-scenario?share=true&source=test");
         });
@@ -267,12 +269,12 @@ describe("ScenarioHandler", () => {
         const context = createTestContext({
             api: {
                 getScenarioEmbed: () => Promise.reject(new Error("Scenario not found")),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "nonexistent-scenario",
         }, new URL("https://example.com/scenario/nonexistent-scenario"));
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);

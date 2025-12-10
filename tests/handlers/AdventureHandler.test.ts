@@ -1,12 +1,13 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { createMockContext, MockContext } from "@oak/oak/testing";
+import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
 import { AdventureHandler } from "@/src/handlers/AdventureHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { AdventureEmbedData } from "@/src/types/EmbedDataTypes.ts";
 import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
+import {AIDungeonAPI} from "@/src/api/AIDungeonAPI.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -20,8 +21,8 @@ class MockEnvironment {
     }
 }
 
-function createTestContext(state: Partial<AppState>, params: Record<string, string>): MockContext<AppState> {
-    const context = createMockContext<AppState>({
+function createTestContext(state: Partial<AppState>, params: Record<string, string>) {
+    const context = createMockContext({
         state: {
             metrics: {
                 endpoint: "",
@@ -52,22 +53,23 @@ describe("AdventureHandler", () => {
             description: "A test adventure.",
             image: "https://example.com/image.jpg",
             user: {
+                isMember: false,
                 profile: {
                     title: "Test User",
                     thumbImageUrl: "https://example.com/thumb.jpg",
                 }
             }
-        };
+        } as AdventureEmbedData;
 
         const context = createTestContext({
             api: {
                 getAdventureEmbed: () => Promise.resolve(mockAdventureData),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "test-adventure",
         });
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);
@@ -83,12 +85,12 @@ describe("AdventureHandler", () => {
         const context = createTestContext({
             api: {
                 getAdventureEmbed: () => Promise.reject(new Error("Adventure not found")),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "nonexistent-adventure",
         });
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);
@@ -101,25 +103,26 @@ describe("AdventureHandler", () => {
         const handler = new AdventureHandler(env);
         const mockAdventureData: AdventureEmbedData = {
             title: "Test Adventure with no description",
-            description: undefined, // Explicitly set to undefined
+            description: null, // Explicitly set to null
             image: "https://example.com/image.jpg",
             user: {
+                isMember: false,
                 profile: {
                     title: "Test User",
                     thumbImageUrl: "https://example.com/thumb.jpg",
                 }
             }
-        };
+        } as AdventureEmbedData;
 
         const context = createTestContext({
             api: {
                 getAdventureEmbed: () => Promise.resolve(mockAdventureData),
-            },
+            } as unknown as AIDungeonAPI,
         }, {
             id: "test-adventure-no-desc",
         });
 
-        await handler.handle(context);
+        await handler.handle(context as unknown as Context<AppState>);
 
         assertExists(context.response.body);
         const responseBody = JSON.parse(context.response.body as string);

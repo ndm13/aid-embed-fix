@@ -12,8 +12,11 @@
     "npm:lodash": "npm:lodash@^4.17.21",
     "npm:nunjucks": "npm:nunjucks@^3.2.4"
   },
+  "test": {
+    "include": ["tests/**/*.test.ts"]
+  },
   "tasks": {
     "start": "deno run --allow-net --allow-read --allow-env src/server.ts",
-    "test": "deno test --allow-net --allow-read --allow-env --no-check --coverage=coverage"
+    "test": "deno test --allow-net --allow-read --allow-env --coverage=coverage"
   }
 }
