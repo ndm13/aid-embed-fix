@@ -10,7 +10,7 @@ import type {
     Timings
 } from "../types/MetricsTypes.ts";
 
-export class Metrics {
+export class MetricsCollector {
     private routerData: RouterDataPoint[] = [];
     private apiData: APIDataPoint[] = [];
 
@@ -42,11 +42,11 @@ export class Metrics {
         if (this.routerData.length === 0) return {};
 
         return {
-            timings: Metrics.calculateTimings(this.routerData),
+            timings: MetricsCollector.calculateTimings(this.routerData),
             endpoints: Object.fromEntries(
                 Object.entries(groupByKey(this.routerData, "endpoint"))
                     .map(([k, data]) => [k, {
-                        timings: Metrics.calculateTimings(data),
+                        timings: MetricsCollector.calculateTimings(data),
                         type: countByKey(data, "type")
                     }])
             )
@@ -58,11 +58,11 @@ export class Metrics {
         if (this.apiData.length === 0) return {};
 
         return {
-            timings: Metrics.calculateTimings(this.apiData),
+            timings: MetricsCollector.calculateTimings(this.apiData),
             methods: Object.fromEntries(
                 Object.entries(groupByKey(this.apiData, "method"))
                     .map(([k, data]) => [k, {
-                        timings: Metrics.calculateTimings(data),
+                        timings: MetricsCollector.calculateTimings(data),
                         results: countByKey(data, "result")
                     }])
             )

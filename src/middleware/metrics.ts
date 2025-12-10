@@ -2,7 +2,7 @@ import {Router} from "@oak/oak";
 
 import type { AppState } from "../types/AppState.ts";
 
-export function metricsMiddleware(metrics: Metrics) {
+export function middleware(metrics: Metrics) {
     return async (ctx, next) => {
         const start = Date.now();
         await next();
@@ -10,7 +10,7 @@ export function metricsMiddleware(metrics: Metrics) {
     };
 }
 
-export function metricsRouter(metrics: Metrics, key?: string) {
+export function router(metrics: Metrics, key?: string) {
     const router = new Router<AppState>();
 
     router.get("/metrics", ctx => {

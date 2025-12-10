@@ -4,7 +4,7 @@ import type {AppState} from "../types/AppState.ts";
 import { Next } from "@oak/oak/middleware";
 import {AIDungeonAPI} from "../api/AIDungeonAPI.ts";
 
-export function stateMiddleware(api: AIDungeonAPI, linkConfig: RelatedLinksConfig) {
+export function middleware(api: AIDungeonAPI, linkConfig: RelatedLinksConfig) {
     return async (ctx: Context<AppState>, next: Next) => {
         ctx.state = {
             api,

@@ -1,20 +1,23 @@
 import {Application} from "@oak/oak";
+import {Environment, FileSystemLoader} from "nunjucks";
 
 import config from "./config.ts";
 import log from "./logging/logger.ts";
 import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
 import type {AppState} from "./types/AppState.ts";
 
-import {Metrics} from "./support/Metrics.ts";
-import {metricsMiddleware, metricsRouter} from "./middleware/metrics.ts";
-import embedRouter from "./middleware/embedRouter.ts";
-import staticRouter from "./middleware/staticRouter.ts";
-import {stateMiddleware} from "./middleware/stateMiddleware.ts";
-import loggingMiddleware from "./middleware/loggingMiddleware.ts";
+import {MetricsCollector} from "./support/MetricsCollector.ts";
+import * as metrics from "./middleware/metrics.ts";
+import * as embed from "./middleware/embed.ts";
+import * as statics from "./middleware/statics.ts";
+import * as state from "./middleware/state.ts";
+import * as logging from "./middleware/logging.ts";
 
 log.info("Setting things up...");
+const app = new Application<AppState>();
+const njk = new Environment(new FileSystemLoader('templates'));
 
-const metrics = config.metrics.enable !== "none" ? new Metrics({
+const collector = config.metrics.enable !== "none" ? new MetricsCollector({
     window: 3600000,
     scopes: {
         api: config.metrics.enable === "all" || config.metrics.enable.includes("api"),
@@ -27,22 +30,20 @@ const api = await AIDungeonAPI.create({
     userAgent: config.client.userAgent,
     origin: config.client.origin,
     firebase: config.firebase
-}, metrics);
+}, collector);
 log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
-const app = new Application<AppState>();
-
 // Logging and state
-app.use(stateMiddleware(api, {
+app.use(state.middleware(api, {
     oembedProtocol: config.network.oembedProtocol,
     defaultRedirectBase: config.client.origin
 }));
-app.use(loggingMiddleware);
+app.use(logging.middleware());
 
 // Metrics
 if (metrics) {
-    app.use(metricsMiddleware(metrics));
-    const router = metricsRouter(metrics, config.metrics.key);
+    app.use(metrics.middleware(collector));
+    const router = metrics.router(collector, config.metrics.key);
     app.use(router.routes(), router.allowedMethods());
 
     if (config.metrics.key) {
@@ -56,8 +57,10 @@ if (metrics) {
 }
 
 // Business logic
+const embedRouter = embed.router(njk);
 app.use(embedRouter.routes(), embedRouter.allowedMethods());
-app.use(staticRouter.routes(), staticRouter.allowedMethods());
+const staticsRouter = statics.router();
+app.use(staticsRouter.routes(), staticsRouter.allowedMethods());
 
 // Fallback redirect to AI Dungeon
 app.use(ctx => {

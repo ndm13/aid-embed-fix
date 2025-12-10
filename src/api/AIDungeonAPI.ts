@@ -1,7 +1,7 @@
 import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
 
 import log from "../logging/logger.ts";
-import { Metrics } from "../support/Metrics.ts";
+import { MetricsCollector } from "../support/MetricsCollector.ts";
 
 import {
     GraphQLQuery,
@@ -22,7 +22,7 @@ export class AIDungeonAPI {
 
     private constructor(
         private readonly config: AIDungeonAPIConfig,
-        private readonly metrics?: Metrics,
+        private readonly metrics?: MetricsCollector,
         credentials: IdentityKitCredentials,
         generated: number,
         private readonly guest = false,
@@ -32,7 +32,7 @@ export class AIDungeonAPI {
 
     static async create(
         config: AIDungeonAPIConfig,
-        metrics?: Metrics,
+        metrics?: MetricsCollector,
         credentials?: IdentityKitCredentials,
         generated?: number
     ): Promise<AIDungeonAPI> {
@@ -159,7 +159,7 @@ export class AIDungeonAPI {
         }, this.metrics);
     }
 
-    private static getNewGuestToken(config: AIDungeonAPIConfig, metrics: Metrics) {
+    private static getNewGuestToken(config: AIDungeonAPIConfig, metrics: MetricsCollector) {
         return AIDungeonAPI.withMetrics("new_token", async () => {
             return await (await fetch(
                 "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +
@@ -182,7 +182,7 @@ export class AIDungeonAPI {
         }, metrics);
     }
 
-    private static async withMetrics<T>(method: string, action: () => Promise<T>, metrics?: Metrics) {
+    private static async withMetrics<T>(method: string, action: () => Promise<T>, metrics?: MetricsCollector) {
         if (!metrics) return action();
 
         const start = Date.now();
