@@ -1,6 +1,6 @@
-import {parseArgs} from "parse-args";
-import {crypto} from "crypto";
-import {LevelName} from "log/levels";
+import {parseArgs} from "@std/cli/parse-args";
+import {crypto} from "@std/crypto";
+import {LevelName} from "@std/log/levels";
 
 const flags = parseArgs(Deno.args, {
     string: [

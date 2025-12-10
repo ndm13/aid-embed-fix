@@ -1,9 +1,9 @@
 {
   "imports": {
+    "@std/cli/parse-args": "jsr:@std/cli@1.0.21/parse-args",
+    "@std/log": "jsr:@std/log@^0.224.14",
+    "@std/crypto": "jsr:@std/crypto@^1.0.5",
     "@oak/oak": "jsr:@oak/oak@^17.1.6",
-    "nunjucks": "npm:nunjucks@^3.2.4",
-    "parse-args": "jsr:@std/cli@1.0.21/parse-args",
-    "log": "jsr:@std/log@^0.224.14",
-    "crypto": "jsr:@std/crypto@^1.0.5"
+    "npm:nunjucks": "npm:nunjucks@^3.2.4"
   }
 }

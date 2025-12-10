@@ -3,7 +3,7 @@ import { ScenarioHandler } from "../handlers/ScenarioHandler.ts";
 import { AdventureHandler } from "../handlers/AdventureHandler.ts";
 import { ProfileHandler } from "../handlers/ProfileHandler.ts";
 import { DemoHandler } from "../handlers/DemoHandler.ts";
-import { Environment } from "nunjucks";
+import { Environment } from "npm:nunjucks";
 import type { AppState } from "../types/AppState.ts";
 import { OEmbedHandler } from "../handlers/OEmbedHandler.ts";
 

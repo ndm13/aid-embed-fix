@@ -1,5 +1,5 @@
 import {Application} from "@oak/oak";
-import {Environment, FileSystemLoader} from "nunjucks";
+import {Environment, FileSystemLoader} from "npm:nunjucks";
 
 import config from "./config.ts";
 import log from "./logging/logger.ts";
