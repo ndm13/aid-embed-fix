@@ -2,8 +2,10 @@ import {Context} from "@oak/oak";
 import {Environment, Template} from "npm:nunjucks";
 import log from "../logging/logger.ts";
 import type {AppState} from "../types/AppState.ts";
-import {capitalize} from "../support/text.ts";
+import _ from "npm:lodash";
 import {Handler} from "./Handler.ts";
+
+const {capitalize} = _;
 
 export abstract class EmbedHandler<T> implements Handler {
     abstract readonly name: string;

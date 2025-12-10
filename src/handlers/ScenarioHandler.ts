@@ -1,8 +1,10 @@
-import { EmbedHandler } from "./EmbedHandler.ts";
-import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
-import { Context } from "@oak/oak";
-import { trimDescription } from "../support/text.ts";
-import type { AppState } from "../types/AppState.ts";
+import _ from "npm:lodash";
+import {EmbedHandler} from "./EmbedHandler.ts";
+import {ScenarioEmbedData} from "../types/EmbedDataTypes.ts";
+import {Context} from "@oak/oak";
+import type {AppState} from "../types/AppState.ts";
+
+const {truncate} = _;
 
 export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     readonly name = "scenario";
@@ -25,7 +27,10 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
             title: data.title,
             author: data.user.profile.title,
             profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
-            description: trimDescription(data.description ?? data.prompt ?? ""),
+            description: truncate(data.description ?? data.prompt ?? "", {
+                length: 1000,
+                separator: ' ',
+            }),
             cover: links.cover(data.image),
             link,
             icon: data.user.profile.thumbImageUrl,

@@ -1,5 +1,4 @@
-import {countByKey, groupByKey} from "./aggregate.ts";
-
+import _ from "npm:lodash";
 import type {
     APIDataPoint,
     APIMetrics,
@@ -10,9 +9,12 @@ import type {
     Timings
 } from "../types/MetricsTypes.ts";
 
+const { countBy, groupBy } = _;
+
 export class MetricsCollector {
     private routerData: RouterDataPoint[] = [];
     private apiData: APIDataPoint[] = [];
+    private timerId: number;
 
     recordEndpoint(endpoint: string, duration: number, type: EndpointResponseType) {
         if (this.config.scopes.router)
@@ -31,10 +33,15 @@ export class MetricsCollector {
     constructor(
         private readonly config: MetricsConfig
     ) {
-        Deno.unrefTimer(setInterval(() => {
+        this.timerId = setInterval(() => {
             this.prune(this.routerData);
             this.prune(this.apiData);
-        }, config.window));
+        }, config.window);
+        Deno.unrefTimer(this.timerId);
+    }
+
+    cleanup() {
+        clearInterval(this.timerId);
     }
 
     get router(): RouterMetrics | Record<PropertyKey, never> {
@@ -44,10 +51,10 @@ export class MetricsCollector {
         return {
             timings: MetricsCollector.calculateTimings(this.routerData),
             endpoints: Object.fromEntries(
-                Object.entries(groupByKey(this.routerData, "endpoint"))
+                Object.entries(groupBy(this.routerData, "endpoint"))
                     .map(([k, data]) => [k, {
                         timings: MetricsCollector.calculateTimings(data),
-                        type: countByKey(data, "type")
+                        type: countBy(data, "type")
                     }])
             )
         };
@@ -60,10 +67,10 @@ export class MetricsCollector {
         return {
             timings: MetricsCollector.calculateTimings(this.apiData),
             methods: Object.fromEntries(
-                Object.entries(groupByKey(this.apiData, "method"))
+                Object.entries(groupBy(this.apiData, "method"))
                     .map(([k, data]) => [k, {
                         timings: MetricsCollector.calculateTimings(data),
-                        results: countByKey(data, "result")
+                        results: countBy(data, "result")
                     }])
             )
         };
@@ -79,9 +86,6 @@ export class MetricsCollector {
     }
 
     private static calculateTimings(data: {timestamp: number, duration: number}[]): Timings {
-        if (data.length === 0) {
-            return { avg: 0, max: 0, requests: 0, lastRequest: new Date(0) };
-        }
         const responseTimes = data.map(d => d.duration);
         const totalResponseTime = responseTimes.reduce((sum, time) => sum + time, 0);
         const lastRequestTimestamp = data[data.length - 1].timestamp;

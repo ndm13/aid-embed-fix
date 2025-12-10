@@ -3,7 +3,7 @@ import type {AppState} from "../types/AppState.ts";
 import {Handler} from "./Handler.ts";
 
 export class OEmbedHandler implements Handler {
-    handle(ctx: Context<AppState>): Promise<void> {
+    async handle(ctx: Context<AppState>): Promise<void> {
         const {links} = ctx.state;
         ctx.state.metrics.endpoint = "oembed";
         ctx.state.metrics.type = "static";

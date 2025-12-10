@@ -14,7 +14,7 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     }
 
     protected getResourceId(ctx: Context<AppState>) {
-        return ctx.params.username || "";
+        return ctx.params.username!;
     }
 
     fetch(ctx: Context<AppState>, id: string) {
