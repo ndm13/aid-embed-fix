@@ -41,7 +41,7 @@ app.use(state.middleware(api, {
 app.use(logging.middleware());
 
 // Metrics
-if (metrics) {
+if (collector) {
     app.use(metrics.middleware(collector));
     const router = metrics.router(collector, config.metrics.key);
     app.use(router.routes(), router.allowedMethods());
