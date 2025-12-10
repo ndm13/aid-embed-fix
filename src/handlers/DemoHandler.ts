@@ -1,5 +1,6 @@
 import {EmbedHandler} from "./EmbedHandler.ts";
 import {Context} from "@oak/oak";
+import {Environment} from "npm:nunjucks";
 import type {AppState} from "../types/AppState.ts";
 
 export class DemoHandler extends EmbedHandler<void> {
@@ -13,7 +14,7 @@ export class DemoHandler extends EmbedHandler<void> {
         super(env, "demo.njk", "embed-notfound.njk");
     }
 
-    protected getRedirectLink(_: Context<AppState>): string {
+    protected override getRedirectLink(_: Context<AppState>): string {
         return "https://github.com/ndm13/aid-embed-fix";
     }
 

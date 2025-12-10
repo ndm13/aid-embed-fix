@@ -7,6 +7,12 @@ import {Handler} from "./Handler.ts";
 
 const {capitalize} = _;
 
+type EmbedContext = Context<AppState, Record<string, any>> & {
+    params: {
+        id: string
+    }
+}
+
 export abstract class EmbedHandler<T> implements Handler {
     abstract readonly name: string;
     abstract readonly redirectKeys: string[];
@@ -35,7 +41,7 @@ export abstract class EmbedHandler<T> implements Handler {
     }
 
     protected getResourceId(ctx: Context<AppState>): string {
-        return ctx.params.id || "";
+        return (ctx as EmbedContext).params.id || "";
     }
 
     async handle(ctx: Context<AppState>) {

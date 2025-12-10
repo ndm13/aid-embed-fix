@@ -13,19 +13,19 @@ import {APIResult} from "../types/MetricsTypes.ts";
 import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "../types/EmbedDataTypes.ts";
 
 export class AIDungeonAPI {
-    private token: string;
-    private refresh: string;
-    private expires: number;
+    private token!: string;
+    private refresh!: string;
+    private expires!: number;
     public get isExpired() {
         return this.expires < Date.now();
     }
 
     private constructor(
         private readonly config: AIDungeonAPIConfig,
-        private readonly metrics?: MetricsCollector,
         credentials: IdentityKitCredentials,
         generated: number,
         private readonly guest = false,
+        private readonly metrics?: MetricsCollector
     ) {
         this.updateCredentials(credentials, generated);
     }
@@ -37,11 +37,11 @@ export class AIDungeonAPI {
         generated?: number
     ): Promise<AIDungeonAPI> {
         if (credentials) {
-            if (!generated) throw new AIDungeonAPIError("Invalid generated time");
+            if (!generated) throw TypeError("Invalid generated time");
 
-            return new AIDungeonAPI(config, metrics, credentials, generated, false);
+            return new AIDungeonAPI(config, credentials, generated, false, metrics);
         }
-        return new AIDungeonAPI(config, metrics, await AIDungeonAPI.getNewGuestToken(config, metrics), Date.now(), true);
+        return new AIDungeonAPI(config, await AIDungeonAPI.getNewGuestToken(config, metrics), Date.now(), true, metrics);
     }
 
     async query<T extends Record<string, unknown>>(gql: GraphQLQuery): Promise<GraphQLResponse<string, T>> {
@@ -113,7 +113,7 @@ export class AIDungeonAPI {
         if (this.isExpired) {
             // Already expired: generate a new token if guest, otherwise error out
             if (this.guest) {
-                const replace = await AIDungeonAPI.getNewGuestToken(this.config);
+                const replace = await AIDungeonAPI.getNewGuestToken(this.config, this.metrics);
                 this.updateCredentials(replace, Date.now());
                 log.debug(`Created new user token (valid until ${new Date(this.expires)})`);
             } else {
@@ -159,7 +159,7 @@ export class AIDungeonAPI {
         }, this.metrics);
     }
 
-    private static getNewGuestToken(config: AIDungeonAPIConfig, metrics: MetricsCollector) {
+    private static getNewGuestToken(config: AIDungeonAPIConfig, metrics?: MetricsCollector) {
         return AIDungeonAPI.withMetrics("new_token", async () => {
             return await (await fetch(
                 "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +

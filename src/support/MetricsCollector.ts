@@ -14,7 +14,7 @@ const { countBy, groupBy } = _;
 export class MetricsCollector {
     private routerData: RouterDataPoint[] = [];
     private apiData: APIDataPoint[] = [];
-    private timerId: number;
+    private readonly timerId: number;
 
     recordEndpoint(endpoint: string, duration: number, type: EndpointResponseType) {
         if (this.config.scopes.router)
@@ -53,7 +53,7 @@ export class MetricsCollector {
             endpoints: Object.fromEntries(
                 Object.entries(groupBy(this.routerData, "endpoint"))
                     .map(([k, data]) => [k, {
-                        timings: MetricsCollector.calculateTimings(data),
+                        timings: MetricsCollector.calculateTimings(data as RouterDataPoint[]),
                         type: countBy(data, "type")
                     }])
             )
@@ -69,7 +69,7 @@ export class MetricsCollector {
             methods: Object.fromEntries(
                 Object.entries(groupBy(this.apiData, "method"))
                     .map(([k, data]) => [k, {
-                        timings: MetricsCollector.calculateTimings(data),
+                        timings: MetricsCollector.calculateTimings(data as APIDataPoint[]),
                         results: countBy(data, "result")
                     }])
             )

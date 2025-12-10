@@ -1,7 +1,14 @@
 import {EmbedHandler} from "./EmbedHandler.ts";
 import {UserEmbedData} from "../types/EmbedDataTypes.ts";
 import {Context} from "@oak/oak";
+import {Environment} from "npm:nunjucks";
 import type {AppState} from "../types/AppState.ts";
+
+type ProfileContext = Context<AppState, Record<string, any>> & {
+    params: {
+        username: string
+    }
+}
 
 export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     readonly name = "profile";
@@ -13,8 +20,8 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
         super(env, "embed-profile.njk", "embed-notfound.njk");
     }
 
-    protected getResourceId(ctx: Context<AppState>) {
-        return ctx.params.username!;
+    protected override getResourceId(ctx: Context<AppState>) {
+        return (ctx as ProfileContext).params.username!;
     }
 
     fetch(ctx: Context<AppState>, id: string) {

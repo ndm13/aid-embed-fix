@@ -1,4 +1,5 @@
 import _ from "npm:lodash";
+import {Environment} from "npm:nunjucks";
 import {EmbedHandler} from "./EmbedHandler.ts";
 import {AdventureEmbedData} from "../types/EmbedDataTypes.ts";
 import {Context} from "@oak/oak";

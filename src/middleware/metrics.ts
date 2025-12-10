@@ -1,16 +1,18 @@
-import {Router} from "@oak/oak";
+import {Context, Router} from "@oak/oak";
 
+import {MetricsCollector} from "../support/MetricsCollector.ts";
 import type { AppState } from "../types/AppState.ts";
+import { Next } from "@oak/oak/middleware";
 
-export function middleware(metrics: Metrics) {
-    return async (ctx, next) => {
+export function middleware(metrics: MetricsCollector) {
+    return async (ctx: Context<AppState>, next: Next) => {
         const start = Date.now();
         await next();
         metrics.recordEndpoint(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
     };
 }
 
-export function router(metrics: Metrics, key?: string) {
+export function router(metrics: MetricsCollector, key?: string) {
     const router = new Router<AppState>();
 
     router.get("/metrics", ctx => {
