@@ -26,9 +26,12 @@ jobs:
         env:
           NO_COLOR: 1
         run: |
+          # Capture the list of outdated dependencies
+          OUTPUT=$(deno outdated)
           echo "update_summary<<EOF" >> "$GITHUB_OUTPUT"
-          deno outdated --update >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+          deno outdated --update
 
       - name: Create Pull Request if changes exist
         uses: peter-evans/create-pull-request@v6
