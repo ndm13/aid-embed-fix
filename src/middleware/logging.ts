@@ -1,6 +1,8 @@
 import { Context } from "@oak/oak";
-import type { AppState } from "../types/AppState.ts";
 import { Next } from "@oak/oak/middleware";
+
+import { AppState } from "../types/AppState.ts";
+
 import log from "../logging/logger.ts";
 
 export function middleware() {

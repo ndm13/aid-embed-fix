@@ -1,5 +1,6 @@
 import { Router } from "@oak/oak";
-import type { AppState } from "../types/AppState.ts";
+
+import { AppState } from "../types/AppState.ts";
 
 export function router() {
     const router = new Router<AppState>();

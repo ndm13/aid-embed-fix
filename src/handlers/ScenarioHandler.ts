@@ -1,9 +1,10 @@
+import { Context } from "@oak/oak";
 import _ from "npm:lodash";
 import { Environment } from "npm:nunjucks";
-import { EmbedHandler } from "./EmbedHandler.ts";
+
+import { AppState } from "../types/AppState.ts";
 import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
-import { Context } from "@oak/oak";
-import type { AppState } from "../types/AppState.ts";
+import { EmbedHandler } from "./EmbedHandler.ts";
 
 const { truncate } = _;
 

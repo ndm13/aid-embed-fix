@@ -1,11 +1,10 @@
 import { AIDungeonAPIError } from "./AIDungeonAPIError.ts";
-
-import log from "../logging/logger.ts";
 import { MetricsCollector } from "../support/MetricsCollector.ts";
-
+import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "../types/EmbedDataTypes.ts";
 import { GraphQLQuery, GraphQLResponse, IdentityKitCredentials, RefreshTokenResponse } from "../types/AIDungeonAPITypes.ts";
 import { APIResult } from "../types/MetricsTypes.ts";
-import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "../types/EmbedDataTypes.ts";
+
+import log from "../logging/logger.ts";
 
 export class AIDungeonAPI {
     private token!: string;

@@ -1,5 +1,6 @@
 import { Context } from "@oak/oak";
-import type { AppState } from "../types/AppState.ts";
+
+import { AppState } from "../types/AppState.ts";
 import { Handler } from "./Handler.ts";
 
 export class OEmbedHandler implements Handler {

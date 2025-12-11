@@ -1,7 +1,8 @@
-import { EmbedHandler } from "./EmbedHandler.ts";
 import { Context } from "@oak/oak";
 import { Environment } from "npm:nunjucks";
-import type { AppState } from "../types/AppState.ts";
+
+import { AppState } from "../types/AppState.ts";
+import { EmbedHandler } from "./EmbedHandler.ts";
 
 export class DemoHandler extends EmbedHandler<void> {
     readonly name = "root";

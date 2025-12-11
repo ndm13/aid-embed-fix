@@ -2,6 +2,7 @@ import { getLogger, LogRecord, setup } from "@std/log";
 import { ConsoleHandler } from "@std/log/console-handler";
 
 import formatters from "./formatters.ts";
+
 import config from "../config.ts";
 
 setup({

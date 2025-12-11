@@ -1,17 +1,17 @@
 import { Application } from "@oak/oak";
 import { Environment, FileSystemLoader } from "npm:nunjucks";
 
-import config from "./config.ts";
-import log from "./logging/logger.ts";
 import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
-import type { AppState } from "./types/AppState.ts";
-
-import { MetricsCollector } from "./support/MetricsCollector.ts";
-import * as metrics from "./middleware/metrics.ts";
 import * as embed from "./middleware/embed.ts";
+import * as logging from "./middleware/logging.ts";
+import * as metrics from "./middleware/metrics.ts";
 import * as statics from "./middleware/statics.ts";
 import * as state from "./middleware/state.ts";
-import * as logging from "./middleware/logging.ts";
+import { MetricsCollector } from "./support/MetricsCollector.ts";
+import { AppState } from "./types/AppState.ts";
+
+import config from "./config.ts";
+import log from "./logging/logger.ts";
 
 log.info("Setting things up...");
 const app = new Application<AppState>();

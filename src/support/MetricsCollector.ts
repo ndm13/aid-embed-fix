@@ -1,5 +1,6 @@
 import _ from "npm:lodash";
-import type {
+
+import {
     APIDataPoint,
     APIMetrics,
     APIResult,

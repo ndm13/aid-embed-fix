@@ -1,8 +1,9 @@
-import { EmbedHandler } from "./EmbedHandler.ts";
-import { UserEmbedData } from "../types/EmbedDataTypes.ts";
 import { Context } from "@oak/oak";
 import { Environment } from "npm:nunjucks";
-import type { AppState } from "../types/AppState.ts";
+
+import { AppState } from "../types/AppState.ts";
+import { UserEmbedData } from "../types/EmbedDataTypes.ts";
+import { EmbedHandler } from "./EmbedHandler.ts";
 
 type ProfileContext = Context<AppState, Record<string, any>> & {
     params: {

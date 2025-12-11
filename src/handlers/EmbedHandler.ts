@@ -1,9 +1,11 @@
 import { Context } from "@oak/oak";
-import { Environment, Template } from "npm:nunjucks";
-import log from "../logging/logger.ts";
-import type { AppState } from "../types/AppState.ts";
 import _ from "npm:lodash";
+import { Environment, Template } from "npm:nunjucks";
+
 import { Handler } from "./Handler.ts";
+import { AppState } from "../types/AppState.ts";
+
+import log from "../logging/logger.ts";
 
 const { capitalize } = _;
 

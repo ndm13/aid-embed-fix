@@ -1,11 +1,12 @@
 import { Router } from "@oak/oak";
-import { ScenarioHandler } from "../handlers/ScenarioHandler.ts";
-import { AdventureHandler } from "../handlers/AdventureHandler.ts";
-import { ProfileHandler } from "../handlers/ProfileHandler.ts";
-import { DemoHandler } from "../handlers/DemoHandler.ts";
 import { Environment } from "npm:nunjucks";
-import type { AppState } from "../types/AppState.ts";
+
+import { AdventureHandler } from "../handlers/AdventureHandler.ts";
+import { DemoHandler } from "../handlers/DemoHandler.ts";
 import { OEmbedHandler } from "../handlers/OEmbedHandler.ts";
+import { ProfileHandler } from "../handlers/ProfileHandler.ts";
+import { ScenarioHandler } from "../handlers/ScenarioHandler.ts";
+import { AppState } from "../types/AppState.ts";
 
 export function router(njk: Environment) {
     const router = new Router<AppState>();

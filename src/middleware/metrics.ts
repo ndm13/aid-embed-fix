@@ -1,8 +1,8 @@
 import { Context, Router } from "@oak/oak";
+import { Next } from "@oak/oak/middleware";
 
 import { MetricsCollector } from "../support/MetricsCollector.ts";
-import type { AppState } from "../types/AppState.ts";
-import { Next } from "@oak/oak/middleware";
+import { AppState } from "../types/AppState.ts";
 
 export function middleware(metrics: MetricsCollector) {
     return async (ctx: Context<AppState>, next: Next) => {
