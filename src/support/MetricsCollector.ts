@@ -17,13 +17,15 @@ export class MetricsCollector {
     private readonly timerId: number;
 
     recordEndpoint(endpoint: string, duration: number, type: EndpointResponseType) {
-        if (this.config.scopes.router)
-            this.routerData.push({timestamp: Date.now(), endpoint, duration, type});
+        if (this.config.scopes.router) {
+            this.routerData.push({ timestamp: Date.now(), endpoint, duration, type });
+        }
     }
 
     recordAPICall(method: string, duration: number, result: APIResult) {
-        if (this.config.scopes.api)
-            this.apiData.push({timestamp: Date.now(), method, duration, result});
+        if (this.config.scopes.api) {
+            this.apiData.push({ timestamp: Date.now(), method, duration, result });
+        }
     }
 
     get window() {
@@ -76,8 +78,8 @@ export class MetricsCollector {
         };
     }
 
-    private prune(data: {timestamp: number}[]) {
-        const cutoff = data.findIndex(d => d.timestamp >= Date.now() - this.window);
+    private prune(data: { timestamp: number }[]) {
+        const cutoff = data.findIndex((d) => d.timestamp >= Date.now() - this.window);
         if (cutoff === -1 && data.length > 0) {
             data.length = 0;
         } else {
@@ -85,8 +87,8 @@ export class MetricsCollector {
         }
     }
 
-    private static calculateTimings(data: {timestamp: number, duration: number}[]): Timings {
-        const responseTimes = data.map(d => d.duration);
+    private static calculateTimings(data: { timestamp: number, duration: number }[]): Timings {
+        const responseTimes = data.map((d) => d.duration);
         const totalResponseTime = responseTimes.reduce((sum, time) => sum + time, 0);
         const lastRequestTimestamp = data[data.length - 1].timestamp;
 
@@ -105,4 +107,4 @@ export type MetricsConfig = {
         router: boolean
     },
     window: number
-}
+};

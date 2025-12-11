@@ -7,7 +7,7 @@ import { AppState } from "@/src/types/AppState.ts";
 import { AdventureEmbedData } from "@/src/types/EmbedDataTypes.ts";
 import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
-import {AIDungeonAPI} from "@/src/api/AIDungeonAPI.ts";
+import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -26,11 +26,11 @@ function createTestContext(state: Partial<AppState>, params: Record<string, stri
         state: {
             metrics: {
                 endpoint: "",
-                type: "",
+                type: ""
             },
-            ...state,
+            ...state
         },
-        params,
+        params
     });
     context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
         oembedProtocol: "https",
@@ -38,7 +38,7 @@ function createTestContext(state: Partial<AppState>, params: Record<string, stri
     });
     // @ts-ignore: userAgent is not on the mock type but is used by the handler
     context.request.userAgent = {
-        ua: "Discordbot/2.0",
+        ua: "Discordbot/2.0"
     };
     return context;
 }
@@ -56,17 +56,17 @@ describe("AdventureHandler", () => {
                 isMember: false,
                 profile: {
                     title: "Test User",
-                    thumbImageUrl: "https://example.com/thumb.jpg",
+                    thumbImageUrl: "https://example.com/thumb.jpg"
                 }
             }
         } as AdventureEmbedData;
 
         const context = createTestContext({
             api: {
-                getAdventureEmbed: () => Promise.resolve(mockAdventureData),
-            } as unknown as AIDungeonAPI,
+                getAdventureEmbed: () => Promise.resolve(mockAdventureData)
+            } as unknown as AIDungeonAPI
         }, {
-            id: "test-adventure",
+            id: "test-adventure"
         });
 
         await handler.handle(context as unknown as Context<AppState>);
@@ -84,10 +84,10 @@ describe("AdventureHandler", () => {
         const handler = new AdventureHandler(env);
         const context = createTestContext({
             api: {
-                getAdventureEmbed: () => Promise.reject(new Error("Adventure not found")),
-            } as unknown as AIDungeonAPI,
+                getAdventureEmbed: () => Promise.reject(new Error("Adventure not found"))
+            } as unknown as AIDungeonAPI
         }, {
-            id: "nonexistent-adventure",
+            id: "nonexistent-adventure"
         });
 
         await handler.handle(context as unknown as Context<AppState>);
@@ -109,17 +109,17 @@ describe("AdventureHandler", () => {
                 isMember: false,
                 profile: {
                     title: "Test User",
-                    thumbImageUrl: "https://example.com/thumb.jpg",
+                    thumbImageUrl: "https://example.com/thumb.jpg"
                 }
             }
         } as AdventureEmbedData;
 
         const context = createTestContext({
             api: {
-                getAdventureEmbed: () => Promise.resolve(mockAdventureData),
-            } as unknown as AIDungeonAPI,
+                getAdventureEmbed: () => Promise.resolve(mockAdventureData)
+            } as unknown as AIDungeonAPI
         }, {
-            id: "test-adventure-no-desc",
+            id: "test-adventure-no-desc"
         });
 
         await handler.handle(context as unknown as Context<AppState>);

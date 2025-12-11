@@ -2,7 +2,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { MetricsCollector, MetricsConfig } from "@/src/support/MetricsCollector.ts";
 import { FakeTime } from "@std/testing/time";
-import {APIResult, EndpointResponseType} from "@/src/types/MetricsTypes.ts";
+import { APIResult, EndpointResponseType } from "@/src/types/MetricsTypes.ts";
 
 describe("MetricsCollector", () => {
     let collector: MetricsCollector;
@@ -14,9 +14,9 @@ describe("MetricsCollector", () => {
     const config: MetricsConfig = {
         scopes: {
             api: true,
-            router: true,
+            router: true
         },
-        window: 1000,
+        window: 1000
     };
 
     it("should record and report router metrics", () => {
@@ -108,9 +108,9 @@ describe("MetricsCollector", () => {
         const disabledConfig: MetricsConfig = {
             scopes: {
                 api: false,
-                router: false,
+                router: false
             },
-            window: 1000,
+            window: 1000
         };
         collector = new MetricsCollector(disabledConfig);
         collector.recordEndpoint("/test", 100, "success" as EndpointResponseType);

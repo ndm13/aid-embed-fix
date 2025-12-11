@@ -7,7 +7,7 @@ import { AppState } from "@/src/types/AppState.ts";
 import { UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
 import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
-import {AIDungeonAPI} from "@/src/api/AIDungeonAPI.ts";
+import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -26,11 +26,11 @@ function createTestContext(state: Partial<AppState>, params: Record<string, stri
         state: {
             metrics: {
                 endpoint: "",
-                type: "",
+                type: ""
             },
-            ...state,
+            ...state
         },
-        params,
+        params
     });
     context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
         oembedProtocol: "https",
@@ -38,7 +38,7 @@ function createTestContext(state: Partial<AppState>, params: Record<string, stri
     });
     // @ts-ignore: userAgent is not on the mock type but is used by the handler
     context.request.userAgent = {
-        ua: userAgent,
+        ua: userAgent
     };
     return context;
 }
@@ -52,16 +52,16 @@ describe("ProfileHandler", () => {
             profile: {
                 title: "Test User",
                 description: "A test user profile.",
-                thumbImageUrl: "https://example.com/thumb.jpg",
+                thumbImageUrl: "https://example.com/thumb.jpg"
             }
         } as UserEmbedData;
 
         const context = createTestContext({
             api: {
-                getUserEmbed: () => Promise.resolve(mockUserData),
+                getUserEmbed: () => Promise.resolve(mockUserData)
             } as unknown as AIDungeonAPI
         }, {
-            username: "testuser",
+            username: "testuser"
         });
 
         await handler.handle(context as unknown as Context<AppState>);
@@ -78,10 +78,10 @@ describe("ProfileHandler", () => {
         const handler = new ProfileHandler(env);
         const context = createTestContext({
             api: {
-                getUserEmbed: () => Promise.reject(new Error("User not found")),
+                getUserEmbed: () => Promise.reject(new Error("User not found"))
             } as unknown as AIDungeonAPI
         }, {
-            username: "nonexistentuser",
+            username: "nonexistentuser"
         });
 
         await handler.handle(context as unknown as Context<AppState>);
@@ -116,15 +116,15 @@ describe("ProfileHandler", () => {
             profile: {
                 title: "Test User",
                 description: "A test user profile.",
-                thumbImageUrl: "https://example.com/thumb.jpg",
+                thumbImageUrl: "https://example.com/thumb.jpg"
             }
         } as UserEmbedData;
         const context = createTestContext({
             api: {
-                getUserEmbed: () => Promise.resolve(mockUserData),
+                getUserEmbed: () => Promise.resolve(mockUserData)
             } as unknown as AIDungeonAPI
         }, {
-            username: "testuser",
+            username: "testuser"
         }, "Mozilla/5.0");
         context.request.url.searchParams.set("no_ua", "true");
 

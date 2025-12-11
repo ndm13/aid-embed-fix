@@ -1,10 +1,10 @@
 import { Context } from "@oak/oak";
-import type {AppState} from "../types/AppState.ts";
-import {Handler} from "./Handler.ts";
+import type { AppState } from "../types/AppState.ts";
+import { Handler } from "./Handler.ts";
 
 export class OEmbedHandler implements Handler {
     async handle(ctx: Context<AppState>): Promise<void> {
-        const {links} = ctx.state;
+        const { links } = ctx.state;
         ctx.state.metrics.endpoint = "oembed";
         ctx.state.metrics.type = "static";
         const params = ctx.request.url.searchParams;
@@ -13,14 +13,16 @@ export class OEmbedHandler implements Handler {
             return;
         }
         const oembed = {
-            provider_name: 'AI Dungeon ' + params.get("type"),
-            provider_url: params.get('type') === "Embed Fix" ? "https://github.com/ndm13/aid-embed-fix" : links.redirectBase,
+            provider_name: "AI Dungeon " + params.get("type"),
+            provider_url: params.get("type") === "Embed Fix"
+                ? "https://github.com/ndm13/aid-embed-fix"
+                : links.redirectBase,
             title: "Embed",
-            type: 'rich',
-            version: '1.0'
-        } as Record<string,string>;
+            type: "rich",
+            version: "1.0"
+        } as Record<string, string>;
 
-        if (params.get("type") !== "Profile" && params.has('author')) {
+        if (params.get("type") !== "Profile" && params.has("author")) {
             oembed.author_name = params.get("author") as string;
             oembed.author_url = `${links.redirectBase}/profile/${params.get("author")}`;
         }

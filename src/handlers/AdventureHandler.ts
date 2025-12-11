@@ -1,15 +1,15 @@
 import _ from "npm:lodash";
-import {Environment} from "npm:nunjucks";
-import {EmbedHandler} from "./EmbedHandler.ts";
-import {AdventureEmbedData} from "../types/EmbedDataTypes.ts";
-import {Context} from "@oak/oak";
-import type {AppState} from "../types/AppState.ts";
+import { Environment } from "npm:nunjucks";
+import { EmbedHandler } from "./EmbedHandler.ts";
+import { AdventureEmbedData } from "../types/EmbedDataTypes.ts";
+import { Context } from "@oak/oak";
+import type { AppState } from "../types/AppState.ts";
 
-const {truncate} = _;
+const { truncate } = _;
 
 export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
     readonly name = "adventure";
-    readonly redirectKeys = ['share', 'source', 'page', 'size'];
+    readonly redirectKeys = ["share", "source", "page", "size"];
     protected readonly responseType = "adventure";
     protected readonly oembedType = "Adventure";
 
@@ -22,7 +22,7 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
     }
 
     protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData, link: string): object {
-        const {links} = ctx.state;
+        const { links } = ctx.state;
         return {
             type: this.responseType,
             title: data.title,
@@ -30,7 +30,7 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
             profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
             description: truncate(data.description ?? "", {
                 length: 1000,
-                separator: ' ',
+                separator: " "
             }),
             cover: links.cover(data.image),
             link,

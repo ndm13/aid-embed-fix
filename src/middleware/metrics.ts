@@ -1,6 +1,6 @@
-import {Context, Router} from "@oak/oak";
+import { Context, Router } from "@oak/oak";
 
-import {MetricsCollector} from "../support/MetricsCollector.ts";
+import { MetricsCollector } from "../support/MetricsCollector.ts";
 import type { AppState } from "../types/AppState.ts";
 import { Next } from "@oak/oak/middleware";
 
@@ -8,14 +8,18 @@ export function middleware(metrics: MetricsCollector) {
     return async (ctx: Context<AppState>, next: Next) => {
         const start = Date.now();
         await next();
-        metrics.recordEndpoint(ctx.state.metrics?.endpoint || "unknown", Date.now() - start, ctx.state.metrics?.type || "unknown");
+        metrics.recordEndpoint(
+            ctx.state.metrics?.endpoint || "unknown",
+            Date.now() - start,
+            ctx.state.metrics?.type || "unknown"
+        );
     };
 }
 
 export function router(metrics: MetricsCollector, key?: string) {
     const router = new Router<AppState>();
 
-    router.get("/metrics", ctx => {
+    router.get("/metrics", (ctx) => {
         ctx.state.metrics.endpoint = "metrics";
 
         if (key) {
@@ -26,9 +30,10 @@ export function router(metrics: MetricsCollector, key?: string) {
                 ctx.response.type = "application/json";
                 ctx.response.body = {
                     error: {
-                        details: "Incorrect or missing metrics key. If using the default config, a key has been generated for you and will be in the log."
+                        details:
+                            "Incorrect or missing metrics key. If using the default config, a key has been generated for you and will be in the log."
                     }
-                }
+                };
                 return;
             }
         }

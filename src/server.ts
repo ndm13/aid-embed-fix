@@ -1,12 +1,12 @@
-import {Application} from "@oak/oak";
-import {Environment, FileSystemLoader} from "npm:nunjucks";
+import { Application } from "@oak/oak";
+import { Environment, FileSystemLoader } from "npm:nunjucks";
 
 import config from "./config.ts";
 import log from "./logging/logger.ts";
-import {AIDungeonAPI} from "./api/AIDungeonAPI.ts";
-import type {AppState} from "./types/AppState.ts";
+import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
+import type { AppState } from "./types/AppState.ts";
 
-import {MetricsCollector} from "./support/MetricsCollector.ts";
+import { MetricsCollector } from "./support/MetricsCollector.ts";
 import * as metrics from "./middleware/metrics.ts";
 import * as embed from "./middleware/embed.ts";
 import * as statics from "./middleware/statics.ts";
@@ -15,15 +15,17 @@ import * as logging from "./middleware/logging.ts";
 
 log.info("Setting things up...");
 const app = new Application<AppState>();
-const njk = new Environment(new FileSystemLoader('templates'));
+const njk = new Environment(new FileSystemLoader("templates"));
 
-const collector = config.metrics.enable !== "none" ? new MetricsCollector({
-    window: 3600000,
-    scopes: {
-        api: config.metrics.enable === "all" || config.metrics.enable.includes("api"),
-        router: config.metrics.enable === "all" || config.metrics.enable.includes("router")
-    }
-}) : undefined;
+const collector = config.metrics.enable !== "none" ?
+    new MetricsCollector({
+        window: 3600000,
+        scopes: {
+            api: config.metrics.enable === "all" || config.metrics.enable.includes("api"),
+            router: config.metrics.enable === "all" || config.metrics.enable.includes("router")
+        }
+    }) :
+    undefined;
 
 const api = await AIDungeonAPI.create({
     gqlEndpoint: config.client.gqlEndpoint,
@@ -63,7 +65,7 @@ const staticsRouter = statics.router();
 app.use(staticsRouter.routes(), staticsRouter.allowedMethods());
 
 // Fallback redirect to AI Dungeon
-app.use(ctx => {
+app.use((ctx) => {
     ctx.state.metrics.endpoint = "unsupported";
     ctx.state.metrics.type = "redirect";
     ctx.response.redirect(ctx.state.links.redirectBase + ctx.request.url.pathname);

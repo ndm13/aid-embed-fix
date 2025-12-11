@@ -40,5 +40,5 @@ export type APIDataPoint = {
     timestamp: number,
     method: string,
     duration: number,
-    result: APIResult;
+    result: APIResult
 };

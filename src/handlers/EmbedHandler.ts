@@ -1,17 +1,17 @@
-import {Context} from "@oak/oak";
-import {Environment, Template} from "npm:nunjucks";
+import { Context } from "@oak/oak";
+import { Environment, Template } from "npm:nunjucks";
 import log from "../logging/logger.ts";
-import type {AppState} from "../types/AppState.ts";
+import type { AppState } from "../types/AppState.ts";
 import _ from "npm:lodash";
-import {Handler} from "./Handler.ts";
+import { Handler } from "./Handler.ts";
 
-const {capitalize} = _;
+const { capitalize } = _;
 
 type EmbedContext = Context<AppState, Record<string, any>> & {
     params: {
         id: string
     }
-}
+};
 
 export abstract class EmbedHandler<T> implements Handler {
     abstract readonly name: string;
@@ -85,8 +85,9 @@ function tryForward(ctx: Context<AppState>, link: string) {
 
 function shouldForward(ctx: Context<AppState>) {
     // Bypass check with ?no_ua
-    if (ctx.request.url.searchParams.has("no_ua"))
+    if (ctx.request.url.searchParams.has("no_ua")) {
         return false;
+    }
     // Otherwise check if it's coming from Discordbot
     return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
 }

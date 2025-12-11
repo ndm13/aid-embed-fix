@@ -1,5 +1,5 @@
 import { Context } from "@oak/oak";
-import type {AppState} from "../types/AppState.ts";
+import type { AppState } from "../types/AppState.ts";
 import { Next } from "@oak/oak/middleware";
 import log from "../logging/logger.ts";
 
@@ -11,5 +11,5 @@ export function middleware() {
         } else {
             log.info("Served", ctx);
         }
-    }
+    };
 }

@@ -1,4 +1,4 @@
-import {AIDungeonAPIError} from "./AIDungeonAPIError.ts";
+import { AIDungeonAPIError } from "./AIDungeonAPIError.ts";
 
 import log from "../logging/logger.ts";
 import { MetricsCollector } from "../support/MetricsCollector.ts";
@@ -9,8 +9,8 @@ import {
     IdentityKitCredentials,
     RefreshTokenResponse
 } from "../types/AIDungeonAPITypes.ts";
-import {APIResult} from "../types/MetricsTypes.ts";
-import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "../types/EmbedDataTypes.ts";
+import { APIResult } from "../types/MetricsTypes.ts";
+import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "../types/EmbedDataTypes.ts";
 
 export class AIDungeonAPI {
     private token!: string;
@@ -41,7 +41,8 @@ export class AIDungeonAPI {
 
             return new AIDungeonAPI(config, credentials, generated, false, metrics);
         }
-        return new AIDungeonAPI(config, await AIDungeonAPI.getNewGuestToken(config, metrics), Date.now(), true, metrics);
+        const token = await AIDungeonAPI.getNewGuestToken(config, metrics);
+        return new AIDungeonAPI(config, token, Date.now(), true, metrics);
     }
 
     async query<T extends Record<string, unknown>>(gql: GraphQLQuery): Promise<GraphQLResponse<string, T>> {
@@ -52,23 +53,23 @@ export class AIDungeonAPI {
         }
         try {
             return await (await fetch(this.config.gqlEndpoint, {
-                "credentials": "include",
-                "headers": {
+                credentials: "include",
+                headers: {
                     "User-Agent": this.config.userAgent,
                     "Accept": "application/json",
                     "Accept-Language": "en-US,en;q=0.5",
                     "content-type": "application/json",
                     "x-gql-operation-name": gql.operationName,
                     "authorization": `firebase ${this.token}`,
-                    "Priority": "u=4",
+                    "Priority": "u=4"
                 },
-                "referrer": this.config.origin,
-                "body": JSON.stringify({
-                    "operationName": gql.operationName,
-                    "variables": gql.variables,
-                    "query": gql.query,
+                referrer: this.config.origin,
+                body: JSON.stringify({
+                    operationName: gql.operationName,
+                    variables: gql.variables,
+                    query: gql.query
                 }),
-                "method": "POST",
+                method: "POST"
             })).json();
         } catch (error) {
             throw AIDungeonAPIError.onRequest("Error running GraphQL query", gql, error);
@@ -79,11 +80,11 @@ export class AIDungeonAPI {
         return AIDungeonAPI.withMetrics("scenario_embed", async () => {
             const query = {
                 operationName: "GetScenario",
-                variables: {"shortId": shortId},
+                variables: { shortId: shortId },
                 query:
-                    "query GetScenario($shortId: String) {  scenario(shortId: $shortId) {    createdAt    editedAt    title    description    prompt    image    published    unlisted    publishedAt    commentCount    voteCount    saveCount    storyCardCount    tags    adventuresPlayed    thirdPerson    nsfw    contentRating    contentRatingLockedAt    user {      isMember      profile {        title        thumbImageUrl      }    }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    userJoined    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed    contentResponses {      isSaved      isDisliked    }  }}",
+                    "query GetScenario($shortId: String) {  scenario(shortId: $shortId) {    createdAt    editedAt    title    description    prompt    image    published    unlisted    publishedAt    commentCount    voteCount    saveCount    storyCardCount    tags    adventuresPlayed    thirdPerson    nsfw    contentRating    contentRatingLockedAt    user {      isMember      profile {        title        thumbImageUrl      }    }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    userJoined    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed    contentResponses {      isSaved      isDisliked    }  }}"
             };
-            return AIDungeonAPI.validateResponse(query, await this.query<ScenarioEmbedData>(query), shortId, 'scenario');
+            return AIDungeonAPI.validateResponse(query, await this.query<ScenarioEmbedData>(query), shortId, "scenario");
         }, this.metrics);
     }
 
@@ -91,10 +92,16 @@ export class AIDungeonAPI {
         return AIDungeonAPI.withMetrics("adventure_embed", async () => {
             const query = {
                 operationName: "GetAdventure",
-                variables: {"shortId": shortId},
-                query: "query GetAdventure($shortId: String) {  adventure(shortId: $shortId) {    createdAt    editedAt    title    description    image    actionCount    published    unlisted    commentCount    voteCount    saveCount    storyCardCount    thirdPerson    nsfw    contentRating    contentRatingLockedAt    tags    user {      isMember      profile {        title        thumbImageUrl      }    }    scenario {      title      published      deletedAt      }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  userId  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed  }}"
+                variables: { shortId: shortId },
+                query:
+                    "query GetAdventure($shortId: String) {  adventure(shortId: $shortId) {    createdAt    editedAt    title    description    image    actionCount    published    unlisted    commentCount    voteCount    saveCount    storyCardCount    thirdPerson    nsfw    contentRating    contentRatingLockedAt    tags    user {      isMember      profile {        title        thumbImageUrl      }    }    scenario {      title      published      deletedAt      }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  userId  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed  }}"
             };
-            return AIDungeonAPI.validateResponse(query, await this.query<AdventureEmbedData>(query), shortId, 'adventure');
+            return AIDungeonAPI.validateResponse(
+                query,
+                await this.query<AdventureEmbedData>(query),
+                shortId,
+                "adventure"
+            );
         }, this.metrics);
     }
 
@@ -102,10 +109,11 @@ export class AIDungeonAPI {
         return AIDungeonAPI.withMetrics("user_embed", async () => {
             const query = {
                 operationName: "ProfileScreenGetUser",
-                variables: {"username": username},
-                query: "query ProfileScreenGetUser($username: String) {  user(username: $username) {    profile {      thumbImageUrl    }    ...ProfileHeaderUser    ...ProfileMobileHeaderUser  }}fragment ProfileHeaderUser on User {  isMember  friendCount  followingCount  followersCount  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser  }fragment SocialStatMenuUser on User {  profile {    title  }}fragment ProfileMobileHeaderUser on User {  friendCount  followingCount  followersCount  isMember  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser}"
+                variables: { username: username },
+                query:
+                    "query ProfileScreenGetUser($username: String) {  user(username: $username) {    profile {      thumbImageUrl    }    ...ProfileHeaderUser    ...ProfileMobileHeaderUser  }}fragment ProfileHeaderUser on User {  isMember  friendCount  followingCount  followersCount  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser  }fragment SocialStatMenuUser on User {  profile {    title  }}fragment ProfileMobileHeaderUser on User {  friendCount  followingCount  followersCount  isMember  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser}"
             };
-            return AIDungeonAPI.validateResponse(query, await this.query<UserEmbedData>(query), username, 'user');
+            return AIDungeonAPI.validateResponse(query, await this.query<UserEmbedData>(query), username, "user");
         }, this.metrics);
     }
 
@@ -141,20 +149,20 @@ export class AIDungeonAPI {
         return AIDungeonAPI.withMetrics("refresh_token", async () => {
             return await (await fetch(
                 "https://securetoken.googleapis.com/v1/token?key=" +
-                this.config.firebase.identityToolkitKey,
+                    this.config.firebase.identityToolkitKey,
                 {
-                    "headers": {
+                    headers: {
                         "User-Agent": this.config.userAgent,
                         "Origin": this.config.origin,
                         "Accept": "*/*",
                         "Accept-Language": "en-US,en;q=0.5",
                         "X-Client-Version": this.config.firebase.clientVersion,
                         "X-Firebase-Client": this.config.firebase.clientToken,
-                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Content-Type": "application/x-www-form-urlencoded"
                     },
-                    "body": `grant_type=refresh_token&refresh_token=${this.refresh}`,
-                    "method": "POST",
-                },
+                    body: `grant_type=refresh_token&refresh_token=${this.refresh}`,
+                    method: "POST"
+                }
             )).json() as Promise<RefreshTokenResponse>;
         }, this.metrics);
     }
@@ -163,22 +171,22 @@ export class AIDungeonAPI {
         return AIDungeonAPI.withMetrics("new_token", async () => {
             return await (await fetch(
                 "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +
-                config.firebase.identityToolkitKey,
+                    config.firebase.identityToolkitKey,
                 {
-                    "credentials": "omit",
-                    "headers": {
+                    credentials: "omit",
+                    headers: {
                         "User-Agent": config.userAgent,
                         "Origin": config.origin,
                         "Accept": "*/*",
                         "Accept-Language": "en-US,en;q=0.5",
                         "X-Client-Version": config.firebase.clientVersion,
                         "X-Firebase-Client": config.firebase.clientToken,
-                        "Content-Type": "application/json",
+                        "Content-Type": "application/json"
                     },
-                    "body": '{"returnSecureToken":true}',
-                    "method": "POST",
-                },
-            )).json() as Promise<IdentityKitCredentials>
+                    body: '{"returnSecureToken":true}',
+                    method: "POST"
+                }
+            )).json() as Promise<IdentityKitCredentials>;
         }, metrics);
     }
 
@@ -206,11 +214,15 @@ export class AIDungeonAPI {
     }
 
     private static validateResponse<K extends string, T>(
-        query: GraphQLQuery, response: { data?: Record<K, T> }, id: string, key: K
+        query: GraphQLQuery,
+        response: { data?: Record<K, T> },
+        id: string,
+        key: K
     ): T {
         const output = response?.data?.[key];
-        if (!output)
+        if (!output) {
             throw AIDungeonAPIError.onUnpack(`Couldn't find ${key} with id ${id}`, query, response);
+        }
 
         return output;
     }
@@ -223,6 +235,6 @@ export type AIDungeonAPIConfig = {
     firebase: {
         identityToolkitKey: string,
         clientToken: string,
-        clientVersion: string,
+        clientVersion: string
     }
 };

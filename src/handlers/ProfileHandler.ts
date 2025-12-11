@@ -1,18 +1,18 @@
-import {EmbedHandler} from "./EmbedHandler.ts";
-import {UserEmbedData} from "../types/EmbedDataTypes.ts";
-import {Context} from "@oak/oak";
-import {Environment} from "npm:nunjucks";
-import type {AppState} from "../types/AppState.ts";
+import { EmbedHandler } from "./EmbedHandler.ts";
+import { UserEmbedData } from "../types/EmbedDataTypes.ts";
+import { Context } from "@oak/oak";
+import { Environment } from "npm:nunjucks";
+import type { AppState } from "../types/AppState.ts";
 
 type ProfileContext = Context<AppState, Record<string, any>> & {
     params: {
         username: string
     }
-}
+};
 
 export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     readonly name = "profile";
-    readonly redirectKeys = ['contentType', 'share', 'sort'];
+    readonly redirectKeys = ["contentType", "share", "sort"];
     protected readonly responseType = "user";
     protected readonly oembedType = "Profile";
 

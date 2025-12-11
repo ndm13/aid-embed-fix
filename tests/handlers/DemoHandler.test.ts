@@ -26,10 +26,10 @@ describe("DemoHandler", () => {
             state: {
                 metrics: {
                     endpoint: "",
-                    type: "",
+                    type: ""
                 }
             },
-            params: {},
+            params: {}
         });
         context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
             oembedProtocol: "https",
@@ -37,7 +37,7 @@ describe("DemoHandler", () => {
         });
         // @ts-ignore: userAgent is not on the mock type but is used by the handler
         context.request.userAgent = {
-            ua: "Discordbot/2.0",
+            ua: "Discordbot/2.0"
         };
 
         await handler.handle(context as unknown as Context<AppState>);

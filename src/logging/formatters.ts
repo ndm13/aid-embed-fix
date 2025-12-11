@@ -3,49 +3,47 @@ import { Context } from "@oak/oak";
 import { AIDungeonAPIError } from "../api/AIDungeonAPIError.ts";
 
 interface Formatters<T> {
-  // deno-lint-ignore no-explicit-any
-  matches: (arg: any) => arg is T;
-  format: (arg: T) => string;
+    // deno-lint-ignore no-explicit-any
+    matches: (arg: any) => arg is T;
+    format: (arg: T) => string;
 }
 
 class FormatterRegistry {
-  // deno-lint-ignore no-explicit-any
-  private formatters: Formatters<any>[] = [];
-  add<T>(entry: Formatters<T>) {
-    this.formatters.push(entry);
-    return this;
-  }
-  format = <T>(arg: T) => {
-    for (const formatter of this.formatters) {
-      if (formatter.matches(arg)) {
-        return (formatter as Formatters<T>).format(arg);
-      }
+    // deno-lint-ignore no-explicit-any
+    private formatters: Formatters<any>[] = [];
+    add<T>(entry: Formatters<T>) {
+        this.formatters.push(entry);
+        return this;
     }
-    return typeof arg === "string" ? arg as string : JSON.stringify(arg);
-  };
+    format = <T>(arg: T) => {
+        for (const formatter of this.formatters) {
+            if (formatter.matches(arg)) {
+                return (formatter as Formatters<T>).format(arg);
+            }
+        }
+        return typeof arg === "string" ? arg as string : JSON.stringify(arg);
+    };
 }
 
 const formatters = new FormatterRegistry()
-  .add({
-    matches: AIDungeonAPIError.isInstance,
-    format: (error) => {
-      let message = error.message;
-      const gqlErrors = error.response?.errors;
-      if (gqlErrors?.length) {
-        gqlErrors.forEach((e) =>
-          message += `\n\tfrom GraphQL: ${e.message} ${JSON.stringify(e.extensions)}`
-        );
-      }
-      if (error.cause instanceof Error) {
-        message += `\n\tcaused by:${error.cause.name}: ${error.cause.message}`;
-      }
-      return message;
-    },
-  })
-  .add({
-    matches: (arg) => arg instanceof Context,
-    format: (ctx) => {
-      return `${ctx.response.status} ${ctx.request.method} ${ctx.request.url.pathname}${ctx.request.url.search} ${ctx.request.userAgent.ua}`;
-    },
-  });
+    .add({
+        matches: AIDungeonAPIError.isInstance,
+        format: (error) => {
+            let message = error.message;
+            const gqlErrors = error.response?.errors;
+            if (gqlErrors?.length) {
+                gqlErrors.forEach((e) => message += `\n\tfrom GraphQL: ${e.message} ${JSON.stringify(e.extensions)}`);
+            }
+            if (error.cause instanceof Error) {
+                message += `\n\tcaused by:${error.cause.name}: ${error.cause.message}`;
+            }
+            return message;
+        }
+    })
+    .add({
+        matches: (arg) => arg instanceof Context,
+        format: (ctx) => {
+            return `${ctx.response.status} ${ctx.request.method} ${ctx.request.url.pathname}${ctx.request.url.search} ${ctx.request.userAgent.ua}`;
+        }
+    });
 export default formatters;

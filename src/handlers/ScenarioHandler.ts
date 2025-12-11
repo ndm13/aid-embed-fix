@@ -1,15 +1,15 @@
 import _ from "npm:lodash";
-import {Environment} from "npm:nunjucks";
-import {EmbedHandler} from "./EmbedHandler.ts";
-import {ScenarioEmbedData} from "../types/EmbedDataTypes.ts";
-import {Context} from "@oak/oak";
-import type {AppState} from "../types/AppState.ts";
+import { Environment } from "npm:nunjucks";
+import { EmbedHandler } from "./EmbedHandler.ts";
+import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
+import { Context } from "@oak/oak";
+import type { AppState } from "../types/AppState.ts";
 
-const {truncate} = _;
+const { truncate } = _;
 
 export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     readonly name = "scenario";
-    readonly redirectKeys = ['share', 'source', 'published', 'unlisted'];
+    readonly redirectKeys = ["share", "source", "published", "unlisted"];
     protected readonly responseType = "scenario";
     protected readonly oembedType = "Scenario";
 
@@ -22,7 +22,7 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     }
 
     protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
-        const {links} = ctx.state;
+        const { links } = ctx.state;
         return {
             type: this.responseType,
             title: data.title,
@@ -30,7 +30,7 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
             profile_link: `${links.redirectBase}/profile/${data.user.profile.title}`,
             description: truncate(data.description ?? data.prompt ?? "", {
                 length: 1000,
-                separator: ' ',
+                separator: " "
             }),
             cover: links.cover(data.image),
             link,

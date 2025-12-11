@@ -7,17 +7,16 @@ import { Environment } from "npm:nunjucks";
 import type { AppState } from "../types/AppState.ts";
 import { OEmbedHandler } from "../handlers/OEmbedHandler.ts";
 
-
 export function router(njk: Environment) {
     const router = new Router<AppState>();
 
     const scenario = new ScenarioHandler(njk);
-    router.get("/scenario/:id/:tail", async ctx => {
+    router.get("/scenario/:id/:tail", async (ctx) => {
         await scenario.handle(ctx);
     });
 
     const adventure = new AdventureHandler(njk);
-    router.get("/adventure/:id/:tail/:read?", async ctx => {
+    router.get("/adventure/:id/:tail/:read?", async (ctx) => {
         if (ctx.params.read && ctx.params.read !== "read") {
             const link = ctx.state.links.redirect(adventure.redirectKeys);
             ctx.state.metrics.endpoint = "adventure";
@@ -29,17 +28,17 @@ export function router(njk: Environment) {
     });
 
     const profile = new ProfileHandler(njk);
-    router.get("/profile/:username", async ctx => {
+    router.get("/profile/:username", async (ctx) => {
         await profile.handle(ctx);
     });
 
     const oembed = new OEmbedHandler();
-    router.get("/oembed.json", async ctx => {
+    router.get("/oembed.json", async (ctx) => {
         await oembed.handle(ctx);
     });
 
     const demo = new DemoHandler(njk);
-    router.get("/", async ctx => {
+    router.get("/", async (ctx) => {
         await demo.handle(ctx);
     });
 

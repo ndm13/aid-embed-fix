@@ -3,11 +3,11 @@ import { describe, it } from "@std/testing/bdd";
 import { spy, stub } from "@std/testing/mock";
 import { FakeTime } from "@std/testing/time";
 import { AIDungeonAPI, AIDungeonAPIConfig } from "@/src/api/AIDungeonAPI.ts";
-import {GraphQLQuery, IdentityKitCredentials} from "@/src/types/AIDungeonAPITypes.ts";
+import { GraphQLQuery, IdentityKitCredentials } from "@/src/types/AIDungeonAPITypes.ts";
 import { APIResult } from "@/src/types/MetricsTypes.ts";
 import { MetricsCollector } from "@/src/support/MetricsCollector.ts";
-import {AIDungeonAPIError} from "@/src/api/AIDungeonAPIError.ts";
-import {AdventureEmbedData, ScenarioEmbedData, UserEmbedData} from "@/src/types/EmbedDataTypes.ts";
+import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
+import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
 
 const config: AIDungeonAPIConfig = {
     gqlEndpoint: "https://api.aidungeon.com/graphql",
@@ -16,7 +16,7 @@ const config: AIDungeonAPIConfig = {
     firebase: {
         identityToolkitKey: "test-firebase-key",
         clientToken: "test-client-token",
-        clientVersion: "test-client-version",
+        clientVersion: "test-client-version"
     }
 };
 
@@ -25,23 +25,24 @@ const mockCredentials = (expiresIn: number): IdentityKitCredentials => ({
     localId: "test",
     idToken: "test-id-token",
     refreshToken: "test-refresh-token",
-    expiresIn: expiresIn.toString(),
+    expiresIn: expiresIn.toString()
 });
 
 describe("AIDungeonAPI", () => {
     describe("create", () => {
         it("should create a guest session if no credentials are provided", async () => {
             const credentials = mockCredentials(3600);
-            using fetchMock = stub(globalThis, "fetch", () =>
-                Promise.resolve(new Response(JSON.stringify(credentials)))
-            );
+            using fetchMock = stub(globalThis, "fetch", () => Promise.resolve(new Response(JSON.stringify(credentials))));
 
             const api = await AIDungeonAPI.create(config);
 
             assertExists(api);
             assertEquals(api.isExpired, false);
             assertEquals(fetchMock.calls.length, 1);
-            assertEquals(fetchMock.calls[0].args[0], `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${config.firebase.identityToolkitKey}`);
+            assertEquals(
+                fetchMock.calls[0].args[0],
+                `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${config.firebase.identityToolkitKey}`
+            );
         });
 
         it("should use existing credentials if provided", async () => {
@@ -63,8 +64,10 @@ describe("AIDungeonAPI", () => {
 
     describe("query", () => {
         it("should make a GraphQL query", async () => {
-            using fetchMock = stub(globalThis, "fetch", () =>
-                Promise.resolve(new Response(JSON.stringify({ data: { success: true } })))
+            using fetchMock = stub(
+                globalThis,
+                "fetch",
+                () => Promise.resolve(new Response(JSON.stringify({ data: { success: true } })))
             );
             const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
 
@@ -109,9 +112,7 @@ describe("AIDungeonAPI", () => {
         it("should get a new token for an expired guest session", async () => {
             using time = new FakeTime();
             const newCreds = { ...mockCredentials(3600), idToken: "new-guest-token" };
-            const fetchMock = stub(globalThis, "fetch", () =>
-                Promise.resolve(new Response(JSON.stringify(newCreds)))
-            );
+            const fetchMock = stub(globalThis, "fetch", () => Promise.resolve(new Response(JSON.stringify(newCreds))));
 
             const api = await AIDungeonAPI.create(config);
             fetchMock.calls.splice(0); // Clear initial create call
@@ -138,43 +139,37 @@ describe("AIDungeonAPI", () => {
         it("getScenarioEmbed should call query and unpack data", async () => {
             const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
             const mockData = { title: "Test" } as ScenarioEmbedData;
-            using queryStub = stub(api, "query", () =>
-                Promise.resolve({ data: { scenario: mockData } })
-            );
+            using queryStub = stub(api, "query", () => Promise.resolve({ data: { scenario: mockData } }));
 
             const result = await api.getScenarioEmbed("test-id");
             assertEquals(result, mockData);
             assertEquals(queryStub.calls.length, 1);
             assertEquals(queryStub.calls[0].args[0].operationName, "GetScenario");
-            assertEquals(queryStub.calls[0].args[0].variables, { "shortId": "test-id" });
+            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id" });
         });
 
         it("getAdventureEmbed should call query and unpack data", async () => {
             const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
             const mockData = { title: "Test" } as AdventureEmbedData;
-            using queryStub = stub(api, "query", () =>
-                Promise.resolve({ data: { adventure: mockData } })
-            );
+            using queryStub = stub(api, "query", () => Promise.resolve({ data: { adventure: mockData } }));
 
             const result = await api.getAdventureEmbed("test-id");
             assertEquals(result, mockData);
             assertEquals(queryStub.calls.length, 1);
             assertEquals(queryStub.calls[0].args[0].operationName, "GetAdventure");
-            assertEquals(queryStub.calls[0].args[0].variables, { "shortId": "test-id" });
+            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id" });
         });
 
         it("getUserEmbed should call query and unpack data", async () => {
             const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
             const mockData = { profile: { title: "Test" } } as UserEmbedData;
-            using queryStub = stub(api, "query", () =>
-                Promise.resolve({ data: { user: mockData } })
-            );
+            using queryStub = stub(api, "query", () => Promise.resolve({ data: { user: mockData } }));
 
             const result = await api.getUserEmbed("test-user");
             assertEquals(result, mockData);
             assertEquals(queryStub.calls.length, 1);
             assertEquals(queryStub.calls[0].args[0].operationName, "ProfileScreenGetUser");
-            assertEquals(queryStub.calls[0].args[0].variables, { "username": "test-user" });
+            assertEquals(queryStub.calls[0].args[0].variables, { username: "test-user" });
         });
 
         it("should throw error if embed data is missing", async () => {

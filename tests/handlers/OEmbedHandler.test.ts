@@ -14,9 +14,9 @@ describe("OEmbedHandler", () => {
             state: {
                 metrics: {
                     endpoint: "",
-                    type: "",
+                    type: ""
                 }
-            },
+            }
         });
         context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
             oembedProtocol: "https",

@@ -1,7 +1,7 @@
-import {EmbedHandler} from "./EmbedHandler.ts";
-import {Context} from "@oak/oak";
-import {Environment} from "npm:nunjucks";
-import type {AppState} from "../types/AppState.ts";
+import { EmbedHandler } from "./EmbedHandler.ts";
+import { Context } from "@oak/oak";
+import { Environment } from "npm:nunjucks";
+import type { AppState } from "../types/AppState.ts";
 
 export class DemoHandler extends EmbedHandler<void> {
     readonly name = "root";
@@ -33,7 +33,7 @@ export class DemoHandler extends EmbedHandler<void> {
 Now you can see the link type, description, and image!
 
 Fully open source, click the link for details!`,
-            cover: 'https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true',
+            cover: "https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true",
             link,
             oembed: ctx.state.links.oembed({
                 title: "Fix AI Dungeon Link Previews!",
