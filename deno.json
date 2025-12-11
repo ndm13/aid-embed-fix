@@ -13,20 +13,20 @@
         "npm:nunjucks": "npm:nunjucks@^3.2.4"
     },
     "fmt": {
-        "include": ["src", "tests"],
+        "exclude": [".github", "*.md"],
         "indentWidth": 4,
         "useTabs": false,
         "semiColons": true,
         "singleQuote": false,
         "spaceSurroundingProperties": true,
         "operatorPosition": "maintain",
-        "lineWidth": 120,
+        "lineWidth": 125,
         "proseWrap": "always",
         "trailingCommas": "never",
         "typeLiteral.separatorKind": "comma",
         "quoteProps": "consistent"
     },
-  "test": {
+    "test": {
         "include": ["tests/**/*.test.ts"]
     },
     "tasks": {

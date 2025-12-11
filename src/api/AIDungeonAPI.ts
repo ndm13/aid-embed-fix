@@ -3,12 +3,7 @@ import { AIDungeonAPIError } from "./AIDungeonAPIError.ts";
 import log from "../logging/logger.ts";
 import { MetricsCollector } from "../support/MetricsCollector.ts";
 
-import {
-    GraphQLQuery,
-    GraphQLResponse,
-    IdentityKitCredentials,
-    RefreshTokenResponse
-} from "../types/AIDungeonAPITypes.ts";
+import { GraphQLQuery, GraphQLResponse, IdentityKitCredentials, RefreshTokenResponse } from "../types/AIDungeonAPITypes.ts";
 import { APIResult } from "../types/MetricsTypes.ts";
 import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "../types/EmbedDataTypes.ts";
 
@@ -96,12 +91,7 @@ export class AIDungeonAPI {
                 query:
                     "query GetAdventure($shortId: String) {  adventure(shortId: $shortId) {    createdAt    editedAt    title    description    image    actionCount    published    unlisted    commentCount    voteCount    saveCount    storyCardCount    thirdPerson    nsfw    contentRating    contentRatingLockedAt    tags    user {      isMember      profile {        title        thumbImageUrl      }    }    scenario {      title      published      deletedAt      }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  userId  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed  }}"
             };
-            return AIDungeonAPI.validateResponse(
-                query,
-                await this.query<AdventureEmbedData>(query),
-                shortId,
-                "adventure"
-            );
+            return AIDungeonAPI.validateResponse(query, await this.query<AdventureEmbedData>(query), shortId, "adventure");
         }, this.metrics);
     }
 

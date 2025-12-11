@@ -14,9 +14,7 @@ export class OEmbedHandler implements Handler {
         }
         const oembed = {
             provider_name: "AI Dungeon " + params.get("type"),
-            provider_url: params.get("type") === "Embed Fix"
-                ? "https://github.com/ndm13/aid-embed-fix"
-                : links.redirectBase,
+            provider_url: params.get("type") === "Embed Fix" ? "https://github.com/ndm13/aid-embed-fix" : links.redirectBase,
             title: "Embed",
             type: "rich",
             version: "1.0"
