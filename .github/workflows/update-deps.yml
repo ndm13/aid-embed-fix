@@ -19,10 +19,12 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.4
         with:
-          deno-version: vx.x.x
+          deno-version: v2.x
 
       - name: Check for outdated dependencies and update files
         id: update_step
+        env:
+          NO_COLOR: 1
         run: |
           echo "update_summary<<EOF" >> "$GITHUB_OUTPUT"
           deno outdated --update >> "$GITHUB_OUTPUT"

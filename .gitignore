@@ -2,3 +2,4 @@
 /local/
 /*.env
 /compose.yml
+/coverage/
