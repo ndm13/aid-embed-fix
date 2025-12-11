@@ -96,7 +96,7 @@ describe("AIDungeonAPI", () => {
             using time = new FakeTime();
             const refreshedCreds = { ...mockCredentials(3600), id_token: "new-id-token" };
             using fetchMock = stub(globalThis, "fetch", (url: string | URL | Request) => {
-                if (url.toString().startsWith("https://securetoken.googleapis.com")) {
+                if (url.toString().startsWith("https://securetoken.googleapis.com/")) {
                     return Promise.resolve(new Response(JSON.stringify(refreshedCreds)));
                 }
                 return Promise.resolve(new Response(JSON.stringify({ data: {} })));
