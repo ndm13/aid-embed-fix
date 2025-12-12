@@ -30,6 +30,16 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     }
 
     protected prepareContext(ctx: Context<AppState>, data: UserEmbedData, link: string): object {
+        ctx.state.analytics.content = {
+            id: /* TODO */ "",
+            type: this.name,
+            title: data.profile.title,
+            author: {
+                id: /* TODO */ "",
+                title: data.profile.title
+            }
+        };
+
         return {
             title: data.profile.title,
             description: data.profile.description,

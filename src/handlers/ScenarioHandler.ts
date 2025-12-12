@@ -23,6 +23,18 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     }
 
     protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
+        ctx.state.analytics.content = {
+            id: this.getResourceId(ctx),
+            type: this.name,
+            title: data.title,
+            rating: data.contentRating,
+            visibility: data.unlisted ? "Unlisted" : "Published",
+            author: {
+                id: data.userId,
+                title: data.user.profile.title
+            }
+        };
+
         const { links } = ctx.state;
         return {
             type: this.responseType,

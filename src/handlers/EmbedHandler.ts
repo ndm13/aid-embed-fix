@@ -48,6 +48,7 @@ export abstract class EmbedHandler<T> implements Handler {
 
     async handle(ctx: Context<AppState>) {
         ctx.state.metrics.endpoint = this.name;
+        ctx.state.analytics.content.type = this.name;
 
         const id = this.getResourceId(ctx);
         const link = this.getRedirectLink(ctx);

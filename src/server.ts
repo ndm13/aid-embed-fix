@@ -2,6 +2,7 @@ import { Application } from "@oak/oak";
 import { Environment, FileSystemLoader } from "npm:nunjucks";
 
 import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
+import * as analytics from "./middleware/analytics.ts";
 import * as embed from "./middleware/embed.ts";
 import * as logging from "./middleware/logging.ts";
 import * as metrics from "./middleware/metrics.ts";
@@ -41,6 +42,7 @@ app.use(state.middleware(api, {
     defaultRedirectBase: config.client.origin
 }));
 app.use(logging.middleware());
+app.use(analytics.middleware());
 
 // Metrics
 if (collector) {

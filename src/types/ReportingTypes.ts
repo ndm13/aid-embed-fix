@@ -42,3 +42,29 @@ export type APIDataPoint = {
     duration: number,
     result: APIResult
 };
+
+export type AnalyticsEntry = {
+    timestamp: number,
+    request: RequestProperties,
+    content: Content,
+};
+
+export type Content = {
+    status: APIResult,
+    id: string,
+    type: string,
+    title?: string,
+    rating?: string,
+    visibility?: string,
+    author: {
+        id?: string,
+        title: string
+    }
+};
+
+export type RequestProperties = {
+    hostname: string,
+    path: string,
+    params: Record<string, string>,
+    userAgent: string
+};

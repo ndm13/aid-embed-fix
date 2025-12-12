@@ -4,7 +4,7 @@ import { spy, stub } from "@std/testing/mock";
 import { FakeTime } from "@std/testing/time";
 import { AIDungeonAPI, AIDungeonAPIConfig } from "@/src/api/AIDungeonAPI.ts";
 import { GraphQLQuery, IdentityKitCredentials } from "@/src/types/AIDungeonAPITypes.ts";
-import { APIResult } from "@/src/types/MetricsTypes.ts";
+import { APIResult } from "../../src/types/ReportingTypes.ts";
 import { MetricsCollector } from "@/src/support/MetricsCollector.ts";
 import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
 import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
