@@ -138,4 +138,48 @@ describe("AdventureHandler", () => {
         assertEquals(responseBody.title, "Test Adventure with no description");
         assertEquals(responseBody.description, ""); // Should fall back to empty string
     });
+
+    describe("analytics", () => {
+        it("should report visibility for published adventures", async () => {
+            const handler = new AdventureHandler(env);
+            const mockAdventureData: AdventureEmbedData = {
+                title: "Test Adventure",
+                unlisted: false, // published
+                user: { profile: { title: "Test User" } }
+            } as AdventureEmbedData;
+
+            const context = createTestContext({
+                api: {
+                    getAdventureEmbed: () => Promise.resolve(mockAdventureData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-adventure"
+            });
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.visibility, "Published");
+        });
+
+        it("should report visibility for unlisted adventures", async () => {
+            const handler = new AdventureHandler(env);
+            const mockAdventureData: AdventureEmbedData = {
+                title: "Test Adventure",
+                unlisted: true, // unlisted
+                user: { profile: { title: "Test User" } }
+            } as AdventureEmbedData;
+
+            const context = createTestContext({
+                api: {
+                    getAdventureEmbed: () => Promise.resolve(mockAdventureData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-adventure"
+            });
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.visibility, "Unlisted");
+        });
+    });
 });

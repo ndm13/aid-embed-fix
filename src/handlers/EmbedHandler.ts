@@ -71,15 +71,16 @@ export abstract class EmbedHandler<T> implements Handler {
         try {
             const data = await this.fetch(ctx, id);
             ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
-            result = "success";
             ctx.state.metrics.router.type = "success";
+            result = "success";
             ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data, link));
         } catch (e) {
+            ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
+            ctx.state.metrics.router.type = "error";
             if (e instanceof AIDungeonAPIError) {
                 if (e.response) result = "api_error";
                 else if (e.cause) result = "net_error";
             }
-            ctx.state.metrics.router.type = "error";
             log.error(`Error getting ${this.name}`, e);
 
             ctx.response.body = this.errorTemplate.render({

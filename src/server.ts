@@ -68,8 +68,8 @@ app.use(staticsRouter.routes(), staticsRouter.allowedMethods());
 
 // Fallback redirect to AI Dungeon
 app.use((ctx) => {
-    ctx.state.metrics.endpoint = "unsupported";
-    ctx.state.metrics.type = "redirect";
+    ctx.state.metrics.router.endpoint = "unsupported";
+    ctx.state.metrics.router.type = "redirect";
     ctx.response.redirect(ctx.state.links.redirectBase + ctx.request.url.pathname);
 });
 
