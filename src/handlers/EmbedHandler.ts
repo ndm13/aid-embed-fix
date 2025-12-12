@@ -2,8 +2,10 @@ import { Context } from "@oak/oak";
 import _ from "npm:lodash";
 import { Environment, Template } from "npm:nunjucks";
 
+import { AIDungeonAPIError } from "../api/AIDungeonAPIError.ts";
 import { Handler } from "./Handler.ts";
 import { AppState } from "../types/AppState.ts";
+import { APIResult } from "../types/ReportingTypes.ts";
 
 import log from "../logging/logger.ts";
 
@@ -47,20 +49,37 @@ export abstract class EmbedHandler<T> implements Handler {
     }
 
     async handle(ctx: Context<AppState>) {
-        ctx.state.metrics.endpoint = this.name;
-        ctx.state.analytics.content.type = this.name;
+        ctx.state.metrics.router.endpoint = this.name;
 
         const id = this.getResourceId(ctx);
         const link = this.getRedirectLink(ctx);
 
+        ctx.state.analytics.content = {
+            status: "unknown",
+            id,
+            type: this.name
+        };
+
         if (tryForward(ctx, link)) return;
+
+        let result: APIResult = "unknown";
+        ctx.state.metrics.api = {
+            method: `${this.name}_embed`,
+            timestamp: Date.now()
+        };
 
         try {
             const data = await this.fetch(ctx, id);
-            ctx.state.metrics.type = "success";
+            ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
+            result = "success";
+            ctx.state.metrics.router.type = "success";
             ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data, link));
         } catch (e) {
-            ctx.state.metrics.type = "error";
+            if (e instanceof AIDungeonAPIError) {
+                if (e.response) result = "api_error";
+                else if (e.cause) result = "net_error";
+            }
+            ctx.state.metrics.router.type = "error";
             log.error(`Error getting ${this.name}`, e);
 
             ctx.response.body = this.errorTemplate.render({
@@ -72,13 +91,16 @@ export abstract class EmbedHandler<T> implements Handler {
                     type: this.oembedType
                 })
             });
+        } finally {
+            ctx.state.analytics.content!.status = result;
+            if (ctx.state.metrics.api) ctx.state.metrics.api.result = result;
         }
     }
 }
 
 function tryForward(ctx: Context<AppState>, link: string) {
     if (shouldForward(ctx)) {
-        ctx.state.metrics.type = "redirect";
+        ctx.state.metrics.router.type = "redirect";
         ctx.response.status = 301;
         ctx.response.redirect(link);
         return true;

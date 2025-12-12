@@ -13,8 +13,10 @@ describe("OEmbedHandler", () => {
         const context = createMockContext({
             state: {
                 metrics: {
-                    endpoint: "",
-                    type: ""
+                    router: {
+                        endpoint: "",
+                        type: ""
+                    }
                 }
             }
         });

@@ -6,8 +6,8 @@ import { Handler } from "./Handler.ts";
 export class OEmbedHandler implements Handler {
     async handle(ctx: Context<AppState>): Promise<void> {
         const { links } = ctx.state;
-        ctx.state.metrics.endpoint = "oembed";
-        ctx.state.metrics.type = "static";
+        ctx.state.metrics.router.endpoint = "oembed";
+        ctx.state.metrics.router.type = "static";
         const params = ctx.request.url.searchParams;
         if (!params.has("type")) {
             ctx.response.status = 400;

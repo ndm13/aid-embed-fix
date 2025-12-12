@@ -1,8 +1,6 @@
 import { AIDungeonAPIError } from "./AIDungeonAPIError.ts";
-import { MetricsCollector } from "../support/MetricsCollector.ts";
 import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "../types/EmbedDataTypes.ts";
 import { GraphQLQuery, GraphQLResponse, IdentityKitCredentials, RefreshTokenResponse } from "../types/AIDungeonAPITypes.ts";
-import { APIResult } from "../types/ReportingTypes.ts";
 
 import log from "../logging/logger.ts";
 
@@ -18,25 +16,23 @@ export class AIDungeonAPI {
         private readonly config: AIDungeonAPIConfig,
         credentials: IdentityKitCredentials,
         generated: number,
-        private readonly guest = false,
-        private readonly metrics?: MetricsCollector
+        private readonly guest = false
     ) {
         this.updateCredentials(credentials, generated);
     }
 
     static async create(
         config: AIDungeonAPIConfig,
-        metrics?: MetricsCollector,
         credentials?: IdentityKitCredentials,
         generated?: number
     ): Promise<AIDungeonAPI> {
         if (credentials) {
             if (!generated) throw TypeError("Invalid generated time");
 
-            return new AIDungeonAPI(config, credentials, generated, false, metrics);
+            return new AIDungeonAPI(config, credentials, generated, false);
         }
-        const token = await AIDungeonAPI.getNewGuestToken(config, metrics);
-        return new AIDungeonAPI(config, token, Date.now(), true, metrics);
+        const token = await AIDungeonAPI.getNewGuestToken(config);
+        return new AIDungeonAPI(config, token, Date.now(), true);
     }
 
     async query<T extends Record<string, unknown>>(gql: GraphQLQuery): Promise<GraphQLResponse<string, T>> {
@@ -71,46 +67,43 @@ export class AIDungeonAPI {
     }
 
     getScenarioEmbed(shortId: string): Promise<ScenarioEmbedData> {
-        return AIDungeonAPI.withMetrics("scenario_embed", async () => {
-            const query = {
-                operationName: "GetScenario",
-                variables: { shortId: shortId },
-                query:
-                    "query GetScenario($shortId: String) {  scenario(shortId: $shortId) {    createdAt    editedAt    title    description    prompt    image    published    unlisted    publishedAt    commentCount    voteCount    saveCount    storyCardCount    tags    adventuresPlayed    thirdPerson    nsfw    contentRating    contentRatingLockedAt    user {      isMember      profile {        title        thumbImageUrl      }    }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    userJoined    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed    contentResponses {      isSaved      isDisliked    }  }}"
-            };
-            return AIDungeonAPI.validateResponse(query, await this.query<ScenarioEmbedData>(query), shortId, "scenario");
-        }, this.metrics);
+        const query = {
+            operationName: "GetScenario",
+            variables: { shortId: shortId },
+            query:
+                "query GetScenario($shortId: String) {  scenario(shortId: $shortId) {    createdAt    editedAt    title    description    prompt    image    published    unlisted    publishedAt    commentCount    voteCount    saveCount    storyCardCount    tags    adventuresPlayed    thirdPerson    nsfw    contentRating    contentRatingLockedAt    user {      isMember      profile {        title        thumbImageUrl      }    }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    userJoined    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed    contentResponses {      isSaved      isDisliked    }  }}"
+        };
+        return this.query<ScenarioEmbedData>(query)
+            .then((res) => AIDungeonAPI.validateResponse(query, res, shortId, "scenario"));
     }
 
     getAdventureEmbed(shortId: string): Promise<AdventureEmbedData> {
-        return AIDungeonAPI.withMetrics("adventure_embed", async () => {
-            const query = {
-                operationName: "GetAdventure",
-                variables: { shortId: shortId },
-                query:
-                    "query GetAdventure($shortId: String) {  adventure(shortId: $shortId) {    createdAt    editedAt    title    description    image    actionCount    published    unlisted    commentCount    voteCount    saveCount    storyCardCount    thirdPerson    nsfw    contentRating    contentRatingLockedAt    tags    user {      isMember      profile {        title        thumbImageUrl      }    }    scenario {      title      published      deletedAt      }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  userId  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed  }}"
-            };
-            return AIDungeonAPI.validateResponse(query, await this.query<AdventureEmbedData>(query), shortId, "adventure");
-        }, this.metrics);
+        const query = {
+            operationName: "GetAdventure",
+            variables: { shortId: shortId },
+            query:
+                "query GetAdventure($shortId: String) {  adventure(shortId: $shortId) {    createdAt    editedAt    title    description    image    actionCount    published    unlisted    commentCount    voteCount    saveCount    storyCardCount    thirdPerson    nsfw    contentRating    contentRatingLockedAt    tags    user {      isMember      profile {        title        thumbImageUrl      }    }    scenario {      title      published      deletedAt      }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  userId  contentRating  user {    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed  }}"
+        };
+        return this.query<AdventureEmbedData>(query)
+            .then((res) => AIDungeonAPI.validateResponse(query, res, shortId, "adventure"));
     }
 
     getUserEmbed(username: string): Promise<UserEmbedData> {
-        return AIDungeonAPI.withMetrics("user_embed", async () => {
-            const query = {
-                operationName: "ProfileScreenGetUser",
-                variables: { username: username },
-                query:
-                    "query ProfileScreenGetUser($username: String) {  user(username: $username) {    profile {      thumbImageUrl    }    ...ProfileHeaderUser    ...ProfileMobileHeaderUser  }}fragment ProfileHeaderUser on User {  isMember  friendCount  followingCount  followersCount  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser  }fragment SocialStatMenuUser on User {  profile {    title  }}fragment ProfileMobileHeaderUser on User {  friendCount  followingCount  followersCount  isMember  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser}"
-            };
-            return AIDungeonAPI.validateResponse(query, await this.query<UserEmbedData>(query), username, "user");
-        }, this.metrics);
+        const query = {
+            operationName: "ProfileScreenGetUser",
+            variables: { username: username },
+            query:
+                "query ProfileScreenGetUser($username: String) {  user(username: $username) {    profile {      thumbImageUrl    }    ...ProfileHeaderUser    ...ProfileMobileHeaderUser  }}fragment ProfileHeaderUser on User {  isMember  friendCount  followingCount  followersCount  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser  }fragment SocialStatMenuUser on User {  profile {    title  }}fragment ProfileMobileHeaderUser on User {  friendCount  followingCount  followersCount  isMember  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser}"
+        };
+        return this.query<UserEmbedData>(query)
+            .then((res) => AIDungeonAPI.validateResponse(query, res, username, "user"));
     }
 
     private async keepTokenAlive() {
         if (this.isExpired) {
             // Already expired: generate a new token if guest, otherwise error out
             if (this.guest) {
-                const replace = await AIDungeonAPI.getNewGuestToken(this.config, this.metrics);
+                const replace = await AIDungeonAPI.getNewGuestToken(this.config);
                 this.updateCredentials(replace, Date.now());
                 log.debug(`Created new user token (valid until ${new Date(this.expires)})`);
             } else {
@@ -135,71 +128,44 @@ export class AIDungeonAPI {
     }
 
     private refreshToken() {
-        return AIDungeonAPI.withMetrics("refresh_token", async () => {
-            return await (await fetch(
-                "https://securetoken.googleapis.com/v1/token?key=" +
-                    this.config.firebase.identityToolkitKey,
-                {
-                    headers: {
-                        "User-Agent": this.config.userAgent,
-                        "Origin": this.config.origin,
-                        "Accept": "*/*",
-                        "Accept-Language": "en-US,en;q=0.5",
-                        "X-Client-Version": this.config.firebase.clientVersion,
-                        "X-Firebase-Client": this.config.firebase.clientToken,
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: `grant_type=refresh_token&refresh_token=${this.refresh}`,
-                    method: "POST"
-                }
-            )).json() as Promise<RefreshTokenResponse>;
-        }, this.metrics);
-    }
-
-    private static getNewGuestToken(config: AIDungeonAPIConfig, metrics?: MetricsCollector) {
-        return AIDungeonAPI.withMetrics("new_token", async () => {
-            return await (await fetch(
-                "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +
-                    config.firebase.identityToolkitKey,
-                {
-                    credentials: "omit",
-                    headers: {
-                        "User-Agent": config.userAgent,
-                        "Origin": config.origin,
-                        "Accept": "*/*",
-                        "Accept-Language": "en-US,en;q=0.5",
-                        "X-Client-Version": config.firebase.clientVersion,
-                        "X-Firebase-Client": config.firebase.clientToken,
-                        "Content-Type": "application/json"
-                    },
-                    body: '{"returnSecureToken":true}',
-                    method: "POST"
-                }
-            )).json() as Promise<IdentityKitCredentials>;
-        }, metrics);
-    }
-
-    private static async withMetrics<T>(method: string, action: () => Promise<T>, metrics?: MetricsCollector) {
-        if (!metrics) return action();
-
-        const start = Date.now();
-        let result: APIResult = "unknown";
-        try {
-            const response = await action();
-            result = "success";
-            return response;
-        } catch (e) {
-            if (e instanceof AIDungeonAPIError) {
-                if (e.response) {
-                    result = "api_error";
-                } else if (e.cause) {
-                    result = "net_error";
-                }
+        return fetch(
+            "https://securetoken.googleapis.com/v1/token?key=" +
+                this.config.firebase.identityToolkitKey,
+            {
+                headers: {
+                    "User-Agent": this.config.userAgent,
+                    "Origin": this.config.origin,
+                    "Accept": "*/*",
+                    "Accept-Language": "en-US,en;q=0.5",
+                    "X-Client-Version": this.config.firebase.clientVersion,
+                    "X-Firebase-Client": this.config.firebase.clientToken,
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `grant_type=refresh_token&refresh_token=${this.refresh}`,
+                method: "POST"
             }
-            throw e;
-        } finally {
-            metrics.recordAPICall(method, Date.now() - start, result);
-        }
+        ).then((r) => r.json() as Promise<RefreshTokenResponse>);
+    }
+
+    private static getNewGuestToken(config: AIDungeonAPIConfig) {
+        return fetch(
+            "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +
+                config.firebase.identityToolkitKey,
+            {
+                credentials: "omit",
+                headers: {
+                    "User-Agent": config.userAgent,
+                    "Origin": config.origin,
+                    "Accept": "*/*",
+                    "Accept-Language": "en-US,en;q=0.5",
+                    "X-Client-Version": config.firebase.clientVersion,
+                    "X-Firebase-Client": config.firebase.clientToken,
+                    "Content-Type": "application/json"
+                },
+                body: '{"returnSecureToken":true}',
+                method: "POST"
+            }
+        ).then((r) => r.json() as Promise<IdentityKitCredentials>);
     }
 
     private static validateResponse<K extends string, T>(

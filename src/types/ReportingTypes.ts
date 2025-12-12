@@ -46,17 +46,17 @@ export type APIDataPoint = {
 export type AnalyticsEntry = {
     timestamp: number,
     request: RequestProperties,
-    content: Content
+    content: Partial<Content>
 };
 
 export type Content = {
     status: APIResult,
     id: string,
     type: string,
-    title?: string,
+    title: string,
     rating?: string,
     visibility?: string,
-    author: {
+    author?: {
         id?: string,
         title: string
     }

@@ -5,6 +5,7 @@ import { Environment } from "npm:nunjucks";
 import { AppState } from "../types/AppState.ts";
 import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
 import { EmbedHandler } from "./EmbedHandler.ts";
+import { APIResult } from "../types/ReportingTypes.ts";
 
 const { truncate } = _;
 
@@ -24,13 +25,12 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
 
     protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
         ctx.state.analytics.content = {
-            id: this.getResourceId(ctx),
-            type: this.name,
+            ...(ctx.state.analytics.content as { status: APIResult, id: string, type: string }),
             title: data.title,
             rating: data.contentRating,
             visibility: data.unlisted ? "Unlisted" : "Published",
             author: {
-                id: data.userId,
+                id: /* TODO */ "",
                 title: data.user.profile.title
             }
         };

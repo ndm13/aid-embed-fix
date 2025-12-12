@@ -4,6 +4,7 @@ import { Environment } from "npm:nunjucks";
 import { AppState } from "../types/AppState.ts";
 import { UserEmbedData } from "../types/EmbedDataTypes.ts";
 import { EmbedHandler } from "./EmbedHandler.ts";
+import { APIResult } from "../types/ReportingTypes.ts";
 
 type ProfileContext = Context<AppState, Record<string, any>> & {
     params: {
@@ -31,8 +32,7 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
 
     protected prepareContext(ctx: Context<AppState>, data: UserEmbedData, link: string): object {
         ctx.state.analytics.content = {
-            id: /* TODO */ "",
-            type: this.name,
+            ...(ctx.state.analytics.content as { status: APIResult, id: string, type: string }),
             title: data.profile.title,
             author: {
                 id: /* TODO */ "",

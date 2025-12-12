@@ -33,7 +33,7 @@ const api = await AIDungeonAPI.create({
     userAgent: config.client.userAgent,
     origin: config.client.origin,
     firebase: config.firebase
-}, collector);
+});
 log.info("Using anonymous API access with user agent:", config.client.userAgent);
 
 // Logging and state

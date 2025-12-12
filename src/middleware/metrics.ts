@@ -9,10 +9,18 @@ export function middleware(metrics: MetricsCollector) {
         const start = Date.now();
         await next();
         metrics.recordEndpoint(
-            ctx.state.metrics?.endpoint || "unknown",
+            ctx.state.metrics.router.endpoint || "unknown",
             Date.now() - start,
-            ctx.state.metrics?.type || "unknown"
+            ctx.state.metrics.router.type || "unknown"
         );
+
+        if (ctx.state.metrics.api?.method && ctx.state.metrics.api?.result) {
+            metrics.recordAPICall(
+                ctx.state.metrics.api.method,
+                ctx.state.metrics.api.duration || 0,
+                ctx.state.metrics.api.result
+            );
+        }
     };
 }
 
@@ -20,12 +28,12 @@ export function router(metrics: MetricsCollector, key?: string) {
     const router = new Router<AppState>();
 
     router.get("/metrics", (ctx) => {
-        ctx.state.metrics.endpoint = "metrics";
+        ctx.state.metrics.router.endpoint = "metrics";
 
         if (key) {
             const params = ctx.request.url.searchParams;
             if (!params.has("key") || params.get("key") !== key) {
-                ctx.state.metrics.type = "error";
+                ctx.state.metrics.router.type = "error";
                 ctx.response.status = 401;
                 ctx.response.type = "application/json";
                 ctx.response.body = {
@@ -38,7 +46,7 @@ export function router(metrics: MetricsCollector, key?: string) {
             }
         }
 
-        ctx.state.metrics.type = "success";
+        ctx.state.metrics.router.type = "success";
         const status = {
             api: metrics.api,
             router: metrics.router,

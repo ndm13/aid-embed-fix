@@ -1,12 +1,9 @@
 import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { spy, stub } from "@std/testing/mock";
+import { stub } from "@std/testing/mock";
 import { FakeTime } from "@std/testing/time";
 import { AIDungeonAPI, AIDungeonAPIConfig } from "@/src/api/AIDungeonAPI.ts";
 import { GraphQLQuery, IdentityKitCredentials } from "@/src/types/AIDungeonAPITypes.ts";
-import { APIResult } from "../../src/types/ReportingTypes.ts";
-import { MetricsCollector } from "@/src/support/MetricsCollector.ts";
-import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
 import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
 
 const config: AIDungeonAPIConfig = {
@@ -47,7 +44,7 @@ describe("AIDungeonAPI", () => {
 
         it("should use existing credentials if provided", async () => {
             using fetchMock = stub(globalThis, "fetch", () => Promise.reject(new Error("fetch should not be called")));
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
 
             assertExists(api);
             assertEquals(api.isExpired, false);
@@ -56,7 +53,7 @@ describe("AIDungeonAPI", () => {
 
         it("should throw an error if credentials are provided without a generation time", async () => {
             await assertRejects(
-                () => AIDungeonAPI.create(config, undefined, mockCredentials(3600)),
+                () => AIDungeonAPI.create(config, mockCredentials(3600)),
                 "Invalid generated time"
             );
         });
@@ -69,7 +66,7 @@ describe("AIDungeonAPI", () => {
                 "fetch",
                 () => Promise.resolve(new Response(JSON.stringify({ data: { success: true } })))
             );
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
 
             const query: GraphQLQuery = { operationName: "test", query: "{ test }", variables: {} };
             const response = await api.query<any>(query);
@@ -82,7 +79,7 @@ describe("AIDungeonAPI", () => {
         it("should throw an error on network failure", async () => {
             // @ts-ignore: no-unused-vars
             using _ = stub(globalThis, "fetch", () => Promise.reject(new Error("Network error")));
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
 
             await assertRejects(
                 () => api.query({ operationName: "test", query: "{ test }", variables: {} }),
@@ -102,7 +99,7 @@ describe("AIDungeonAPI", () => {
                 return Promise.resolve(new Response(JSON.stringify({ data: {} })));
             });
 
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(300), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(300), Date.now());
             await time.tickAsync(1000); // Elapse 1 second, token is now close to expiry
 
             await api.query({ operationName: "test", query: "{ test }", variables: {} });
@@ -125,7 +122,7 @@ describe("AIDungeonAPI", () => {
 
         it("should throw an error for an expired non-guest session", async () => {
             using time = new FakeTime();
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(1), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(1), Date.now());
             await time.tickAsync(2000); // Expire the token
 
             await assertRejects(
@@ -137,7 +134,7 @@ describe("AIDungeonAPI", () => {
 
     describe("embed methods", () => {
         it("getScenarioEmbed should call query and unpack data", async () => {
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
             const mockData = { title: "Test" } as ScenarioEmbedData;
             using queryStub = stub(api, "query", () => Promise.resolve({ data: { scenario: mockData } }));
 
@@ -149,7 +146,7 @@ describe("AIDungeonAPI", () => {
         });
 
         it("getAdventureEmbed should call query and unpack data", async () => {
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
             const mockData = { title: "Test" } as AdventureEmbedData;
             using queryStub = stub(api, "query", () => Promise.resolve({ data: { adventure: mockData } }));
 
@@ -161,7 +158,7 @@ describe("AIDungeonAPI", () => {
         });
 
         it("getUserEmbed should call query and unpack data", async () => {
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
             const mockData = { profile: { title: "Test" } } as UserEmbedData;
             using queryStub = stub(api, "query", () => Promise.resolve({ data: { user: mockData } }));
 
@@ -173,7 +170,7 @@ describe("AIDungeonAPI", () => {
         });
 
         it("should throw error if embed data is missing", async () => {
-            const api = await AIDungeonAPI.create(config, undefined, mockCredentials(3600), Date.now());
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
             // @ts-ignore: no-unused-vars
             using _ = stub(api, "query", () => Promise.resolve({ data: {} }));
 
@@ -181,90 +178,6 @@ describe("AIDungeonAPI", () => {
                 () => api.getScenarioEmbed("test-id"),
                 "Couldn't find scenario with id test-id"
             );
-        });
-    });
-
-    describe("metrics", () => {
-        it("should record API call metrics on success", async () => {
-            const metrics = new MetricsCollector({ scopes: { api: true, router: false }, window: 1000 });
-            try {
-                using recordSpy = spy(metrics, "recordAPICall");
-
-                const api = await AIDungeonAPI.create(config, metrics, mockCredentials(3600), Date.now());
-                // @ts-ignore: no-unused-vars
-                using _ = stub(api, "query", () => Promise.resolve({ data: { scenario: {} as ScenarioEmbedData } }));
-
-                await api.getScenarioEmbed("test-id");
-
-                assertEquals(recordSpy.calls.length, 1);
-                const [method, , result] = recordSpy.calls[0].args;
-                assertEquals(method, "scenario_embed");
-                assertEquals(result, "success" as APIResult);
-            } finally {
-                metrics.cleanup();
-            }
-        });
-
-        it("should record API call metrics on network error", async () => {
-            const metrics = new MetricsCollector({ scopes: { api: true, router: false }, window: 1000 });
-            try {
-                using recordSpy = spy(metrics, "recordAPICall");
-
-                const api = await AIDungeonAPI.create(config, metrics, mockCredentials(3600), Date.now());
-                const error = new Error("network error");
-                const query = { operationName: "test", query: "{ test }", variables: {} };
-                // @ts-ignore: no-unused-vars
-                using _ = stub(api, "query", () => Promise.reject(AIDungeonAPIError.onRequest("test", query, error)));
-
-                await assertRejects(() => api.getScenarioEmbed("test-id"));
-
-                assertEquals(recordSpy.calls.length, 1);
-                const [method, , result] = recordSpy.calls[0].args;
-                assertEquals(method, "scenario_embed");
-                assertEquals(result, "net_error" as APIResult);
-            } finally {
-                metrics.cleanup();
-            }
-        });
-
-        it("should record API call metrics on API error", async () => {
-            const metrics = new MetricsCollector({ scopes: { api: true, router: false }, window: 1000 });
-            try {
-                using recordSpy = spy(metrics, "recordAPICall");
-
-                const api = await AIDungeonAPI.create(config, metrics, mockCredentials(3600), Date.now());
-                // @ts-ignore: no-unused-vars
-                using _ = stub(api, "query", () => Promise.resolve({ data: {} }));
-
-                await assertRejects(() => api.getScenarioEmbed("test-id"));
-
-                assertEquals(recordSpy.calls.length, 1);
-                const [method, , result] = recordSpy.calls[0].args;
-                assertEquals(method, "scenario_embed");
-                assertEquals(result, "api_error" as APIResult);
-            } finally {
-                metrics.cleanup();
-            }
-        });
-
-        it("should record API call metrics on unknown error", async () => {
-            const metrics = new MetricsCollector({ scopes: { api: true, router: false }, window: 1000 });
-            try {
-                using recordSpy = spy(metrics, "recordAPICall");
-
-                const api = await AIDungeonAPI.create(config, metrics, mockCredentials(3600), Date.now());
-                // @ts-ignore: no-unused-vars
-                using _ = stub(api, "query", () => Promise.reject(new Error("unknown")));
-
-                await assertRejects(() => api.getScenarioEmbed("test-id"));
-
-                assertEquals(recordSpy.calls.length, 1);
-                const [method, , result] = recordSpy.calls[0].args;
-                assertEquals(method, "scenario_embed");
-                assertEquals(result, "unknown" as APIResult);
-            } finally {
-                metrics.cleanup();
-            }
         });
     });
 });
