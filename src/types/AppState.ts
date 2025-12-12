@@ -1,6 +1,6 @@
 import { AIDungeonAPI } from "../api/AIDungeonAPI.ts";
 import { RelatedLinks } from "../support/RelatedLinks.ts";
-import {AnalyticsEntry, RouterDataPoint} from "./ReportingTypes.ts";
+import { AnalyticsEntry, RouterDataPoint } from "./ReportingTypes.ts";
 
 export type AppState = {
     api: AIDungeonAPI,

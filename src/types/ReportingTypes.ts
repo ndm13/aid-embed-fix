@@ -46,7 +46,7 @@ export type APIDataPoint = {
 export type AnalyticsEntry = {
     timestamp: number,
     request: RequestProperties,
-    content: Content,
+    content: Content
 };
 
 export type Content = {

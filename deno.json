@@ -21,6 +21,7 @@
         "spaceSurroundingProperties": true,
         "operatorPosition": "maintain",
         "lineWidth": 125,
+        "newLineKind": "crlf",
         "proseWrap": "always",
         "trailingCommas": "never",
         "typeLiteral.separatorKind": "comma",
