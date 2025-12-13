@@ -31,6 +31,11 @@ export class AnalyticsCollector {
         this.supabase = createClient(config.supabaseUrl, config.supabaseKey, {
             db: {
                 schema: "ingest"
+            },
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false,
+                detectSessionInUrl: false
             }
         });
         this.timerId = setInterval(() => this.process(), config.processingInterval);

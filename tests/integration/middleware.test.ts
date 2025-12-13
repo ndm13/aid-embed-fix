@@ -1,10 +1,13 @@
 import { superoak } from "superoak";
-import { describe, it } from "@std/testing/bdd";
+import { afterEach, describe, it } from "@std/testing/bdd";
 import { app } from "@/src/server.ts";
 import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
-import { stub } from "@std/testing/mock";
+import { assertSpyCalls, stub } from "@std/testing/mock";
 import config from "@/src/config.ts";
+import { Application } from "@oak/oak";
+import { AnalyticsCollector } from "@/src/support/AnalyticsCollector.ts";
+import * as analytics from "@/src/middleware/analytics.ts";
 
 const mockScenario: ScenarioEmbedData = {
     createdAt: new Date().toISOString(),
@@ -314,6 +317,46 @@ describe("Middleware Integration Tests", () => {
             const request = await superoak(app);
             await request.get("/unknown")
                 .expect(302);
+        });
+    });
+
+    describe("Analytics Middleware", () => {
+        let collector: AnalyticsCollector | undefined;
+
+        afterEach(() => {
+            collector?.cleanup();
+        });
+
+        it("should record analytics data when enabled", async () => {
+            // Create a temporary app to test middleware in isolation
+            const tempApp = new Application<any>();
+            const apiStub = {} as unknown as AIDungeonAPI;
+            collector = new AnalyticsCollector(apiStub, {
+                processingInterval: 10000,
+                cacheExpiration: 10000,
+                supabaseUrl: "http://localhost",
+                supabaseKey: "key",
+                ingestSecret: "secret"
+            });
+
+            const recordStub = stub(collector, "record", () => Promise.resolve());
+
+            tempApp.use(async (ctx, next) => {
+                ctx.state.analytics = { content: { id: "1", type: "test" } };
+                await next();
+            });
+            tempApp.use(analytics.middleware(collector));
+            tempApp.use((ctx) => {
+                ctx.response.body = "ok";
+            });
+
+            try {
+                const request = await superoak(tempApp);
+                await request.get("/").expect(200);
+                assertSpyCalls(recordStub, 1);
+            } finally {
+                recordStub.restore();
+            }
         });
     });
 });

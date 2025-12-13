@@ -31,10 +31,7 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
     }
 
     protected prepareContext(ctx: Context<AppState>, data: UserEmbedData, link: string): object {
-        ctx.state.analytics.content = {
-            ...ctx.state.analytics.content,
-            ...contentMapper.user(data)
-        };
+        Object.assign(ctx.state.analytics.content, contentMapper.user(data));
 
         return {
             title: data.profile.title,

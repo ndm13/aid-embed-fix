@@ -8,6 +8,6 @@ export type AppState = {
         router: Partial<RouterDataPoint>,
         api?: Partial<APIDataPoint>
     },
-    analytics: Partial<AnalyticsEntry>,
+    analytics: AnalyticsEntry,
     links: RelatedLinks
 };

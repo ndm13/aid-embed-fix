@@ -54,11 +54,10 @@ export abstract class EmbedHandler<T> implements Handler {
         const id = this.getResourceId(ctx);
         const link = this.getRedirectLink(ctx);
 
-        ctx.state.analytics.content = {
-            status: "unknown",
+        Object.assign(ctx.state.analytics.content, {
             id,
             type: this.name
-        };
+        });
 
         if (tryForward(ctx, link)) return;
 
