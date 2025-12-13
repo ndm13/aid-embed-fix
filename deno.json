@@ -10,7 +10,8 @@
         "@std/testing/bdd": "jsr:@std/testing@^0.225.3/bdd",
         "@oak/oak/testing": "jsr:@oak/oak@^17.2.0/testing",
         "npm:lodash": "npm:lodash@^4.17.21",
-        "npm:nunjucks": "npm:nunjucks@^3.2.4"
+        "npm:nunjucks": "npm:nunjucks@^3.2.4",
+        "superoak": "https://deno.land/x/superoak@5.0.0/mod.ts"
     },
     "fmt": {
         "exclude": [".github", "*.md"],
@@ -28,10 +29,43 @@
         "quoteProps": "consistent"
     },
     "test": {
-        "include": ["tests/**/*.test.ts"]
+        "include": ["tests/**/*.test.ts", "tests/integration/**/*.test.ts"],
+        "permissions": {
+            "net": true,
+            "read": true,
+            "env": true,
+            "import": [
+                "jspm.dev"
+            ]
+        }
+    },
+    "permissions": {
+        "server": {
+            "net": true,
+            "read": [
+                "static",
+                "templates"
+            ],
+            "env": [
+                "FIREBASE_ITK",
+                "FIREBASE_CLIENT_VERSION",
+                "FIREBASE_CLIENT_TOKEN",
+                "ORIGIN",
+                "GQL_ENDPOINT",
+                "USER_AGENT",
+                "OEMBED_PROTOCOL",
+                "LISTEN",
+                "METRICS",
+                "METRICS_KEY",
+                "LOG_LEVEL"
+            ]
+        }
     },
     "tasks": {
-        "start": "deno run --allow-net --allow-read --allow-env src/server.ts",
-        "test": "deno test --allow-net --allow-read --allow-env --coverage=coverage"
+        "start": "deno run --permission-set=server src/server.ts",
+        "test": "deno test -P --coverage=coverage",
+        "test:unit": "deno test -P tests/unit",
+        "test:integration": "deno test -P tests/integration",
+        "check": "deno check --allow-import"
     }
 }

@@ -15,7 +15,7 @@ import config from "./config.ts";
 import log from "./logging/logger.ts";
 
 log.info("Setting things up...");
-const app = new Application<AppState>();
+export const app = new Application<AppState>();
 const njk = new Environment(new FileSystemLoader("templates"));
 
 const collector = config.metrics.enable !== "none" ?
@@ -73,5 +73,7 @@ app.use((ctx) => {
     ctx.response.redirect(ctx.state.links.redirectBase + ctx.request.url.pathname);
 });
 
-log.info("Listening on", config.network.listen);
-await app.listen(config.network.listen);
+if (import.meta.main) {
+    log.info("Listening on", config.network.listen);
+    await app.listen(config.network.listen);
+}

@@ -2,7 +2,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import { afterEach, describe, it } from "@std/testing/bdd";
 import { MetricsCollector, MetricsConfig } from "@/src/support/MetricsCollector.ts";
 import { FakeTime } from "@std/testing/time";
-import { APIResult, EndpointResponseType } from "../../src/types/ReportingTypes.ts";
+import { APIResult, EndpointResponseType } from "@/src/types/ReportingTypes.ts";
 
 describe("MetricsCollector", () => {
     let collector: MetricsCollector;

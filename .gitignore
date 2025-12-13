@@ -1,5 +1,6 @@
 /.idea/
 /local/
+/coverage/
 /*.env
 /compose.yml
-/coverage/
+/permissions.jsonl
