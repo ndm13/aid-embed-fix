@@ -50,7 +50,7 @@ export type AnalyticsEntry = {
 };
 
 export type Content = {
-    status: APIResult,
+    status: APIResult | "cache",
     id: string,
     type: string,
     title: string,

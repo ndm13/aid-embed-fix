@@ -14,7 +14,13 @@ const flags = parseArgs(Deno.args, {
         "listen",
         "metrics",
         "metricsKey",
-        "logLevel"
+        "logLevel",
+        "supabaseUrl",
+        "supabaseKey",
+        "ingestSecret"
+    ],
+    boolean: [
+        "analytics"
     ]
 });
 
@@ -81,6 +87,25 @@ const config = {
         key: flags.metricsKey ??
             Deno.env.get("METRICS_KEY") ??
             crypto.randomUUID()
+    },
+    // These settings are for Supabase analytics ingestion.
+    analytics: {
+        // Determines whether analytics will be collected and sent to Supabase.
+        enable: flags.analytics ||
+            Deno.env.get("ANALYTICS") === "true" ||
+            false,
+        // The URL of the Supabase instance for analytics ingest.
+        supabaseUrl: flags.supabaseUrl ||
+            Deno.env.get("SUPABASE_URL") ||
+            undefined,
+        // The API key for the Supabase instance for analytics ingest.
+        supabaseKey: flags.supabaseKey ||
+            Deno.env.get("SUPABASE_KEY") ||
+            undefined,
+        // The secret used by the analytics ingest RPC function.
+        ingestSecret: flags.ingestSecret ||
+            Deno.env.get("INGEST_SECRET") ||
+            undefined
     },
     // The logging level for the application.
     logLevel: (flags.logLevel ||

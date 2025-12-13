@@ -35,7 +35,9 @@
             "read": true,
             "env": true,
             "import": [
-                "jspm.dev"
+                "deno.land",
+                "jspm.dev",
+                "jsr.io"
             ]
         }
     },
@@ -57,7 +59,11 @@
                 "LISTEN",
                 "METRICS",
                 "METRICS_KEY",
-                "LOG_LEVEL"
+                "LOG_LEVEL",
+                "ANALYTICS",
+                "SUPABASE_URL",
+                "SUPABASE_KEY",
+                "INGEST_SECRET"
             ]
         }
     },

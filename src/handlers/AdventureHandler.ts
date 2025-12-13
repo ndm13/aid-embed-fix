@@ -5,7 +5,7 @@ import { Environment } from "npm:nunjucks";
 import { AppState } from "../types/AppState.ts";
 import { AdventureEmbedData } from "../types/EmbedDataTypes.ts";
 import { EmbedHandler } from "./EmbedHandler.ts";
-import { APIResult } from "../types/ReportingTypes.ts";
+import { contentMapper } from "../support/mappers.ts";
 
 const { truncate } = _;
 
@@ -25,14 +25,8 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
 
     protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData, link: string): object {
         ctx.state.analytics.content = {
-            ...(ctx.state.analytics.content as { status: APIResult, id: string, type: string }),
-            title: data.title,
-            rating: data.contentRating,
-            visibility: data.unlisted ? "Unlisted" : "Published",
-            author: {
-                id: data.userId,
-                title: data.user.profile.title
-            }
+            ...ctx.state.analytics.content,
+            ...contentMapper.adventure(data)
         };
 
         const { links } = ctx.state;

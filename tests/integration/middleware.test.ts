@@ -34,6 +34,7 @@ const mockScenario: ScenarioEmbedData = {
     },
     user: {
         isMember: false,
+        id: "123",
         profile: {
             title: "testuser",
             thumbImageUrl: ""
@@ -71,6 +72,7 @@ const mockAdventure: AdventureEmbedData = {
     },
     user: {
         isMember: false,
+        id: "123",
         profile: {
             title: "testuser",
             thumbImageUrl: ""
@@ -80,6 +82,7 @@ const mockAdventure: AdventureEmbedData = {
 
 const mockUser: UserEmbedData = {
     isMember: false,
+    id: "123",
     profile: {
         thumbImageUrl: "",
         title: "testuser",
