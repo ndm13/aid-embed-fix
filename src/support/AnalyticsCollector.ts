@@ -55,6 +55,7 @@ export class AnalyticsCollector {
         });
 
         if (error) {
+            log.error(error);
             throw new Error("Invalid ingest secret", { cause: error });
         }
     }
@@ -72,7 +73,8 @@ export class AnalyticsCollector {
                     entry.content = content;
                     this.cache[id] = { content, timestamp: Date.now() };
                 } catch (error) {
-                    log.error("Error fetching content for analytics:", error);
+                    log.error("Error fetching content for analytics");
+                    log.error(error);
                     entry.content.status = "api_error";
                 }
             }
@@ -118,7 +120,8 @@ export class AnalyticsCollector {
             if (error) throw error;
             log.info(`Successfully sent ${entriesToProcess.length} analytics entries to Supabase`);
         } catch (error) {
-            log.error("Error sending analytics to Supabase, re-buffering entries:", error);
+            log.error("Error sending analytics to Supabase, re-buffering entries");
+            log.error(error);
             this.buffer.push(...entriesToProcess);
         }
     }
