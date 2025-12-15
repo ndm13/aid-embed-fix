@@ -24,7 +24,7 @@ export class AnalyticsCollector {
     private readonly supabase: SupabaseClient<any, "ingest", any>;
     private readonly timerId: number;
 
-    constructor(
+    private constructor(
         private readonly api: AIDungeonAPI,
         private readonly config: AnalyticsConfig
     ) {
@@ -40,6 +40,23 @@ export class AnalyticsCollector {
         });
         this.timerId = setInterval(() => this.process(), config.processingInterval);
         Deno.unrefTimer(this.timerId);
+    }
+
+    static async create(api: AIDungeonAPI, config: AnalyticsConfig) {
+        const collector = new AnalyticsCollector(api, config);
+        await collector.testSecret();
+        return collector;
+    }
+
+    private async testSecret() {
+        const { error } = await this.supabase.rpc("ingest_analytics", {
+            secret: this.config.ingestSecret,
+            payload: []
+        });
+
+        if (error) {
+            throw new Error("Invalid ingest secret", { cause: error });
+        }
     }
 
     async record(entry: AnalyticsEntry) {

@@ -38,30 +38,36 @@ app.use(logging.middleware());
 // Analytics
 if (config.analytics.enable) {
     if (!config.analytics.supabaseUrl || !config.analytics.supabaseKey || !config.analytics.ingestSecret) {
-        throw new TypeError("Analytics is enabled, but the Supabase URL, key, or secret is missing.");
-    }
-    const analyticsCollector = new AnalyticsCollector(api, {
-        supabaseUrl: config.analytics.supabaseUrl,
-        supabaseKey: config.analytics.supabaseKey,
-        ingestSecret: config.analytics.ingestSecret,
-        processingInterval: 300000, // 5 minutes
-        cacheExpiration: 3600000 // 1 hour
-    });
-    app.use(analytics.middleware(analyticsCollector));
-    log.info(`Analytics enabled: reporting to ${config.analytics.supabaseUrl}`);
+        log.warn("Analytics is enabled, but the Supabase URL, key, or secret is missing. Analytics will be disabled.");
+    } else {
+        try {
+            const analyticsCollector = await AnalyticsCollector.create(api, {
+                supabaseUrl: config.analytics.supabaseUrl,
+                supabaseKey: config.analytics.supabaseKey,
+                ingestSecret: config.analytics.ingestSecret,
+                processingInterval: 300000, // 5 minutes
+                cacheExpiration: 3600000 // 1 hour
+            });
+            app.use(analytics.middleware(analyticsCollector));
+            log.info(`Analytics enabled: reporting to ${config.analytics.supabaseUrl}`);
 
-    // Wait for server to shut down, then flush the cache before exit
-    const shutdown = async () => {
-        log.info("Waiting for server to shut down...");
-        abortController.abort();
-        log.info("Flushing analytics cache...");
-        await analyticsCollector.cleanup();
-        Deno.exit();
-    };
+            // Wait for server to shut down, then flush the cache before exit
+            const shutdown = async () => {
+                log.info("Waiting for server to shut down...");
+                abortController.abort();
+                log.info("Flushing analytics cache...");
+                await analyticsCollector.cleanup();
+                Deno.exit();
+            };
 
-    Deno.addSignalListener("SIGINT", shutdown);
-    if (Deno.build.os !== "windows") {
-        Deno.addSignalListener("SIGTERM", shutdown);
+            Deno.addSignalListener("SIGINT", shutdown);
+            if (Deno.build.os !== "windows") {
+                Deno.addSignalListener("SIGTERM", shutdown);
+            }
+        } catch (error) {
+            log.error("Failed to initialize analytics, continuing with analytics disabled.");
+            log.error(error);
+        }
     }
 } else {
     log.info("Analytics disabled");

@@ -1,6 +1,5 @@
 import { superoak } from "superoak";
-import { afterEach, describe, it } from "@std/testing/bdd";
-import { app } from "@/src/server.ts";
+import { afterAll, afterEach, describe, it } from "@std/testing/bdd";
 import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
 import { assertSpyCalls, stub } from "@std/testing/mock";
@@ -8,6 +7,11 @@ import config from "@/src/config.ts";
 import { Application } from "@oak/oak";
 import { AnalyticsCollector } from "@/src/support/AnalyticsCollector.ts";
 import * as analytics from "@/src/middleware/analytics.ts";
+
+// Stub testSecret before app initialization
+const testSecretStub = stub(AnalyticsCollector.prototype, "testSecret" as any, () => Promise.resolve());
+
+const { app } = await import("@/src/server.ts");
 
 const mockScenario: ScenarioEmbedData = {
     createdAt: new Date().toISOString(),
@@ -97,6 +101,10 @@ const mockUser: UserEmbedData = {
 };
 
 describe("Middleware Integration Tests", () => {
+    afterAll(() => {
+        testSecretStub.restore();
+    });
+
     describe("Embeds", () => {
         describe("Scenario", () => {
             it("should return a scenario embed with ?no_ua", async () => {
@@ -331,7 +339,7 @@ describe("Middleware Integration Tests", () => {
             // Create a temporary app to test middleware in isolation
             const tempApp = new Application<any>();
             const apiStub = {} as unknown as AIDungeonAPI;
-            collector = new AnalyticsCollector(apiStub, {
+            collector = await AnalyticsCollector.create(apiStub, {
                 processingInterval: 10000,
                 cacheExpiration: 10000,
                 supabaseUrl: "http://localhost",

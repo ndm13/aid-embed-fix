@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
-import { assertSpyCall, assertSpyCalls, Spy, spy } from "@std/testing/mock";
+import { assertSpyCall, assertSpyCalls, Spy, spy, stub } from "@std/testing/mock";
 import { FakeTime } from "@std/testing/time";
 import { AnalyticsCollector, AnalyticsConfig } from "@/src/support/AnalyticsCollector.ts";
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
@@ -21,7 +21,7 @@ describe("AnalyticsCollector", () => {
         ingestSecret: "test-secret"
     };
 
-    beforeEach(() => {
+    beforeEach(async () => {
         time = new FakeTime();
         mockRpc = spy((_fn: string, _args: any) => Promise.resolve({ error: null }));
         const mockSupabase = {
@@ -33,8 +33,17 @@ describe("AnalyticsCollector", () => {
             getAdventureEmbed: spy(() => Promise.resolve({} as any)),
             getUserEmbed: spy(() => Promise.resolve({} as any))
         } as unknown as AIDungeonAPI;
-        // Instantiate collector
-        collector = new AnalyticsCollector(api, config);
+
+        // Stub testSecret to avoid network call during creation
+        const testSecretStub = stub(AnalyticsCollector.prototype, "testSecret" as any, () => Promise.resolve());
+
+        try {
+            // Instantiate collector
+            collector = await AnalyticsCollector.create(api, config);
+        } finally {
+            testSecretStub.restore();
+        }
+
         // Inject mock Supabase client (accessing private property via cast)
         (collector as any).supabase = mockSupabase;
     });
