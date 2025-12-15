@@ -138,7 +138,12 @@ export class AnalyticsCollector {
         }
     }
 
-    cleanup() {
+    async cleanup() {
         clearInterval(this.timerId);
+        await this.process();
+        if (this.buffer.length > 0) {
+            log.warn("Unable to send analytics to Supabase, logging to console instead.");
+            console.log(JSON.stringify(this.buffer));
+        }
     }
 }

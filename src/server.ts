@@ -18,6 +18,7 @@ import log from "./logging/logger.ts";
 log.info("Setting things up...");
 export const app = new Application<AppState>();
 const njk = new Environment(new FileSystemLoader("templates"));
+const abortController = new AbortController();
 
 const api = await AIDungeonAPI.create({
     gqlEndpoint: config.client.gqlEndpoint,
@@ -43,11 +44,25 @@ if (config.analytics.enable) {
         supabaseUrl: config.analytics.supabaseUrl,
         supabaseKey: config.analytics.supabaseKey,
         ingestSecret: config.analytics.ingestSecret,
-        processingInterval: 1000,
-        cacheExpiration: 3600000
+        processingInterval: 300000, // 5 minutes
+        cacheExpiration: 3600000 // 1 hour
     });
     app.use(analytics.middleware(analyticsCollector));
     log.info(`Analytics enabled: reporting to ${config.analytics.supabaseUrl}`);
+
+    // Wait for server to shut down, then flush the cache before exit
+    const shutdown = async () => {
+        log.info("Waiting for server to shut down...");
+        abortController.abort();
+        log.info("Flushing analytics cache...");
+        await analyticsCollector.cleanup();
+        Deno.exit();
+    };
+
+    Deno.addSignalListener("SIGINT", shutdown);
+    if (Deno.build.os !== "windows") {
+        Deno.addSignalListener("SIGTERM", shutdown);
+    }
 } else {
     log.info("Analytics disabled");
 }
@@ -55,7 +70,7 @@ if (config.analytics.enable) {
 // Metrics
 if (config.metrics.enable !== "none") {
     const metricsCollector = new MetricsCollector({
-        window: 3600000,
+        window: 3600000, // 1 hour
         scopes: {
             api: config.metrics.enable === "all" || config.metrics.enable.includes("api"),
             router: config.metrics.enable === "all" || config.metrics.enable.includes("router")
@@ -92,5 +107,9 @@ app.use((ctx) => {
 
 if (import.meta.main) {
     log.info("Listening on", config.network.listen);
-    await app.listen(config.network.listen);
+    await app.listen({
+        hostname: config.network.listen.split(":")[0],
+        port: parseInt(config.network.listen.split(":")[1]),
+        signal: abortController.signal
+    });
 }
