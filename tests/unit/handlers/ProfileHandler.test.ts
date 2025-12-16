@@ -25,8 +25,16 @@ function createTestContext(state: Partial<AppState>, params: Record<string, stri
     const context = createMockContext({
         state: {
             metrics: {
-                endpoint: "",
-                type: ""
+                router: {
+                    endpoint: "",
+                    type: ""
+                }
+            },
+            analytics: {
+                timestamp: Date.now(),
+                content: {
+                    status: "unknown"
+                }
             },
             ...state
         },

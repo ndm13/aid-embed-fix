@@ -25,8 +25,16 @@ describe("DemoHandler", () => {
         const context = createMockContext({
             state: {
                 metrics: {
-                    endpoint: "",
-                    type: ""
+                    router: {
+                        endpoint: "",
+                        type: ""
+                    }
+                },
+                analytics: {
+                    timestamp: Date.now(),
+                    content: {
+                        status: "unknown"
+                    }
                 }
             },
             params: {}

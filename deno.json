@@ -10,7 +10,8 @@
         "@std/testing/bdd": "jsr:@std/testing@^0.225.3/bdd",
         "@oak/oak/testing": "jsr:@oak/oak@^17.2.0/testing",
         "npm:lodash": "npm:lodash@^4.17.21",
-        "npm:nunjucks": "npm:nunjucks@^3.2.4"
+        "npm:nunjucks": "npm:nunjucks@^3.2.4",
+        "superoak": "https://deno.land/x/superoak@5.0.0/mod.ts"
     },
     "fmt": {
         "exclude": [".github", "*.md"],
@@ -21,16 +22,56 @@
         "spaceSurroundingProperties": true,
         "operatorPosition": "maintain",
         "lineWidth": 125,
+        "newLineKind": "crlf",
         "proseWrap": "always",
         "trailingCommas": "never",
         "typeLiteral.separatorKind": "comma",
         "quoteProps": "consistent"
     },
     "test": {
-        "include": ["tests/**/*.test.ts"]
+        "include": ["tests/**/*.test.ts", "tests/integration/**/*.test.ts"],
+        "permissions": {
+            "net": true,
+            "read": true,
+            "env": true,
+            "import": [
+                "deno.land",
+                "jspm.dev",
+                "jsr.io"
+            ]
+        }
+    },
+    "permissions": {
+        "server": {
+            "net": true,
+            "read": [
+                "static",
+                "templates"
+            ],
+            "env": [
+                "FIREBASE_ITK",
+                "FIREBASE_CLIENT_VERSION",
+                "FIREBASE_CLIENT_TOKEN",
+                "ORIGIN",
+                "GQL_ENDPOINT",
+                "USER_AGENT",
+                "OEMBED_PROTOCOL",
+                "LISTEN",
+                "METRICS",
+                "METRICS_KEY",
+                "LOG_LEVEL",
+                "ANALYTICS",
+                "SUPABASE_URL",
+                "SUPABASE_KEY",
+                "INGEST_SECRET"
+            ]
+        }
     },
     "tasks": {
-        "start": "deno run --allow-net --allow-read --allow-env src/server.ts",
-        "test": "deno test --allow-net --allow-read --allow-env --coverage=coverage"
+        "start": "deno run --permission-set=server src/server.ts",
+        "test": "deno test -P --coverage=coverage",
+        "test:unit": "deno test -P tests/unit",
+        "test:integration": "deno test -P tests/integration",
+        "check": "deno check --allow-import"
     }
 }

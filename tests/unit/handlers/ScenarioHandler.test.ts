@@ -1,13 +1,16 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
+import { FakeTime } from "@std/testing/time";
+import { Context } from "@oak/oak";
 import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
+
+import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
+import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
 import { ScenarioHandler } from "@/src/handlers/ScenarioHandler.ts";
+import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { ScenarioEmbedData } from "@/src/types/EmbedDataTypes.ts";
-import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
-import { Context } from "@oak/oak";
-import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -30,8 +33,16 @@ function createTestContext(
     const context = createMockContext({
         state: {
             metrics: {
-                endpoint: "",
-                type: ""
+                router: {
+                    endpoint: "",
+                    type: ""
+                }
+            },
+            analytics: {
+                timestamp: Date.now(),
+                content: {
+                    status: "unknown"
+                }
             },
             ...state
         },
@@ -310,5 +321,109 @@ describe("ScenarioHandler", () => {
 
         assertEquals(responseBody.type, "scenario");
         assertEquals(responseBody.id, "nonexistent-scenario");
+    });
+
+    describe("analytics", () => {
+        it("should report visibility for published scenarios", async () => {
+            const handler = new ScenarioHandler(env);
+            const mockScenarioData: ScenarioEmbedData = {
+                title: "Test Scenario",
+                unlisted: false, // published
+                user: { profile: { title: "Test User" } }
+            } as ScenarioEmbedData;
+
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario"));
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.visibility, "Published");
+        });
+
+        it("should report visibility for unlisted scenarios", async () => {
+            const handler = new ScenarioHandler(env);
+            const mockScenarioData: ScenarioEmbedData = {
+                title: "Test Scenario",
+                unlisted: true, // unlisted
+                user: { profile: { title: "Test User" } }
+            } as ScenarioEmbedData;
+
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario"));
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.visibility, "Unlisted");
+        });
+
+        it("should record duration on success", async () => {
+            using time = new FakeTime();
+            const handler = new ScenarioHandler(env);
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: async () => {
+                        await time.tickAsync(75);
+                        return mockScenarioData;
+                    }
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario"));
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.status, "success");
+            assertEquals(context.state.metrics.api?.duration, 75);
+        });
+
+        it("should report api_error on API error", async () => {
+            using time = new FakeTime();
+            const handler = new ScenarioHandler(env);
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: async () => {
+                        await time.tickAsync(50);
+                        throw AIDungeonAPIError.onUnpack("test", {} as any, { data: {} });
+                    }
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario"));
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.status, "api_error");
+            assertEquals(context.state.metrics.api?.duration, 50);
+        });
+
+        it("should report net_error on network error", async () => {
+            using time = new FakeTime();
+            const handler = new ScenarioHandler(env);
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: async () => {
+                        await time.tickAsync(100);
+                        throw AIDungeonAPIError.onRequest("test", {} as any, new Error("network error"));
+                    }
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario"));
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.state.analytics.content?.status, "net_error");
+            assertEquals(context.state.metrics.api?.duration, 100);
+        });
     });
 });

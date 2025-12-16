@@ -5,6 +5,7 @@ import { Environment } from "npm:nunjucks";
 import { AppState } from "../types/AppState.ts";
 import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
 import { EmbedHandler } from "./EmbedHandler.ts";
+import { contentMapper } from "../support/mappers.ts";
 
 const { truncate } = _;
 
@@ -23,6 +24,11 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     }
 
     protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
+        ctx.state.analytics.content = {
+            ...ctx.state.analytics.content,
+            ...contentMapper.scenario(data)
+        };
+
         const { links } = ctx.state;
         return {
             type: this.responseType,

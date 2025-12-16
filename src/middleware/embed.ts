@@ -20,8 +20,8 @@ export function router(njk: Environment) {
     router.get("/adventure/:id/:tail/:read?", async (ctx) => {
         if (ctx.params.read && ctx.params.read !== "read") {
             const link = ctx.state.links.redirect(adventure.redirectKeys);
-            ctx.state.metrics.endpoint = "adventure";
-            ctx.state.metrics.type = "redirect";
+            ctx.state.metrics.router.endpoint = "adventure";
+            ctx.state.metrics.router.type = "redirect";
             ctx.response.redirect(link);
             return;
         }

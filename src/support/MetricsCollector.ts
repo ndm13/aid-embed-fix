@@ -8,7 +8,7 @@ import {
     RouterDataPoint,
     RouterMetrics,
     Timings
-} from "../types/MetricsTypes.ts";
+} from "../types/ReportingTypes.ts";
 
 const { countBy, groupBy } = _;
 

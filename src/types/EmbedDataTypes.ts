@@ -27,6 +27,7 @@ export type ScenarioEmbedData = {
         isDisliked: boolean
     },
     user: {
+        id: string,
         isMember: boolean,
         profile: {
             title: string,
@@ -64,6 +65,7 @@ export type AdventureEmbedData = {
         deletedAt: string | null
     },
     user: {
+        id: string,
         isMember: boolean,
         profile: {
             title: string,
@@ -73,6 +75,7 @@ export type AdventureEmbedData = {
 };
 
 export type UserEmbedData = {
+    id: string,
     isMember: boolean,
     profile: {
         thumbImageUrl: string,

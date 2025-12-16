@@ -9,7 +9,23 @@ export function middleware(api: AIDungeonAPI, linkConfig: RelatedLinksConfig) {
     return async (ctx: Context<AppState>, next: Next) => {
         ctx.state = {
             api,
-            metrics: {},
+            metrics: {
+                router: {}
+            },
+            analytics: {
+                timestamp: Date.now(),
+                content: {
+                    status: "unknown"
+                },
+                request: {
+                    hostname: ctx.request.url.hostname,
+                    path: ctx.request.url.pathname,
+                    params: Object.fromEntries(ctx.request.url.searchParams),
+                    userAgent: ctx.request.userAgent.ua,
+                    browser: ctx.request.userAgent.browser?.name,
+                    platform: ctx.request.userAgent.os?.name
+                }
+            },
             links: new RelatedLinks(ctx, linkConfig)
         };
         await next();
