@@ -69,7 +69,7 @@ export class AnalyticsCollector {
                 entry.content.status = "cache";
             } else {
                 try {
-                    const content = await this.fetchContent(entry.content.type as "scenario" | "adventure" | "user", id);
+                    const content = await this.fetchContent(entry.content.type as "scenario" | "adventure" | "profile", id);
                     entry.content = content;
                     this.cache[id] = { content, timestamp: Date.now() };
                 } catch (error) {
@@ -126,7 +126,7 @@ export class AnalyticsCollector {
         }
     }
 
-    private async fetchContent(type: "scenario" | "adventure" | "user", id: string): Promise<Content> {
+    private async fetchContent(type: "scenario" | "adventure" | "profile", id: string): Promise<Content> {
         switch (type) {
             case "scenario": {
                 const data = await this.api.getScenarioEmbed(id);
@@ -146,7 +146,7 @@ export class AnalyticsCollector {
                     ...contentMapper.adventure(data)
                 };
             }
-            case "user": {
+            case "profile": {
                 const data = await this.api.getUserEmbed(id);
                 return {
                     status: "success",
@@ -155,6 +155,8 @@ export class AnalyticsCollector {
                     ...contentMapper.user(data)
                 };
             }
+            default:
+                throw new TypeError(`Unknown content type: ${type}`);
         }
     }
 

@@ -111,7 +111,7 @@ describe("AnalyticsCollector", () => {
 
     it("should fetch user content if status is unknown", async () => {
         const entry: AnalyticsEntry = {
-            content: { id: "user-123", type: "user", status: "unknown" },
+            content: { id: "user-123", type: "profile", status: "unknown" },
             timestamp: Date.now()
         } as any;
 

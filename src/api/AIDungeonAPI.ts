@@ -93,7 +93,7 @@ export class AIDungeonAPI {
             operationName: "ProfileScreenGetUser",
             variables: { username: username },
             query:
-                "query ProfileScreenGetUser($username: String) {  user(username: $username) {    id    profile {      thumbImageUrl    }    ...ProfileHeaderUser    ...ProfileMobileHeaderUser  }}fragment ProfileHeaderUser on User {  id  isMember  friendCount  followingCount  followersCount  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser  }fragment SocialStatMenuUser on User {  profile {    title  }}fragment ProfileMobileHeaderUser on User {  id  friendCount  followingCount  followersCount  isMember  profile {    title    description    thumbImageUrl  }  ...SocialStatMenu-User}"
+                "query ProfileScreenGetUser($username: String) {  user(username: $username) {    id    profile {      thumbImageUrl    }    ...ProfileHeaderUser    ...ProfileMobileHeaderUser  }}fragment ProfileHeaderUser on User {  id  isMember  friendCount  followingCount  followersCount  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser  }fragment SocialStatMenuUser on User {  profile {    title  }}fragment ProfileMobileHeaderUser on User {  id  friendCount  followingCount  followersCount  isMember  profile {    title    description    thumbImageUrl  }  ...SocialStatMenuUser}"
         };
         return this.query<UserEmbedData>(query)
             .then((res) => AIDungeonAPI.validateResponse(query, res, username, "user"));
