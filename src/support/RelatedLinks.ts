@@ -6,8 +6,34 @@ export class RelatedLinks {
     constructor(private readonly ctx: Context<AppState>, private readonly config: RelatedLinksConfig) {}
 
     cover(image: string) {
-        const betterImage = this.ctx.request.url.searchParams.get("bi");
+        const params = this.ctx.request.url.searchParams;
+
+        // Support legacy ?bi=[url] (this will likely be deprecated)
+        const betterImage = params.get("bi");
         if (betterImage) return betterImage;
+
+        // New cover param
+        const cover = params.get("cover");
+        if (cover === "none") return null;
+        if (cover && cover.includes(":")) {
+            let [service, slug] = cover.split(":");
+            // Allow for optional leading slash(es) on cover ID
+            slug = slug.replace(/^\/+/, "");
+            if (slug.length > 0) {
+                if (!slug.includes(".")) {
+                    // We'll naively assume .jpg if not specified (usually safe)
+                    slug += ".jpg";
+                }
+                slug = encodeURIComponent(slug);
+                switch (service) {
+                    case "catbox":
+                        return `https://files.catbox.moe/${slug}`;
+                    case "imgur":
+                        return `https://i.imgur.com/${slug}`;
+                }
+            }
+        }
+
         try {
             const url = new URL(image);
             const split = url.pathname.split("/");
