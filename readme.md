@@ -3,6 +3,7 @@
 [![Check for Deno Updates](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml)
 [![CodeQL](https://github.com/ndm13/aid-embed-fix/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/github-code-scanning/codeql)
 [![Automated Testing](https://github.com/ndm13/aid-embed-fix/actions/workflows/test.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/test.yml)
+<br>
 ![axdungeon.com status](https://img.shields.io/website?url=https%3A%2F%2Faxdungeon.com%2Fhealthcheck&logo=digitalocean&label=axdungeon.com&cacheSeconds=300)
 ![aidungeon.link status](https://img.shields.io/website?url=https%3A%2F%2Faidungeon.link%2Fhealthcheck&logo=digitalocean&label=aidungeon.link&cacheSeconds=300)
 [![Discord](https://img.shields.io/discord/1432533980070281228?logo=discord&label=Discord&link=https%3A%2F%2Fdiscord.gg%2FpjHXDsYfR6)](https://discord.gg/pjHXDsYfR6)
