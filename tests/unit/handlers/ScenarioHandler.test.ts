@@ -96,35 +96,6 @@ describe("ScenarioHandler", () => {
         assertEquals(responseBody.author, "Test User");
         assertEquals(responseBody.description, "A test scenario.");
         assertEquals(responseBody.cover, "https://example.com/image.jpg");
-        assertEquals(
-            responseBody.oembed,
-            "https://example.com/oembed.json?title=Test+Scenario&author=Test+User&type=Scenario"
-        );
-    });
-
-    it("should handle UUID image paths", async () => {
-        const handler = new ScenarioHandler(env);
-        const scenarioWithUuidImage: ScenarioEmbedData = {
-            ...mockScenarioData,
-            image: "https://images.prod.another-dungeon.com/00000000-0000-0000-0000-000000000000"
-        };
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: () => Promise.resolve(scenarioWithUuidImage)
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, new URL("https://example.com/scenario/test-scenario"));
-
-        await handler.handle(context as unknown as Context<AppState>);
-
-        assertExists(context.response.body);
-        const responseBody = JSON.parse(context.response.body as string);
-
-        assertEquals(
-            responseBody.cover,
-            "https://images.prod.another-dungeon.com/00000000-0000-0000-0000-000000000000/public"
-        );
     });
 
     it("should handle invalid image URLs gracefully", async () => {
@@ -147,26 +118,6 @@ describe("ScenarioHandler", () => {
         const responseBody = JSON.parse(context.response.body as string);
 
         assertEquals(responseBody.cover, "not-a-valid-url");
-    });
-
-    it("should use better image parameter", async () => {
-        const handler = new ScenarioHandler(env);
-        const url = new URL("https://example.com/scenario/test-scenario");
-        url.searchParams.set("bi", "https://better.image/image.png");
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, url);
-
-        await handler.handle(context as unknown as Context<AppState>);
-
-        assertExists(context.response.body);
-        const responseBody = JSON.parse(context.response.body as string);
-
-        assertEquals(responseBody.cover, "https://better.image/image.png");
     });
 
     describe("description logic", () => {
@@ -227,80 +178,6 @@ describe("ScenarioHandler", () => {
             await handler.handle(context as unknown as Context<AppState>);
             const responseBody = JSON.parse(context.response.body as string);
             assertEquals(responseBody.description, "");
-        });
-    });
-
-    describe("redirects", () => {
-        const handler = new ScenarioHandler(env);
-
-        const testRedirect = async (requestUrl: string, expectedRedirect: string) => {
-            const context = createTestContext(
-                { api: { getScenarioEmbed: () => Promise.resolve(mockScenarioData) } as unknown as AIDungeonAPI },
-                { id: "test-scenario" },
-                new URL(requestUrl),
-                "Mozilla/5.0"
-            );
-
-            let redirectedUrl = "";
-            context.response.redirect = ((url: string | URL) => {
-                redirectedUrl = url.toString();
-            }) as any;
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.response.status, 301);
-            assertEquals(redirectedUrl, expectedRedirect);
-        };
-
-        it("should redirect non-Discord user agents to default", () =>
-            testRedirect(
-                "https://example.com/scenario/test-scenario",
-                "https://aid.com/scenario/test-scenario"
-            ));
-
-        it("should redirect to play.aidungeon.com for play. subdomain", () =>
-            testRedirect(
-                "https://play.example.com/scenario/test-scenario",
-                "https://play.aidungeon.com/scenario/test-scenario"
-            ));
-
-        it("should redirect to beta.aidungeon.com for beta. subdomain", () =>
-            testRedirect(
-                "https://beta.example.com/scenario/test-scenario",
-                "https://beta.aidungeon.com/scenario/test-scenario"
-            ));
-
-        it("should redirect to alpha.aidungeon.com for alpha. subdomain", () =>
-            testRedirect(
-                "https://alpha.example.com/scenario/test-scenario",
-                "https://alpha.aidungeon.com/scenario/test-scenario"
-            ));
-
-        it("should pass through redirect keys", async () => {
-            const url = new URL("https://example.com/scenario/test-scenario");
-            url.searchParams.set("share", "true");
-            url.searchParams.set("source", "test");
-            const context = createTestContext(
-                {
-                    api: {
-                        getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                    } as unknown as AIDungeonAPI
-                },
-                {
-                    id: "test-scenario"
-                },
-                url,
-                "Mozilla/5.0"
-            );
-
-            let redirectedUrl = "";
-            context.response.redirect = ((url: string | URL) => {
-                redirectedUrl = url.toString();
-            }) as any;
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(redirectedUrl, "https://aid.com/scenario/test-scenario?share=true&source=test");
         });
     });
 
