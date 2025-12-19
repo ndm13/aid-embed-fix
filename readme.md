@@ -31,6 +31,7 @@ or [Imgur](https://imgur.com/upload), or remove the image entirely.
 | Catbox  | `https://files.catbox.moe/ecb5xa.png` | `?cover=catbox:ecb5xa.png` | 1. Upload the image of your choosing.<br>2. Click on the URL below the progress bar to copy the link.<br>3. The part of the URL after the `/` is your ID. Add the URL parameter `cover=catbox:[your ID]`, with an optional extension (assumes `.jpg` by default).        |
 | Imgur   | `https://imgur.com/G2oq1zB`           | `?cover=imgur:G2oq1zB`     | 1. Upload the image of your choosing.<br>2. Hover your mouse over the image and click the `Copy link` button.<br>3. The part of the URL after the `/` is your ID. Add the URL parameter `cover=imgur:[your ID]`, with an optional extension (assumes `.jpg` by default). |
 | None    | n/a                                   | `?cover=none`              | Add the URL parameter `cover=none` to remove the cover art from the embed.                                                                                                                                                                                               |
+
 If the cover service is not valid, or the ID is empty, then the service will show the original cover art instead.
 
 > **Note:** AI Dungeon uses HIVE and other image content filters to moderate inappropriate content. *This explicitly
