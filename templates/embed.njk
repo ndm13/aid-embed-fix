@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
     <meta name="theme-color" content="#f8ae2c"/>
-    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:card" content="summary{% if cover %}_large_image{% endif %}"/>
     <meta property="twitter:title" content="{{ title }}"/>
     <meta property="og:title" content="{{ title }}"/>
     <meta property="og:description" content="{{ description }}"/>
-    <meta property="description" content="{{ description }}"/>
+    <meta property="description" content="{{ description }}"/>{% if cover %}
     <meta property="twitter:image" content="{{ cover }}"/>
-    <meta property="og:image" content="{{ cover }}"/>
+    <meta property="og:image" content="{{ cover }}"/>{% endif %}
     <meta property="og:type" content="article"/>
     <meta name="application-name" content="AI Dungeon"/>
     <meta property="og:site_name" content="AI Dungeon"/>
 
-    <link rel="canonical" href="{{ link | safe }}>"/>
+    <link rel="canonical" href="{{ link | safe }}"/>
     <meta property="og:url" content="{{ link | safe }}"/>
 
     <link rel="icon" href="{{ icon }}"/>
@@ -33,7 +33,7 @@
 <body class="embed">
 <h2><a href="{{ link | safe }}">{{ title }}</a></h2>
 <h5>{% if type === "scenario" %}a scenario{% elif type === "adventure" %}an adventure{% endif %} by <img alt="Profile icon for user '{{ author }}'" src="{{ icon }}" style="height: 1.5ex"/> <a href="{{ profile_link }}">{{ author }}</a></h5>
-<p>{{ description }}</p>
-<img alt="Cover image for {{ type }} '{{ title }}'" src="{{ cover }}"/>
+<p>{{ description }}</p>{% if cover %}
+<img alt="Cover image for {{ type }} '{{ title }}'" src="{{ cover }}"/>{% endif %}
 </body>
 </html>
