@@ -3,6 +3,7 @@ import { Environment, FileSystemLoader } from "npm:nunjucks";
 
 import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
 import * as analytics from "./middleware/analytics.ts";
+import * as blocklist from "./middleware/blocklist.ts";
 import * as embed from "./middleware/embed.ts";
 import * as logging from "./middleware/logging.ts";
 import * as metrics from "./middleware/metrics.ts";
@@ -103,6 +104,9 @@ const embedRouter = embed.router(njk);
 app.use(embedRouter.routes(), embedRouter.allowedMethods());
 const staticsRouter = statics.router();
 app.use(staticsRouter.routes(), staticsRouter.allowedMethods());
+
+// Block spam requests
+app.use(blocklist.middleware());
 
 // Fallback redirect to AI Dungeon
 app.use((ctx) => {
