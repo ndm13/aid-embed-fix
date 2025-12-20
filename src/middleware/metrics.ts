@@ -27,6 +27,11 @@ export function middleware(metrics: MetricsCollector) {
 export function router(metrics: MetricsCollector, key?: string) {
     const router = new Router<AppState>();
 
+    router.use(async (ctx, next) => {
+        ctx.state.analytics.request.middleware = "metrics";
+        await next();
+    });
+
     router.get("/metrics", (ctx) => {
         ctx.state.metrics.router.endpoint = "metrics";
 

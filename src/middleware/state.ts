@@ -21,6 +21,7 @@ export function middleware(api: AIDungeonAPI, linkConfig: RelatedLinksConfig) {
                     hostname: ctx.request.url.hostname,
                     path: ctx.request.url.pathname,
                     params: Object.fromEntries(ctx.request.url.searchParams),
+                    middleware: "unknown",
                     userAgent: ctx.request.userAgent.ua,
                     browser: ctx.request.userAgent.browser?.name,
                     platform: ctx.request.userAgent.os?.name

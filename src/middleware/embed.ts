@@ -11,6 +11,11 @@ import { AppState } from "../types/AppState.ts";
 export function router(njk: Environment) {
     const router = new Router<AppState>();
 
+    router.use(async (ctx, next) => {
+        ctx.state.analytics.request.middleware = "embed";
+        await next();
+    });
+
     const scenario = new ScenarioHandler(njk);
     router.get("/scenario/:id/:tail", async (ctx) => {
         await scenario.handle(ctx);
