@@ -328,6 +328,71 @@ describe("Middleware Integration Tests", () => {
         });
     });
 
+    describe("Blocklist", () => {
+        const blockedPaths = [
+            // Script extensions
+            "/index.php",
+            "/test.php7",
+            "/index.phtml",
+            "/default.aspx",
+            "/index.jsp",
+            "/script.cgi",
+            "/test.pl",
+            "/setup.sh",
+            "/install.bash",
+            "/index.php?id=1",
+
+            // WordPress/Laravel
+            "/wp-admin",
+            "/wp-content/themes/theme/style.css",
+            "/wp-includes/js/jquery.js",
+            "/wp-json/wp/v2/users",
+            "/wp-login.php",
+            "/vendor/phpunit/phpunit/phpunit",
+            "/laravel/.env",
+
+            // Dotfiles
+            "/.git",
+            "/.git/config",
+            "/.git/logs/HEAD",
+            "/.env",
+            "/.env.dev.local",
+            "/.config",
+            "/.vscode/settings.json",
+            "/.npmrc",
+            "/.aws/credentials"
+        ];
+
+        for (const path of blockedPaths) {
+            it(`should block ${path}`, async () => {
+                const request = await superoak(app);
+                await request.get(path)
+                    .expect(404);
+            });
+        }
+
+        const allowedPaths = [
+            "/scenario/123/test-scenario",
+            "/adventure/123/test-adventure",
+            "/profile/testuser",
+            "/style.css",
+            "/robots.txt",
+            "/healthcheck",
+            "/oembed.json?type=Embed+Fix",
+            "/unknown-path" // Should be 302, not 404
+        ];
+
+        for (const path of allowedPaths) {
+            it(`should allow ${path}`, async () => {
+                const request = await superoak(app);
+                const response = await request.get(path);
+                if (response.status === 404) {
+                    throw new Error(`Path ${path} was incorrectly blocked (404)`);
+                }
+            });
+        }
+    });
+
     describe("Analytics Middleware", () => {
         let collector: AnalyticsCollector | undefined;
 
