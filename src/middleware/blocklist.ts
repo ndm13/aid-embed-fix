@@ -17,7 +17,6 @@ const BLOCKED_PATTERNS = [
 export function middleware() {
     return async (ctx: Context<AppState>, next: Next) => {
         if (BLOCKED_PATTERNS.some((pattern) => pattern.test(ctx.request.url.pathname))) {
-            ctx.state.analytics.content.type = "blocked";
             ctx.state.metrics.router.endpoint = "blocklist";
             ctx.state.metrics.router.type = "unknown";
             ctx.response.status = 404;
