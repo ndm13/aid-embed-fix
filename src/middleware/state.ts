@@ -14,9 +14,7 @@ export function middleware(api: AIDungeonAPI, linkConfig: RelatedLinksConfig) {
             },
             analytics: {
                 timestamp: Date.now(),
-                content: {
-                    status: "unknown"
-                },
+                content: {},
                 request: {
                     hostname: ctx.request.url.hostname,
                     path: ctx.request.url.pathname,
