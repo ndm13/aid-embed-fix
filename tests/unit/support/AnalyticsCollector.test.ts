@@ -84,7 +84,7 @@ describe("AnalyticsCollector", () => {
 
     it("should fetch content if status is unknown", async () => {
         const entry: AnalyticsEntry = {
-            content: { id: "456", type: "scenario", status: "unknown" },
+            content: { id: "456", type: "scenario" },
             timestamp: Date.now()
         } as any;
 
@@ -92,7 +92,7 @@ describe("AnalyticsCollector", () => {
         // We provide minimal data to satisfy the mapper
         const scenarioData = {
             title: "Test Scenario",
-            user: { profile: { title: "author" } }
+            user: { id: "user-1", profile: { title: "author" } }
         };
         (api.getScenarioEmbed as any) = spy(() => Promise.resolve(scenarioData as any));
 
@@ -111,11 +111,12 @@ describe("AnalyticsCollector", () => {
 
     it("should fetch user content if status is unknown", async () => {
         const entry: AnalyticsEntry = {
-            content: { id: "user-123", type: "profile", status: "unknown" },
+            content: { id: "user-123", type: "profile" },
             timestamp: Date.now()
         } as any;
 
         const userData = {
+            id: "user-123",
             profile: {
                 title: "Test User"
             }
@@ -136,24 +137,31 @@ describe("AnalyticsCollector", () => {
 
     it("should use cached content for subsequent requests", async () => {
         const entry1: AnalyticsEntry = {
-            content: { id: "789", type: "adventure", status: "unknown" },
+            content: { id: "789", type: "adventure" },
             timestamp: Date.now()
         } as any;
 
-        (api.getAdventureEmbed as any) = spy(() => Promise.resolve({ title: "Adventure 1", user: {} } as any));
+        // Create a spy that returns a promise
+        const getAdventureEmbedSpy = spy(() => Promise.resolve({
+            title: "Adventure 1",
+            userId: "user-1",
+            user: { profile: { title: "User 1" } }
+        } as any));
+        (api.getAdventureEmbed as any) = getAdventureEmbedSpy;
 
         // First record - fetches from API
         await collector.record(entry1);
 
         const entry2: AnalyticsEntry = {
-            content: { id: "789", type: "adventure", status: "unknown" },
+            content: { id: "789", type: "adventure" },
             timestamp: Date.now()
         } as any;
 
         // Second record - should use cache
         await collector.record(entry2);
 
-        assertSpyCalls(api.getAdventureEmbed as any, 1);
+        // Assert that the spy was called exactly once
+        assertSpyCalls(getAdventureEmbedSpy, 1);
     });
 
     it("should retry on Supabase error", async () => {
@@ -184,9 +192,11 @@ describe("AnalyticsCollector", () => {
 
     it("should prune expired cache entries", async () => {
         const entry: AnalyticsEntry = {
-            content: { id: "cache-test", type: "user", status: "success" },
+            content: { id: "cache-test", type: "profile" },
             timestamp: Date.now()
         } as any;
+
+        (api.getUserEmbed as any) = spy(() => Promise.resolve({ id: "user-1", profile: { title: "Test User" } } as any));
 
         // Record entry to populate cache
         await collector.record(entry);
