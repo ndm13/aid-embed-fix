@@ -110,6 +110,7 @@ app.use(blocklist.middleware());
 
 // Fallback redirect to AI Dungeon
 app.use((ctx) => {
+    ctx.state.analytics.request.middleware = "redirect";
     ctx.state.metrics.router.endpoint = "unsupported";
     ctx.state.metrics.router.type = "redirect";
     ctx.response.redirect(ctx.state.links.redirectBase + ctx.request.url.pathname);

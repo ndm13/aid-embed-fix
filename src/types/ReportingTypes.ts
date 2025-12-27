@@ -66,6 +66,7 @@ export type RequestProperties = {
     hostname: string,
     path: string,
     params: Record<string, string>,
+    middleware: string,
     userAgent: string,
     browser?: string,
     platform?: string

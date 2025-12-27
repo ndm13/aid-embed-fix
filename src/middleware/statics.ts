@@ -5,6 +5,11 @@ import { AppState } from "../types/AppState.ts";
 export function router() {
     const router = new Router<AppState>();
 
+    router.use(async (ctx, next) => {
+        ctx.state.analytics.request.middleware = "statics";
+        await next();
+    });
+
     router.get("/healthcheck", (ctx) => {
         ctx.state.metrics.router.endpoint = "healthcheck";
         ctx.state.metrics.router.type = "static";

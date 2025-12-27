@@ -62,7 +62,7 @@ export class AnalyticsCollector {
 
     async record(entry: AnalyticsEntry) {
         const id = entry.content!.id;
-        if (entry.content.status === "unknown" && id) {
+        if (!entry.content.status && id) {
             const cached = this.cache[id];
             if (cached && (Date.now() - cached.timestamp < this.config.cacheExpiration)) {
                 entry.content = cached.content;
@@ -80,7 +80,7 @@ export class AnalyticsCollector {
             }
         }
 
-        if (entry.content.status !== "unknown" && entry.content.id) {
+        if (!entry.content.status && entry.content.id) {
             this.cache[entry.content.id] = { content: entry.content, timestamp: Date.now() };
         }
 
