@@ -35,6 +35,23 @@
                     tld = hostMatch.groups.tld;
                 }
             }
+            if (s.searchParams.has('shareId')) {
+                shareId = s.searchParams.get('shareId');
+            }
+            if (s.searchParams.has('cover')) {
+                let coverParam = s.searchParams.get('cover');
+                if (coverParam.includes(':')) {
+                    const [platform, file] = coverParam.split(':');
+                    switch (platform) {
+                        case 'catbox':
+                            coverLink = "https://files.catbox.moe/" + file.replace(/^\/+/, "");
+                            break;
+                        case 'imgur':
+                            coverLink = "https://imgur.com/" + file.replace(/^\/+/, "");
+                            break;
+                    }
+                }
+            }
         } catch { }
     });
 
@@ -57,7 +74,7 @@
 
     let coverInput: HTMLInputElement | undefined = $state();
     $effect(() => {
-        coverInput?.setCustomValidity(coverInvalid ? "Invalid cover URL" : "");
+        coverInput?.setCustomValidity(coverInvalid ? "Supports Catbox and Imgur links" : "");
     });
 
     let url = $derived.by(() => {
