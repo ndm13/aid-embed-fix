@@ -4,3 +4,5 @@
 /*.env
 /compose.yml
 /permissions.jsonl
+/dashboard/dist/
+/dashboard/.vite/

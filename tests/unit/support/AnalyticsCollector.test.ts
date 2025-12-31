@@ -142,11 +142,13 @@ describe("AnalyticsCollector", () => {
         } as any;
 
         // Create a spy that returns a promise
-        const getAdventureEmbedSpy = spy(() => Promise.resolve({
-            title: "Adventure 1",
-            userId: "user-1",
-            user: { profile: { title: "User 1" } }
-        } as any));
+        const getAdventureEmbedSpy = spy(() =>
+            Promise.resolve({
+                title: "Adventure 1",
+                userId: "user-1",
+                user: { profile: { title: "User 1" } }
+            } as any)
+        );
         (api.getAdventureEmbed as any) = getAdventureEmbedSpy;
 
         // First record - fetches from API

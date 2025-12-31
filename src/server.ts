@@ -5,6 +5,7 @@ import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
 import * as analytics from "./middleware/analytics.ts";
 import * as blocklist from "./middleware/blocklist.ts";
 import * as embed from "./middleware/embed.ts";
+import * as dashboard from "./middleware/dashboard.ts";
 import * as logging from "./middleware/logging.ts";
 import * as metrics from "./middleware/metrics.ts";
 import * as statics from "./middleware/statics.ts";
@@ -98,6 +99,9 @@ if (config.metrics.enable !== "none") {
 } else {
     log.info("Metrics disabled");
 }
+
+// Dashboard
+app.use(dashboard.middleware());
 
 // Business logic
 const embedRouter = embed.router(njk);
