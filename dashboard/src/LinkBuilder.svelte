@@ -9,7 +9,7 @@
     let shareId = $state('');
 
     let coverLink = $state("");
-    let noCover = $state(false);
+    let coverMode = $state<'default' | 'none' | 'custom'>('default');
 
     let path = $derived.by(() => {
         if (!source) return '';
@@ -40,23 +40,30 @@
             }
             if (s.searchParams.has('cover')) {
                 let coverParam = s.searchParams.get('cover');
-                if (coverParam.includes(':')) {
+                if (coverParam === 'none') {
+                    coverMode = 'none';
+                } else if (coverParam.includes(':')) {
                     const [platform, file] = coverParam.split(':');
                     switch (platform) {
                         case 'catbox':
                             coverLink = "https://files.catbox.moe/" + file.replace(/^\/+/, "");
+                            coverMode = 'custom';
                             break;
                         case 'imgur':
                             coverLink = "https://imgur.com/" + file.replace(/^\/+/, "");
+                            coverMode = 'custom';
                             break;
                     }
                 }
+            } else {
+                coverMode = 'default';
             }
         } catch { }
     });
 
     let cover = $derived.by(() => {
-        if (noCover) return "none";
+        if (coverMode === 'default') return "";
+        if (coverMode === 'none') return "none";
         if (!coverLink) return "";
         try {
             const coverUrl = new URL(coverLink);
@@ -70,7 +77,7 @@
         return "";
     });
 
-    let coverInvalid = $derived(!noCover && coverLink !== "" && cover === "");
+    let coverInvalid = $derived(coverMode === 'custom' && coverLink !== "" && cover === "");
 
     let coverInput: HTMLInputElement | undefined = $state();
     $effect(() => {
@@ -100,48 +107,126 @@
     }
 </script>
 
+<p>
+    Paste your AI Dungeon link below to customize your embed fix version!
+</p>
+
 <form>
+    <div class="grid-section">
+        <label for="source">Original Link:</label>
+        <input id="source" type="text" bind:value={source} />
+
+        <label for="prefix">Embed Fixer:</label>
+        <div class="row">
+            <select id="prefix" bind:value={prefix}>
+                <option value="play.">play.</option>
+                <option value="beta.">beta.</option>
+                <option value="alpha.">alpha.</option>
+            </select>
+            <select bind:value={tld} aria-label="TLD">
+                <option value="aidungeon.link">aidungeon.link</option>
+                <option value="axdungeon.com">axdungeon.com</option>
+            </select>
+        </div>
+    </div>
+
+    <details>
+        <summary>Advanced</summary>
+        <div class="advanced-grid">
+            <label for="shareId">Share ID:</label>
+            <div class="row">
+                <input id="shareId" type="text" bind:value={shareId} />
+                <button type="button" onclick={generateRandomId} aria-label="Generate random ID" title="Generate random ID">🔀</button>
+            </div>
+
+            <span>Cover Art:</span>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" bind:group={coverMode} value="default" />
+                    Default
+                </label>
+                <label>
+                    <input type="radio" bind:group={coverMode} value="none" />
+                    None
+                </label>
+                <label>
+                    <input type="radio" bind:group={coverMode} value="custom" />
+                    Custom
+                </label>
+            </div>
+
+            {#if coverMode === 'custom'}
+                <input aria-label="custom cover" id="coverLink" type="text" bind:this={coverInput} bind:value={coverLink} placeholder="https://files.catbox.moe/ecb5xa.png" onblur={() => coverInput?.reportValidity()} />
+            {/if}
+        </div>
+    </details>
+</form>
+
+{#if url}
     <p>
-        <label>
-            Source URL:
-            <input type="text" bind:value={source} size="50" />
+        <label class="generated-url">
+            Generated URL:
+            <input type="text" value={url.href} readonly size="50" />
         </label>
     </p>
+{/if}
 
-    <label>
-        Base Domain:
-        <select bind:value={prefix}>
-            <option value="play.">play.</option>
-            <option value="beta.">beta.</option>
-            <option value="alpha.">alpha.</option>
-        </select>
-        <select bind:value={tld}>
-            <option value="aidungeon.link">aidungeon.link</option>
-            <option value="axdungeon.com">axdungeon.com</option>
-        </select>
-    </label>
-    <br/>
-    <label>
-        Share ID:
-        <input type="text" bind:value={shareId} />
-        <button type="button" onclick={generateRandomId}>Generate</button>
-    </label>
-    <br/>
-    <label>
-        Custom cover:
-        <input type="text" bind:this={coverInput} bind:value={coverLink} placeholder="https://files.catbox.moe/ecb5xa.png" disabled={noCover} onblur={() => !noCover && coverInput?.reportValidity()} />
-    </label>
-    <label>
-        <input type="checkbox" bind:checked={noCover} />
-        No Cover
-    </label>
+<style>
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
 
-    {#if url}
-        <p>
-            <label>
-                Generated URL:
-                <input type="text" value={url.href} readonly size="50" />
-            </label>
-        </p>
-    {/if}
-</form>
+    summary {
+        padding: 0.75rem;
+        background-color: #333;
+    }
+
+    .grid-section, .advanced-grid {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .advanced-grid {
+        padding: 0.75rem;
+        border: 0.1rem dashed #333;
+        border-top: none;
+    }
+
+    .row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .row input[type="text"], .row select {
+        flex-grow: 1;
+    }
+
+    .radio-group {
+        display: flex;
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .radio-group label {
+        display: flex;
+        flex-grow: 1;
+        gap: 0.25rem;
+        align-items: center;
+        width: auto;
+        cursor: pointer;
+    }
+
+    #coverLink {
+        grid-column: 2;
+    }
+
+    .generated-url {
+        display: grid;
+        gap: 0.25rem;
+    }
+</style>
