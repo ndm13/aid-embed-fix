@@ -105,6 +105,11 @@
     function generateRandomId() {
         shareId = Math.random().toString(16).slice(2, 10);
     }
+
+    function copyToClipboard() {
+        if (!url) return;
+        navigator.clipboard.writeText(url.href);
+    }
 </script>
 
 <p>
@@ -164,11 +169,13 @@
 
 {#if url}
     <p>
-        <label class="generated-url">
-            Generated URL:
-            <input type="text" value={url.href} readonly size="50" />
-        </label>
+        Awesome! You can share the link below on Discord and get a nice pretty embed.
     </p>
+    <div class="row">
+        <label for="generated-url-input">Share Link:</label>
+        <input id="generated-url-input" type="text" value={url.href} readonly />
+        <button type="button" onclick={copyToClipboard} aria-label="Copy to clipboard" title="Copy to clipboard">📋</button>
+    </div>
 {/if}
 
 <style>
@@ -223,10 +230,5 @@
 
     #coverLink {
         grid-column: 2;
-    }
-
-    .generated-url {
-        display: grid;
-        gap: 0.25rem;
     }
 </style>
