@@ -6,7 +6,8 @@ const root = "./dashboard/dist";
 
 export function middleware() {
     return async (ctx: Context<AppState>, next: Next) => {
-        if (ctx.request.url.hostname.startsWith("my.")) {
+        if (ctx.request.url.searchParams.has("skipDashboardCheck")) return await next();
+        if (ctx.request.url.hostname.startsWith("my.") || ctx.request.url.hostname === "localhost") {
             ctx.state.analytics.request.middleware = "dashboard";
             ctx.state.metrics.router.endpoint = "dashboard";
             ctx.state.metrics.router.type = "static";

@@ -1,5 +1,5 @@
 import { Router } from "@oak/oak";
-import { Environment } from "npm:nunjucks";
+import { Environment, runtime, lib } from "npm:nunjucks";
 
 import { AdventureHandler } from "../handlers/AdventureHandler.ts";
 import { DemoHandler } from "../handlers/DemoHandler.ts";
@@ -9,6 +9,15 @@ import { ScenarioHandler } from "../handlers/ScenarioHandler.ts";
 import { AppState } from "../types/AppState.ts";
 
 export function router(njk: Environment) {
+    njk.addFilter('p', function(text: string) {
+        return runtime.markSafe(
+            lib.escape(text).replaceAll(/\n/gm,'\n    <br>\n    ')
+        );
+    });
+    njk.addFilter('cap', function(text: string, length: number) {
+        return text.length <= length ? text : text.substring(0, length - 3).trimEnd() + "...";
+    });
+
     const router = new Router<AppState>();
 
     router.use(async (ctx, next) => {

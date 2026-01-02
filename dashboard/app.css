@@ -1,0 +1,13 @@
+body {
+    max-width: 100%;
+    margin: 2ex auto;
+    box-sizing: border-box;
+    padding: 1ex;
+    width: fit-content;
+    font-size: 100%;
+    line-height: 1.6;
+}
+h4 {
+    margin: 0;
+    padding: 0;
+}

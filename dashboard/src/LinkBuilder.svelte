@@ -2,6 +2,8 @@
     const HOSTNAME_PATTERN = /^(?<prefix>(play|beta|alpha)\.)(?<tld>aidungeon\.(com|link)|axdungeon\.com)$/;
     const PATHNAME_PATTERN = /^(?<path>\/(?:(?<type>scenario|adventure)\/(?<id>[\w-]+)\/[^?\s]+|(?<type>profile)\/(?<id>[\w-]+))$)/;
 
+    let { generatedLink = $bindable() }: { generatedLink?: URL } = $props();
+
     let source = $state("");
 
     let prefix = $state('play.');
@@ -91,8 +93,11 @@
         coverInput?.setCustomValidity(coverInvalid ? "Supports Catbox and Imgur links" : "");
     });
 
-    let url = $derived.by(() => {
-        if (!path || !prefix || !tld) return undefined;
+    $effect(() => {
+        if (!path || !prefix || !tld) {
+            generatedLink = undefined;
+            return;
+        }
         try {
             const u = new URL(`https://${prefix}${tld}`);
             u.pathname = path;
@@ -103,25 +108,16 @@
             if (cover) {
                 u.searchParams.set('cover', cover);
             }
-            return u;
+            generatedLink = u;
         } catch {
-            return undefined;
+            generatedLink = undefined;
         }
     });
 
     function generateRandomId() {
         shareId = Math.random().toString(16).slice(2, 10);
     }
-
-    function copyToClipboard() {
-        if (!url) return;
-        navigator.clipboard.writeText(url.href);
-    }
 </script>
-
-<p>
-    Paste your AI Dungeon link below to customize your embed fix version!
-</p>
 
 <form>
     <div class="grid-section">
@@ -194,19 +190,9 @@
     </details>
 </form>
 
-{#if url}
-    <p>
-        Awesome! You can share the link below on Discord and get a nice pretty embed.
-    </p>
-    <div class="row">
-        <label for="generated-url-input">Share Link:</label>
-        <input id="generated-url-input" type="text" value={url.href} readonly />
-        <button type="button" onclick={copyToClipboard} aria-label="Copy to clipboard" title="Copy to clipboard">📋</button>
-    </div>
-{/if}
-
 <style>
     form {
+        padding-top: 1rem;
         display: flex;
         flex-direction: column;
         gap: 1rem;
@@ -217,6 +203,7 @@
         background-color: #333;
         cursor: pointer;
         user-select: none;
+        border-radius: 1ex;
     }
 
     .grid-section, .advanced-grid {
@@ -230,6 +217,8 @@
         padding: 0.75rem;
         border: 0.1rem dashed #333;
         border-top: none;
+        border-radius: 0 0 1ex 1ex;
+        background-color: #111;
     }
 
     .row {

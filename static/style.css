@@ -8,7 +8,7 @@ html {
     min-height: 100%;
 }
 
-body {
+.embed {
     max-width: 100%;
     margin: 2ex auto;
     box-sizing: border-box;
@@ -19,11 +19,11 @@ body {
     font-size: 100%;
     line-height: 1.6;
     display: grid;
-    grid-template-areas: "credit" "title" "description" "image";
+    grid-template-areas: "type" "credit" "title" "description" "image";
     border-left: 0.5ex solid #f8ae2c;
     width: 50ex;
 }
-body.profile {
+.embed.profile {
     grid-template-areas: "title title image" "description description description";
 }
 
@@ -31,34 +31,48 @@ img {
     max-width: 100%;
     grid-area: image;
 }
-body.profile img {
+.embed.profile img {
     height: 3em;
     border-radius: 1em;
     place-self: center;
     justify-self: end;
 }
 
-p {
-    grid-area: description;
+.embed h6 {
+    grid-area: type;
+    margin: 0 0 1ex 0;
+    padding: 0;
+    font-weight: unset;
+    color: #ccc;
 }
 
-h5 {
+.embed h5 {
     grid-area: credit;
     margin: 0 0 1ex 0;
     padding: 0;
 }
 
-h2 {
+.embed h2 {
     grid-area: title;
     place-self: center;
     justify-self: start;
     margin: 0;
     padding: 0;
+    font-size: unset;
+    color: cornflowerblue;
 }
 
+
+.embed p {
+    grid-area: description;
+    font-size: smaller;
+}
 a {
     text-decoration: none;
     color: #f8ae2c;
+}
+.embed a {
+    color: unset;
 }
 a:hover {
     text-decoration: underline;
