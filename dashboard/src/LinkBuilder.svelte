@@ -31,8 +31,15 @@
             const hostMatch = HOSTNAME_PATTERN.exec(s.hostname);
             if (hostMatch) {
                 prefix = hostMatch.groups.prefix;
+                // If we're loading an existing proxied link, use that domain
                 if (['axdungeon.com', 'aidungeon.link'].includes(hostMatch.groups.tld)) {
                     tld = hostMatch.groups.tld;
+                } else {
+                    const currentMatch = HOSTNAME_PATTERN.exec(new URL(document.URL).hostname);
+                    // If we're on a recognizable proxied domain, use that domain
+                    if (currentMatch && ['axdungeon.com', 'aidungeon.link'].includes(currentMatch.groups.tld)) {
+                        tld = currentMatch.groups.tld;
+                    }
                 }
             }
             if (s.searchParams.has('shareId')) {
@@ -120,48 +127,68 @@
     <div class="grid-section">
         <label for="source">Original Link:</label>
         <input id="source" type="text" bind:value={source} />
-
-        <label for="prefix">Embed Fixer:</label>
-        <div class="row">
-            <select id="prefix" bind:value={prefix}>
-                <option value="play.">play.</option>
-                <option value="beta.">beta.</option>
-                <option value="alpha.">alpha.</option>
-            </select>
-            <select bind:value={tld} aria-label="TLD">
-                <option value="aidungeon.link">aidungeon.link</option>
-                <option value="axdungeon.com">axdungeon.com</option>
-            </select>
-        </div>
     </div>
 
     <details>
         <summary>Advanced</summary>
         <div class="advanced-grid">
+
+            <label for="prefix">Embed Fixer:</label>
+            <div class="hinted">
+                <div class="row">
+                    <select id="prefix" bind:value={prefix}>
+                        <option value="play.">play.</option>
+                        <option value="beta.">beta.</option>
+                        <option value="alpha.">alpha.</option>
+                    </select>
+                    <select bind:value={tld} aria-label="TLD">
+                        <option value="aidungeon.link">aidungeon.link</option>
+                        <option value="axdungeon.com">axdungeon.com</option>
+                    </select>
+                </div>
+                <small>
+                    Set the default environment/embed fixer.
+                </small>
+            </div>
             <label for="shareId">Share ID:</label>
-            <div class="row">
-                <input id="shareId" type="text" bind:value={shareId} />
-                <button type="button" onclick={generateRandomId} aria-label="Generate random ID" title="Generate random ID">🔀</button>
+            <div class="hinted">
+                <div class="row">
+                    <input id="shareId" type="text" bind:value={shareId} />
+                    <button type="button" onclick={generateRandomId} aria-label="Generate random ID" title="Generate random ID">🔀</button>
+                </div>
+                <small>Group clicks of the same link in <a target="_blank" href="https://exwjwjqg.budibase.app/app/ai-dungeon-link-analytics/creator-analytics">Creator Dashboard</a>.</small>
             </div>
 
             <span>Cover Art:</span>
-            <div class="radio-group">
-                <label>
-                    <input type="radio" bind:group={coverMode} value="default" />
-                    Default
-                </label>
-                <label>
-                    <input type="radio" bind:group={coverMode} value="none" />
-                    None
-                </label>
-                <label>
-                    <input type="radio" bind:group={coverMode} value="custom" />
-                    Custom
-                </label>
+            <div class="hinted">
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" bind:group={coverMode} value="default" />
+                        Default
+                    </label>
+                    <label>
+                        <input type="radio" bind:group={coverMode} value="none" />
+                        None
+                    </label>
+                    <label>
+                        <input type="radio" bind:group={coverMode} value="custom" />
+                        Custom...
+                    </label>
+                </div>
+                <small>
+                    {#if coverMode === 'default'}
+                        Use the cover from AI Dungeon.
+                    {:else if coverMode === 'none'}
+                        Do not show a cover.
+                    {/if}
+                </small>
             </div>
 
             {#if coverMode === 'custom'}
-                <input aria-label="custom cover" id="coverLink" type="text" bind:this={coverInput} bind:value={coverLink} placeholder="https://files.catbox.moe/ecb5xa.png" onblur={() => coverInput?.reportValidity()} />
+                <span class="hinted customCoverHint">
+                    <input aria-label="custom cover" id="coverLink" type="text" bind:this={coverInput} bind:value={coverLink} placeholder="https://files.catbox.moe/ecb5xa.png" onblur={() => coverInput?.reportValidity()} />
+                    <small>Supports <a target="_blank" href="https://imgur.com/upload">Imgur</a> and <a target="_blank" href="https://catbox.moe/">Catbox</a> links.</small>
+                </span>
             {/if}
         </div>
     </details>
@@ -188,13 +215,15 @@
     summary {
         padding: 0.75rem;
         background-color: #333;
+        cursor: pointer;
+        user-select: none;
     }
 
     .grid-section, .advanced-grid {
         display: grid;
         grid-template-columns: max-content 1fr;
         gap: 1rem;
-        align-items: center;
+        align-items: first baseline;
     }
 
     .advanced-grid {
@@ -213,6 +242,16 @@
         flex-grow: 1;
     }
 
+    .hinted {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hinted small {
+        color: #ccc;
+        font-style: italic;
+    }
+
     .radio-group {
         display: flex;
         align-items: stretch;
@@ -223,12 +262,13 @@
         display: flex;
         flex-grow: 1;
         gap: 0.25rem;
-        align-items: center;
+        align-items: last baseline;
+        place-items: flex-start stretch;
         width: auto;
         cursor: pointer;
     }
 
-    #coverLink {
+    .customCoverHint {
         grid-column: 2;
     }
 </style>
