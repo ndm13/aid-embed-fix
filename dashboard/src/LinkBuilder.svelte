@@ -80,6 +80,7 @@
                 case "files.catbox.moe":
                     return "catbox:" + coverUrl.pathname.substring(1);
                 case "imgur.com":
+                case "i.imgur.com":
                     return "imgur:" + coverUrl.pathname.substring(1);
             }
         } catch { }

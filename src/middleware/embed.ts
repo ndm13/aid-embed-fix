@@ -11,11 +11,11 @@ import { AppState } from "../types/AppState.ts";
 export function router(njk: Environment) {
     njk.addFilter('p', function(text: string) {
         return runtime.markSafe(
-            lib.escape(text).replaceAll(/\n/gm,'\n    <br>\n    ')
+             text ? lib.escape(text).replaceAll(/\n/gm,'\n    <br>\n    ') : ""
         );
     });
     njk.addFilter('cap', function(text: string, length: number) {
-        return text.length <= length ? text : text.substring(0, length - 3).trimEnd() + "...";
+        return (text ?? "").length <= length ? text : text.substring(0, length - 3).trimEnd() + "...";
     });
 
     const router = new Router<AppState>();

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Noto+Color+Emoji&display=swap');
+
 html {
     font-family: sans-serif;
     background-color: #222;
@@ -12,35 +14,48 @@ html {
     max-width: 100%;
     margin: 2ex auto;
     box-sizing: border-box;
-    padding: 1ex;
-    border-radius: 0.5ex;
+    /* Offset the width of the border (they do this in desktop but not mobile) */
+    padding: 1.5ex 2ex 1.5ex 1.5ex;
     background-color: #111;
-    box-shadow: 0 0.5ex 1ex rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0.5ex 1ex rgba(0, 0, 0, 0.2);
     font-size: 100%;
-    line-height: 1.6;
+    line-height: 1.4;
     display: grid;
+    gap: 1ex;
     grid-template-areas: "type" "credit" "title" "description" "image";
+    grid-template-rows: min-content min-content min-content 1fr min-content;
+    /* Likely won't be visible unless placed against a black background */
+    border: 0.1ex solid #202020;
     border-left: 0.5ex solid #f8ae2c;
-    width: 50ex;
+    border-radius: 0.75ex;
+    width: min-content;
+    font-family: "Cabin", "Noto Color Emoji", sans-serif;
+    letter-spacing: 0.02ex;
 }
 .embed.profile {
-    grid-template-areas: "title title image" "description description description";
+    grid-template-areas: "type image" "title image" "description image";
+    grid-template-rows: min-content min-content 1fr;
+    width: fit-content;
 }
 
-img {
-    max-width: 100%;
+.embed img {
     grid-area: image;
+    border-radius: 0.5ex;
+    margin: 1ex 0;
+    max-width: 52.5ex;
+    max-height: 39ex;
 }
 .embed.profile img {
-    height: 3em;
-    border-radius: 1em;
-    place-self: center;
+    width: 80px;
+    height: 80px;
+    margin: 0 0 0 1.5ex;
+    place-self: start;
     justify-self: end;
 }
 
 .embed h6 {
     grid-area: type;
-    margin: 0 0 1ex 0;
+    margin: 0;
     padding: 0;
     font-weight: unset;
     color: #ccc;
@@ -48,7 +63,7 @@ img {
 
 .embed h5 {
     grid-area: credit;
-    margin: 0 0 1ex 0;
+    margin: 0;
     padding: 0;
 }
 
@@ -59,13 +74,16 @@ img {
     margin: 0;
     padding: 0;
     font-size: unset;
-    color: cornflowerblue;
+    color: #9bbef3;
 }
-
 
 .embed p {
     grid-area: description;
-    font-size: smaller;
+    font-size: 1.8ex;
+    margin: 0;
+    /* Applies to .profile and cover=none */
+    max-width: 54ex;
+    color: #eee;
 }
 a {
     text-decoration: none;

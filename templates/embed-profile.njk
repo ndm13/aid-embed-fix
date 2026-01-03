@@ -29,8 +29,9 @@
     <link rel="stylesheet" href="/style.css"/>
 </head>
 <body class="embed profile">
+<h6>AI Dungeon Profile</h6>
 <h2><a href="{{ link | safe }}">{{ title }}</a></h2>
-<p>{{ description }}</p>
+<p>{{ description | cap(350) | p }}</p>
 <img alt="Profile icon for user '{{ title }}'" src="{{ icon }}"/>
 </body>
 </html>
