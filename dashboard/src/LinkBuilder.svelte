@@ -13,18 +13,18 @@
     let coverLink = $state("");
     let coverMode = $state<'default' | 'none' | 'custom'>('default');
 
-    let path = $derived.by(() => {
-        if (!source) return '';
+    let pathData = $derived.by(() => {
+        if (!source) return {};
         try {
             const s = new URL(source);
 
             if (!HOSTNAME_PATTERN.test(s.hostname)) return '';
 
-            return PATHNAME_PATTERN.exec(s.pathname)?.groups?.path ?? '';
+            return PATHNAME_PATTERN.exec(s.pathname)?.groups || {};
         } catch {
-            return '';
+            return {};
         }
-    });
+    }) as Partial<{ path: string, type: string, id: string }>;
 
     $effect(() => {
         if (!source) return;
@@ -71,6 +71,7 @@
     });
 
     let cover = $derived.by(() => {
+        if (pathData.type === "profile") return "";
         if (coverMode === 'default') return "";
         if (coverMode === 'none') return "none";
         if (!coverLink) return "";
@@ -95,13 +96,13 @@
     });
 
     $effect(() => {
-        if (!path || !prefix || !tld) {
+        if (!pathData.path || !prefix || !tld) {
             generatedLink = undefined;
             return;
         }
         try {
             const u = new URL(`https://${prefix}${tld}`);
-            u.pathname = path;
+            u.pathname = pathData.path;
 
             if (shareId) {
                 u.searchParams.set('shareId', shareId);
@@ -156,30 +157,32 @@
                 <small>Group clicks of the same link in <a target="_blank" href="https://exwjwjqg.budibase.app/app/ai-dungeon-link-analytics/creator-analytics">Creator Dashboard</a>.</small>
             </div>
 
-            <span>Cover Art:</span>
-            <div class="hinted">
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" bind:group={coverMode} value="default" />
-                        Default
-                    </label>
-                    <label>
-                        <input type="radio" bind:group={coverMode} value="none" />
-                        None
-                    </label>
-                    <label>
-                        <input type="radio" bind:group={coverMode} value="custom" />
-                        Custom...
-                    </label>
+            {#if pathData.type !== "profile"}
+                <span>Cover Art:</span>
+                <div class="hinted">
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" bind:group={coverMode} value="default" />
+                            Default
+                        </label>
+                        <label>
+                            <input type="radio" bind:group={coverMode} value="none" />
+                            None
+                        </label>
+                        <label>
+                            <input type="radio" bind:group={coverMode} value="custom" />
+                            Custom...
+                        </label>
+                    </div>
+                    <small>
+                        {#if coverMode === 'default'}
+                            Use the cover from AI Dungeon.
+                        {:else if coverMode === 'none'}
+                            Do not show a cover.
+                        {/if}
+                    </small>
                 </div>
-                <small>
-                    {#if coverMode === 'default'}
-                        Use the cover from AI Dungeon.
-                    {:else if coverMode === 'none'}
-                        Do not show a cover.
-                    {/if}
-                </small>
-            </div>
+            {/if}
 
             {#if coverMode === 'custom'}
                 <span class="hinted customCoverHint">

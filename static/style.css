@@ -11,11 +11,10 @@ html {
 }
 
 .embed {
-    max-width: 100%;
-    margin: 2ex auto;
+    margin: 2ex 0;
     box-sizing: border-box;
     /* Offset the width of the border (they do this in desktop but not mobile) */
-    padding: 1.5ex 2ex 1.5ex 1.5ex;
+    padding: 1.5ex 2.2ex 1.5ex 1.5ex;
     background-color: #111;
     box-shadow: 0 0.5ex 1ex rgba(0, 0, 0, 0.2);
     font-size: 100%;
@@ -26,9 +25,9 @@ html {
     grid-template-rows: min-content min-content min-content 1fr min-content;
     /* Likely won't be visible unless placed against a black background */
     border: 0.1ex solid #202020;
-    border-left: 0.5ex solid #f8ae2c;
+    border-left: 0.7ex solid #f8ae2c;
     border-radius: 0.75ex;
-    width: min-content;
+    width: fit-content;
     font-family: "Cabin", "Noto Color Emoji", sans-serif;
     letter-spacing: 0.02ex;
 }
@@ -36,19 +35,19 @@ html {
     grid-template-areas: "type image" "title image" "description image";
     grid-template-rows: min-content min-content 1fr;
     width: fit-content;
+    max-width: 31rem;
 }
 
 .embed img {
     grid-area: image;
     border-radius: 0.5ex;
     margin: 1ex 0;
-    max-width: 52.5ex;
-    max-height: 39ex;
+    max-height: 19rem;
 }
 .embed.profile img {
     width: 80px;
     height: 80px;
-    margin: 0 0 0 1.5ex;
+    margin: 0 0 0 1.25ex;
     place-self: start;
     justify-self: end;
 }
@@ -76,14 +75,19 @@ html {
     font-size: unset;
     color: #9bbef3;
 }
-
 .embed p {
     grid-area: description;
     font-size: 1.8ex;
     margin: 0;
-    /* Applies to .profile and cover=none */
-    max-width: 54ex;
     color: #eee;
+}
+/* Cap content to match max image width */
+.embed h2, .embed p, img {
+    max-width: 25.5rem;
+}
+/* Override when there's no cover (use wider version) */
+.embed p:not(:has(+ img)) {
+    max-width: 31rem;
 }
 a {
     text-decoration: none;

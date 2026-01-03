@@ -55,7 +55,7 @@
     {#if generatedLink}
         <section class="output">
             <p>
-                Awesome! Share this link (👇) to get it to look like that (👉).
+                Awesome! Share this <span class="linkpoint">link</span> to get it to look like <span class="embedpoint">that</span>.
             </p>
             <div class="row">
                 <label for="generated-url-input">Share Link:</label>
@@ -67,15 +67,32 @@
 </div>
 
 <style>
+    .linkpoint::after {
+        content: ' (👇)';
+    }
+    .embedpoint::after {
+        content: ' (👉)';
+    }
+
     .sxs {
         display: grid;
         grid-template-areas: "builder preview" "output preview";
         align-items: flex-start;
         gap: 1rem;
     }
+    @media (width < 960px) {
+        .sxs {
+            grid-template-areas: "builder" "preview" "output";
+            justify-items: center;
+        }
+        .embedpoint::after {
+            content: ' (👆)';
+        }
+    }
     .builder {
         width: 60ex;
         grid-area: builder;
+        margin-bottom: 1ex;
     }
     .preview {
         grid-area: preview;
@@ -83,7 +100,7 @@
     .output {
         grid-area: output;
         align-self: self-end;
-        margin: 1ex;
+        margin: 0 1ex 1ex;
         padding-bottom: 1ex;
     }
 
