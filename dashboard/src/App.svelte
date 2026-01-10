@@ -1,7 +1,6 @@
 <script lang="ts">
     import LinkPage from "./LinkPage.svelte";
     import SettingsPage from "./SettingsPage.svelte";
-    import PrivacyPage from "./PrivacyPage.svelte";
 
     let currentPage = $state('link');
 </script>
