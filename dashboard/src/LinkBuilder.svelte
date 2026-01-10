@@ -129,9 +129,8 @@
 
     <details>
         <summary>Advanced</summary>
-        <div class="advanced-grid">
-
-            <label for="prefix">Embed Fixer:</label>
+        <div class="detail-container grid-section">
+            <label for="prefix">Domain:</label>
             <div class="hinted">
                 <div class="row">
                     <select id="prefix" bind:value={prefix}>
@@ -145,13 +144,13 @@
                     </select>
                 </div>
                 <small>
-                    Set the default environment/embed fixer.
+                    Set the default environment/service.
                 </small>
             </div>
             <label for="shareId">Share ID:</label>
             <div class="hinted">
                 <div class="row">
-                    <input id="shareId" type="text" bind:value={shareId} />
+                    <input id="shareId" type="text" bind:value={shareId} placeholder="e.g. 'aid-discord', 'cool-subreddit'" />
                     <button type="button" onclick={generateRandomId} aria-label="Generate random ID" title="Generate random ID">🔀</button>
                 </div>
                 <small>Group clicks of the same link in <a target="_blank" href="https://exwjwjqg.budibase.app/app/ai-dungeon-link-analytics/creator-analytics">Creator Dashboard</a>.</small>
@@ -193,75 +192,3 @@
         </div>
     </details>
 </form>
-
-<style>
-    form {
-        padding-top: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    summary {
-        padding: 0.75rem;
-        background-color: #333;
-        cursor: pointer;
-        user-select: none;
-        border-radius: 1ex;
-    }
-
-    .grid-section, .advanced-grid {
-        display: grid;
-        grid-template-columns: max-content 1fr;
-        gap: 1rem;
-        align-items: first baseline;
-    }
-
-    .advanced-grid {
-        padding: 0.75rem;
-        border: 0.1rem dashed #333;
-        border-top: none;
-        border-radius: 0 0 1ex 1ex;
-        background-color: #111;
-    }
-
-    .row {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-    }
-
-    .row input[type="text"], .row select {
-        flex-grow: 1;
-    }
-
-    .hinted {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .hinted small {
-        color: #ccc;
-        font-style: italic;
-    }
-
-    .radio-group {
-        display: flex;
-        align-items: stretch;
-        flex-wrap: wrap;
-    }
-
-    .radio-group label {
-        display: flex;
-        flex-grow: 1;
-        gap: 0.25rem;
-        align-items: last baseline;
-        place-items: flex-start stretch;
-        width: auto;
-        cursor: pointer;
-    }
-
-    .customCoverHint {
-        grid-column: 2;
-    }
-</style>

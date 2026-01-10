@@ -77,8 +77,10 @@
     .sxs {
         display: grid;
         grid-template-areas: "builder preview" "output preview";
-        align-items: flex-start;
+        grid-template-columns: minmax(min-content, 1fr) max-content;
+        place-items: center;
         gap: 1rem;
+        width: 100%
     }
     @media (width < 960px) {
         .sxs {
@@ -89,19 +91,25 @@
             content: ' (👆)';
         }
     }
-    .builder {
-        width: 60ex;
-        grid-area: builder;
-        margin-bottom: 1ex;
+
+    .builder, .output {
+        width: 100%;
+        max-width: 80ex;
     }
-    .preview {
-        grid-area: preview;
+
+    .builder {
+        grid-area: builder;
+        align-self: start;
+        margin-bottom: 1ex;
     }
     .output {
         grid-area: output;
         align-self: self-end;
         margin: 0 1ex 1ex;
         padding-bottom: 1ex;
+    }
+    .preview {
+        grid-area: preview;
     }
 
     .row {
