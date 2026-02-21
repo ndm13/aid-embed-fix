@@ -66,12 +66,12 @@ export class AIDungeonAPI {
         }
     }
 
-    getScenarioEmbed(shortId: string): Promise<ScenarioEmbedData> {
+    getScenarioEmbed(shortId: string, published: boolean): Promise<ScenarioEmbedData> {
         const query = {
             operationName: "GetScenario",
-            variables: { shortId: shortId },
+            variables: { shortId: shortId, viewPublished: published },
             query:
-                "query GetScenario($shortId: String) {  scenario(shortId: $shortId) {    createdAt    editedAt    title    description    prompt    image    published    unlisted    publishedAt    commentCount    voteCount    saveCount    storyCardCount    tags    adventuresPlayed    thirdPerson    nsfw    contentRating    contentRatingLockedAt    user {      id      isMember      profile {        title        thumbImageUrl      }    }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  contentRating  user {    id    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    userJoined    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed    contentResponses {      isSaved      isDisliked    }  }}"
+                "query GetScenario($shortId: String, $viewPublished: Boolean) {  scenario(shortId: $shortId, viewPublished: $viewPublished) {    createdAt    editedAt    title    description    prompt    image    published    unlisted    publishedAt    commentCount    voteCount    saveCount    storyCardCount    tags    adventuresPlayed    thirdPerson    nsfw    contentRating    contentRatingLockedAt    user {      id      isMember      profile {        title        thumbImageUrl      }    }    ...CardSearchable  }}fragment CardSearchable on Searchable {  title  description  image  tags  voteCount  published  unlisted  publishedAt  createdAt  editedAt  deletedAt  blockedAt  saveCount  commentCount  contentRating  user {    id    isMember    profile {      title      thumbImageUrl    }  }  ... on Adventure {    actionCount    userJoined    unlisted    playerCount  }  ... on Scenario {    adventuresPlayed    contentResponses {      isSaved      isDisliked    }  }}"
         };
         return this.query<ScenarioEmbedData>(query)
             .then((res) => AIDungeonAPI.validateResponse(query, res, shortId, "scenario"));

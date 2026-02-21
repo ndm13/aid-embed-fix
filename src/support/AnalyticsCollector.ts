@@ -69,7 +69,7 @@ export class AnalyticsCollector {
                 entry.content.status = "cache";
             } else {
                 try {
-                    const content = await this.fetchContent(entry.content.type as "scenario" | "adventure" | "profile", id);
+                    const content = await this.fetchContent(entry.content.type as "scenario" | "adventure" | "profile", id, entry.request.params["published"] === "true");
                     entry.content = content;
                     this.cache[id] = { content, timestamp: Date.now() };
                 } catch (error) {
@@ -126,10 +126,10 @@ export class AnalyticsCollector {
         }
     }
 
-    private async fetchContent(type: "scenario" | "adventure" | "profile", id: string): Promise<Content> {
+    private async fetchContent(type: "scenario" | "adventure" | "profile", id: string, published: boolean): Promise<Content> {
         switch (type) {
             case "scenario": {
-                const data = await this.api.getScenarioEmbed(id);
+                const data = await this.api.getScenarioEmbed(id, published);
                 return {
                     status: "success",
                     id,

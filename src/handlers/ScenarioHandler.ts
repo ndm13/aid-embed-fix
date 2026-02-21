@@ -20,7 +20,7 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     }
 
     fetch(ctx: Context<AppState>, id: string) {
-        return ctx.state.api.getScenarioEmbed(id);
+        return ctx.state.api.getScenarioEmbed(id, ctx.request.url.searchParams.has("published") && ctx.request.url.searchParams.get("published") === "true");
     }
 
     protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
