@@ -4,6 +4,7 @@ import { FakeTime } from "@std/testing/time";
 import { Context } from "@oak/oak";
 import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
+import { spy } from "@std/testing/mock";
 
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
 import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
@@ -96,6 +97,38 @@ describe("ScenarioHandler", () => {
         assertEquals(responseBody.author, "Test User");
         assertEquals(responseBody.description, "A test scenario.");
         assertEquals(responseBody.cover, "https://example.com/image.jpg");
+    });
+
+    it("should pass published=true to API when query param is present", async () => {
+        const handler = new ScenarioHandler(env);
+        const getScenarioEmbedSpy = spy((_id: string, _published: boolean) => Promise.resolve(mockScenarioData));
+        const context = createTestContext({
+            api: {
+                getScenarioEmbed: getScenarioEmbedSpy
+            } as unknown as AIDungeonAPI
+        }, {
+            id: "test-scenario"
+        }, new URL("https://example.com/scenario/test-scenario?published=true"));
+
+        await handler.handle(context as unknown as Context<AppState>);
+
+        assertEquals(getScenarioEmbedSpy.calls[0].args[1], true);
+    });
+
+    it("should pass published=false to API when query param is absent", async () => {
+        const handler = new ScenarioHandler(env);
+        const getScenarioEmbedSpy = spy((_id: string, _published: boolean) => Promise.resolve(mockScenarioData));
+        const context = createTestContext({
+            api: {
+                getScenarioEmbed: getScenarioEmbedSpy
+            } as unknown as AIDungeonAPI
+        }, {
+            id: "test-scenario"
+        }, new URL("https://example.com/scenario/test-scenario"));
+
+        await handler.handle(context as unknown as Context<AppState>);
+
+        assertEquals(getScenarioEmbedSpy.calls[0].args[1], false);
     });
 
     it("should handle invalid image URLs gracefully", async () => {

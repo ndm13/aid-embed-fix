@@ -138,11 +138,11 @@ describe("AIDungeonAPI", () => {
             const mockData = { title: "Test" } as ScenarioEmbedData;
             using queryStub = stub(api, "query", () => Promise.resolve({ data: { scenario: mockData } }));
 
-            const result = await api.getScenarioEmbed("test-id");
+            const result = await api.getScenarioEmbed("test-id", true);
             assertEquals(result, mockData);
             assertEquals(queryStub.calls.length, 1);
             assertEquals(queryStub.calls[0].args[0].operationName, "GetScenario");
-            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id" });
+            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id", viewPublished: true });
         });
 
         it("getAdventureEmbed should call query and unpack data", async () => {
@@ -175,7 +175,7 @@ describe("AIDungeonAPI", () => {
             using _ = stub(api, "query", () => Promise.resolve({ data: {} }));
 
             await assertRejects(
-                () => api.getScenarioEmbed("test-id"),
+                () => api.getScenarioEmbed("test-id", false),
                 "Couldn't find scenario with id test-id"
             );
         });

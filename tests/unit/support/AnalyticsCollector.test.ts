@@ -85,6 +85,7 @@ describe("AnalyticsCollector", () => {
     it("should fetch content if status is unknown", async () => {
         const entry: AnalyticsEntry = {
             content: { id: "456", type: "scenario" },
+            request: { params: { published: "true" } },
             timestamp: Date.now()
         } as any;
 
@@ -99,6 +100,9 @@ describe("AnalyticsCollector", () => {
         await collector.record(entry);
 
         assertSpyCalls(api.getScenarioEmbed as any, 1);
+        assertSpyCall(api.getScenarioEmbed as any, 0, {
+            args: ["456", true]
+        });
 
         // Trigger process
         await time.tickAsync(1100);
@@ -112,6 +116,7 @@ describe("AnalyticsCollector", () => {
     it("should fetch user content if status is unknown", async () => {
         const entry: AnalyticsEntry = {
             content: { id: "user-123", type: "profile" },
+            request: { params: {} },
             timestamp: Date.now()
         } as any;
 
@@ -138,6 +143,7 @@ describe("AnalyticsCollector", () => {
     it("should use cached content for subsequent requests", async () => {
         const entry1: AnalyticsEntry = {
             content: { id: "789", type: "adventure" },
+            request: { params: {} },
             timestamp: Date.now()
         } as any;
 
@@ -154,6 +160,7 @@ describe("AnalyticsCollector", () => {
 
         const entry2: AnalyticsEntry = {
             content: { id: "789", type: "adventure" },
+            request: { params: {} },
             timestamp: Date.now()
         } as any;
 
@@ -193,6 +200,7 @@ describe("AnalyticsCollector", () => {
     it("should prune expired cache entries", async () => {
         const entry: AnalyticsEntry = {
             content: { id: "cache-test", type: "profile" },
+            request: { params: {} },
             timestamp: Date.now()
         } as any;
 
