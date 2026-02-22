@@ -30,13 +30,13 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
         return ctx.state.api.getUserEmbed(id);
     }
 
-    protected prepareContext(ctx: Context<AppState>, data: UserEmbedData, link: string): object {
+    protected prepareContext(ctx: Context<AppState>, data: UserEmbedData): object {
         Object.assign(ctx.state.analytics.content, contentMapper.user(data));
 
         return {
             title: data.profile.title,
             description: data.profile.description,
-            link,
+            link: this.getRedirectLink(ctx),
             icon: data.profile.thumbImageUrl,
             oembed: ctx.state.links.oembed({
                 title: data.profile.title,

@@ -22,8 +22,7 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
     fetch(ctx: Context<AppState>, id: string) {
         return ctx.state.api.getAdventureEmbed(id);
     }
-
-    protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData, link: string): object {
+    protected prepareContext(ctx: Context<AppState>, data: AdventureEmbedData): object {
         ctx.state.analytics.content = {
             ...ctx.state.analytics.content,
             ...contentMapper.adventure(data)
@@ -40,7 +39,7 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
                 separator: " "
             }),
             cover: links.cover(data.image),
-            link,
+            link: this.getRedirectLink(ctx),
             icon: data.user.profile.thumbImageUrl,
             oembed: links.oembed({
                 title: data.title,
