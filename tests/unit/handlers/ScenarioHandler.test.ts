@@ -101,7 +101,7 @@ describe("ScenarioHandler", () => {
 
     it("should pass published=true to API when query param is present", async () => {
         const handler = new ScenarioHandler(env);
-        const getScenarioEmbedSpy = spy((_id: string, _published: boolean) => Promise.resolve(mockScenarioData));
+        const getScenarioEmbedSpy = spy((_id: string, _published?: boolean) => Promise.resolve(mockScenarioData));
         const context = createTestContext({
             api: {
                 getScenarioEmbed: getScenarioEmbedSpy
@@ -115,9 +115,25 @@ describe("ScenarioHandler", () => {
         assertEquals(getScenarioEmbedSpy.calls[0].args[1], true);
     });
 
-    it("should pass published=false to API when query param is absent", async () => {
+    it("should pass published=false to API when unlisted query param is present", async () => {
         const handler = new ScenarioHandler(env);
-        const getScenarioEmbedSpy = spy((_id: string, _published: boolean) => Promise.resolve(mockScenarioData));
+        const getScenarioEmbedSpy = spy((_id: string, _published?: boolean) => Promise.resolve(mockScenarioData));
+        const context = createTestContext({
+            api: {
+                getScenarioEmbed: getScenarioEmbedSpy
+            } as unknown as AIDungeonAPI
+        }, {
+            id: "test-scenario"
+        }, new URL("https://example.com/scenario/test-scenario?unlisted=true"));
+
+        await handler.handle(context as unknown as Context<AppState>);
+
+        assertEquals(getScenarioEmbedSpy.calls[0].args[1], false);
+    });
+
+    it("should pass undefined to API when query param is absent", async () => {
+        const handler = new ScenarioHandler(env);
+        const getScenarioEmbedSpy = spy((_id: string, _published?: boolean) => Promise.resolve(mockScenarioData));
         const context = createTestContext({
             api: {
                 getScenarioEmbed: getScenarioEmbedSpy
@@ -128,7 +144,7 @@ describe("ScenarioHandler", () => {
 
         await handler.handle(context as unknown as Context<AppState>);
 
-        assertEquals(getScenarioEmbedSpy.calls[0].args[1], false);
+        assertEquals(getScenarioEmbedSpy.calls[0].args[1], undefined);
     });
 
     it("should handle invalid image URLs gracefully", async () => {
@@ -334,6 +350,53 @@ describe("ScenarioHandler", () => {
 
             assertEquals(context.state.analytics.content?.status, "net_error");
             assertEquals(context.state.metrics.api?.duration, 100);
+        });
+    });
+
+    describe("redirection", () => {
+        it("should not redirect if published/unlisted params are missing", async () => {
+            const handler = new ScenarioHandler(env);
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario"), "Mozilla/5.0");
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.response.status, 200); // Should not be 301
+        });
+
+        it("should redirect if published param is present", async () => {
+            const handler = new ScenarioHandler(env);
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario?published=true"), "Mozilla/5.0");
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.response.status, 301);
+        });
+
+        it("should redirect if unlisted param is present", async () => {
+            const handler = new ScenarioHandler(env);
+            const context = createTestContext({
+                api: {
+                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
+                } as unknown as AIDungeonAPI
+            }, {
+                id: "test-scenario"
+            }, new URL("https://example.com/scenario/test-scenario?unlisted=true"), "Mozilla/5.0");
+
+            await handler.handle(context as unknown as Context<AppState>);
+
+            assertEquals(context.response.status, 301);
         });
     });
 });
