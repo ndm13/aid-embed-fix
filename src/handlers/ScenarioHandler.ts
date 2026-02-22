@@ -20,10 +20,30 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
     }
 
     fetch(ctx: Context<AppState>, id: string) {
-        return ctx.state.api.getScenarioEmbed(id, ctx.request.url.searchParams.has("published") && ctx.request.url.searchParams.get("published") === "true");
+        const params = ctx.request.url.searchParams;
+
+        // Follow native Latitude URL parameter processing order
+        if (params.has("published") && params.get("published") === "true")
+            return ctx.state.api.getScenarioEmbed(id, true);
+
+        if (params.has("unlisted") && params.get("unlisted") === "true")
+            return ctx.state.api.getScenarioEmbed(id, false);
+
+        // Older link, try to figure it out
+        return ctx.state.api.getScenarioEmbed(id);
     }
 
-    protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData, link: string) {
+    protected override getRedirectLink(ctx: Context<AppState>): string {
+        let publishParam = {};
+        if (ctx.state.analytics.content?.visibility === "Published") {
+            publishParam = { published: "true" };
+        } else if (ctx.state.analytics.content?.visibility === "Unlisted") {
+            publishParam = { unlisted: "true" };
+        }
+        return ctx.state.links.redirect(this.redirectKeys, publishParam);
+    }
+
+    protected prepareContext(ctx: Context<AppState>, data: ScenarioEmbedData) {
         ctx.state.analytics.content = {
             ...ctx.state.analytics.content,
             ...contentMapper.scenario(data)
@@ -40,7 +60,7 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
                 separator: " "
             }),
             cover: links.cover(data.image),
-            link,
+            link: this.getRedirectLink(ctx),
             icon: data.user.profile.thumbImageUrl,
             oembed: links.oembed({
                 title: data.title,
@@ -48,5 +68,14 @@ export class ScenarioHandler extends EmbedHandler<ScenarioEmbedData> {
                 type: this.oembedType
             })
         };
+    }
+
+    protected override shouldForward(ctx: Context<AppState>): boolean {
+        // Force resolution for scenarios missing published/unlisted flag
+        // (we need to query regardless, so we may as well render the page)
+        if (!ctx.request.url.searchParams.has("published") && !ctx.request.url.searchParams.has("unlisted")) {
+            return false;
+        }
+        return super.shouldForward(ctx);
     }
 }

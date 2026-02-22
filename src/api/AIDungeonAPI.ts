@@ -66,7 +66,10 @@ export class AIDungeonAPI {
         }
     }
 
-    getScenarioEmbed(shortId: string, published: boolean): Promise<ScenarioEmbedData> {
+    getScenarioEmbed(shortId: string, published?: boolean): Promise<ScenarioEmbedData> {
+        if (published === undefined)
+            return this.getScenarioEmbed(shortId, true).catch(() => this.getScenarioEmbed(shortId, false));
+
         const query = {
             operationName: "GetScenario",
             variables: { shortId: shortId, viewPublished: published },

@@ -69,7 +69,14 @@ export class AnalyticsCollector {
                 entry.content.status = "cache";
             } else {
                 try {
-                    const content = await this.fetchContent(entry.content.type as "scenario" | "adventure" | "profile", id, entry.request.params["published"] === "true");
+                    let published: boolean | undefined;
+                    if (entry.content.type === "scenario") {
+                        const params = entry.request.params;
+                        if (params["published"] === "true") published = true;
+                        else if (params["unlisted"] === "true") published = false;
+                    }
+
+                    const content = await this.fetchContent(entry.content.type as "scenario" | "adventure" | "profile", id, published);
                     entry.content = content;
                     this.cache[id] = { content, timestamp: Date.now() };
                 } catch (error) {
@@ -126,7 +133,7 @@ export class AnalyticsCollector {
         }
     }
 
-    private async fetchContent(type: "scenario" | "adventure" | "profile", id: string, published: boolean): Promise<Content> {
+    private async fetchContent(type: "scenario" | "adventure" | "profile", id: string, published?: boolean): Promise<Content> {
         switch (type) {
             case "scenario": {
                 const data = await this.api.getScenarioEmbed(id, published);
