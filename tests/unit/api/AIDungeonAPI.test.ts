@@ -138,11 +138,28 @@ describe("AIDungeonAPI", () => {
             const mockData = { title: "Test" } as ScenarioEmbedData;
             using queryStub = stub(api, "query", () => Promise.resolve({ data: { scenario: mockData } }));
 
-            const result = await api.getScenarioEmbed("test-id");
+            const result = await api.getScenarioEmbed("test-id", true);
             assertEquals(result, mockData);
             assertEquals(queryStub.calls.length, 1);
             assertEquals(queryStub.calls[0].args[0].operationName, "GetScenario");
-            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id" });
+            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id", viewPublished: true });
+        });
+
+        it("getScenarioEmbed should fallback if published is undefined", async () => {
+            const api = await AIDungeonAPI.create(config, mockCredentials(3600), Date.now());
+            const mockData = { title: "Test" } as ScenarioEmbedData;
+            let callCount = 0;
+            using queryStub = stub(api, "query", () => {
+                callCount++;
+                if (callCount === 1) return Promise.reject(new Error("Not found"));
+                return Promise.resolve({ data: { scenario: mockData } });
+            });
+
+            const result = await api.getScenarioEmbed("test-id");
+            assertEquals(result, mockData);
+            assertEquals(queryStub.calls.length, 2);
+            assertEquals(queryStub.calls[0].args[0].variables, { shortId: "test-id", viewPublished: true });
+            assertEquals(queryStub.calls[1].args[0].variables, { shortId: "test-id", viewPublished: false });
         });
 
         it("getAdventureEmbed should call query and unpack data", async () => {
@@ -175,7 +192,7 @@ describe("AIDungeonAPI", () => {
             using _ = stub(api, "query", () => Promise.resolve({ data: {} }));
 
             await assertRejects(
-                () => api.getScenarioEmbed("test-id"),
+                () => api.getScenarioEmbed("test-id", false),
                 "Couldn't find scenario with id test-id"
             );
         });

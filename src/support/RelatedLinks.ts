@@ -58,13 +58,19 @@ export class RelatedLinks {
         }`;
     }
 
-    redirect(passKeys: string[]) {
+    redirect(passKeys: string[], forceKeys: Record<string, string> = {}) {
         const linkParams = this.ctx.request.url.searchParams.entries()
             .filter(([k, _]) => passKeys.includes(k))
             .reduce((a, [k, v]) => {
                 a.set(k, v);
                 return a;
             }, new URLSearchParams());
+
+        // Overwrite any existing keys
+        Object.entries(forceKeys).forEach(([k, v]) => {
+            linkParams.set(k, v);
+        });
+
         return this.redirectBase +
             this.ctx.request.url.pathname +
             (linkParams.size > 0 ? "?" + linkParams.toString() : "");

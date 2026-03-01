@@ -134,10 +134,52 @@ describe("Middleware Integration Tests", () => {
                 }
             });
 
-            it("should redirect without ?no_ua or Discordbot user-agent", async () => {
+            it("should return scenario embed with published param and ?no_ua", async () => {
+                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
+                try {
+                    const request = await superoak(app);
+                    await request.get("/scenario/123/test-scenario?no_ua")
+                        .expect(200)
+                        .expect("Content-Type", /text\/html/);
+                } finally {
+                    apiStub.restore();
+                }
+            });
+
+            it("should redirect with published param", async () => {
                 const request = await superoak(app);
-                await request.get("/scenario/123/test-scenario")
+                await request.get("/scenario/123/test-scenario?published=true")
                     .expect(301);
+            });
+
+            it("should redirect with unlisted param", async () => {
+                const request = await superoak(app);
+                await request.get("/scenario/123/test-scenario?unlisted=true")
+                    .expect(301);
+            });
+
+            it("should NOT redirect when published/unlisted param is absent", async () => {
+                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
+
+                try {
+                    const request = await superoak(app);
+                    await request.get("/scenario/123/test-scenario")
+                        .expect(200);
+                } finally {
+                    apiStub.restore();
+                }
+            });
+
+            it("should NOT redirect with published/unlisted param when no_ua is present", async () => {
+                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
+
+                try {
+                    const request = await superoak(app);
+                    await request.get("/scenario/123/test-scenario?no_ua&published=true")
+                        .expect(200);
+                } finally {
+                    apiStub.restore();
+                }
             });
         });
 
@@ -173,6 +215,24 @@ describe("Middleware Integration Tests", () => {
                 const request = await superoak(app);
                 await request.get("/adventure/123/test-adventure")
                     .expect(301);
+            });
+
+            it("should redirect with published param", async () => {
+                const request = await superoak(app);
+                await request.get("/adventure/123/test-adventure?published=true")
+                    .expect(301);
+            });
+
+            it("should return adventure embed with unlisted param and ?no_ua", async () => {
+                const apiStub = stub(AIDungeonAPI.prototype, "getAdventureEmbed", () => Promise.resolve(mockAdventure));
+                try {
+                    const request = await superoak(app);
+                    await request.get("/adventure/123/test-adventure?unlisted=true&no_ua")
+                        .expect(200)
+                        .expect("Content-Type", /text\/html/);
+                } finally {
+                    apiStub.restore();
+                }
             });
 
             it("should return an adventure embed for /read path", async () => {

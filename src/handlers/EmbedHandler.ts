@@ -38,7 +38,7 @@ export abstract class EmbedHandler<T> implements Handler {
 
     abstract fetch(ctx: Context<AppState>, id: string): Promise<T>;
 
-    protected abstract prepareContext(ctx: Context<AppState>, data: T, link: string): object;
+    protected abstract prepareContext(ctx: Context<AppState>, data: T): object;
 
     protected getRedirectLink(ctx: Context<AppState>): string {
         return ctx.state.links.redirect(this.redirectKeys);
@@ -52,14 +52,13 @@ export abstract class EmbedHandler<T> implements Handler {
         ctx.state.metrics.router.endpoint = this.name;
 
         const id = this.getResourceId(ctx);
-        const link = this.getRedirectLink(ctx);
 
         Object.assign(ctx.state.analytics.content, {
             id,
             type: this.name
         });
 
-        if (tryForward(ctx, link)) return;
+        if (this.tryForward(ctx)) return;
 
         let result: APIResult = "unknown";
         ctx.state.metrics.api = {
@@ -72,7 +71,7 @@ export abstract class EmbedHandler<T> implements Handler {
             ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
             ctx.state.metrics.router.type = "success";
             result = "success";
-            ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data, link));
+            ctx.response.body = this.successTemplate.render(this.prepareContext(ctx, data));
         } catch (e) {
             ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
             ctx.state.metrics.router.type = "error";
@@ -85,7 +84,7 @@ export abstract class EmbedHandler<T> implements Handler {
             ctx.response.body = this.errorTemplate.render({
                 type: this.responseType,
                 id,
-                link,
+                link: this.getRedirectLink(ctx),
                 oembed: ctx.state.links.oembed({
                     title: `${capitalize(this.responseType)} Not Found [${id}]`,
                     type: this.oembedType
@@ -96,23 +95,23 @@ export abstract class EmbedHandler<T> implements Handler {
             if (ctx.state.metrics.api) ctx.state.metrics.api.result = result;
         }
     }
-}
 
-function tryForward(ctx: Context<AppState>, link: string) {
-    if (shouldForward(ctx)) {
-        ctx.state.metrics.router.type = "redirect";
-        ctx.response.status = 301;
-        ctx.response.redirect(link);
-        return true;
-    }
-    return false;
-}
-
-function shouldForward(ctx: Context<AppState>) {
-    // Bypass check with ?no_ua
-    if (ctx.request.url.searchParams.has("no_ua")) {
+    private tryForward(ctx: Context<AppState>) {
+        if (this.shouldForward(ctx)) {
+            ctx.state.metrics.router.type = "redirect";
+            ctx.response.status = 301;
+            ctx.response.redirect(this.getRedirectLink(ctx));
+            return true;
+        }
         return false;
     }
-    // Otherwise check if it's coming from Discordbot
-    return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
+
+    protected shouldForward(ctx: Context<AppState>) {
+        // Bypass check with ?no_ua
+        if (ctx.request.url.searchParams.has("no_ua")) {
+            return false;
+        }
+        // Otherwise check if it's coming from Discordbot
+        return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
+    }
 }
