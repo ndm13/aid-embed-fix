@@ -3,16 +3,18 @@
     import SettingsPage from "./SettingsPage.svelte";
 
     let currentPage = $state('link');
+
+    currentPage = ['#link', '#settings'].filter(e => document.location.hash === e).map(e => e.substring(1)).pop() || 'link';
 </script>
 
 <header>
     <h2>AI Dungeon Embed Fix</h2>
     <nav>
-        <a href="#" onclick={(e) => { e.preventDefault(); currentPage = 'link'; }} class:active={currentPage === 'link'}>
+        <a href="#link" onclick={() => { currentPage = 'link'; }} class:active={currentPage === 'link'}>
             <i class="fa-solid fa-link"></i>
             <span>Fix Link</span>
         </a>
-        <a href="#" onclick={(e) => { e.preventDefault(); currentPage = 'settings'; }} class:active={currentPage === 'settings'}>
+        <a href="#settings" onclick={() => { currentPage = 'settings'; }} class:active={currentPage === 'settings'}>
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>

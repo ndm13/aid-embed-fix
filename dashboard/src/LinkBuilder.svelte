@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { settings } from "./settings.svelte.ts";
+    import { untrack } from "svelte";
+
     const HOSTNAME_PATTERN = /^(?<prefix>(play|beta|alpha)\.)(?<tld>aidungeon\.(com|link)|axdungeon\.com)$/;
     const PATHNAME_PATTERN = /^(?<path>\/(?:(?<type>scenario|adventure)\/(?<id>[\w-]+)\/[^?\s]+|(?<type>profile)\/(?<id>[\w-]+))$)/;
 
@@ -12,83 +15,114 @@
 
     let source = $state("");
 
-    let prefix = $state('play.');
-    let tld = $state('aidungeon.link');
+    function getEnvPrefix(env: string) {
+        switch (env) {
+            case 'prod': return 'play.';
+            case 'beta': return 'beta.';
+            case 'alpha': return 'alpha.';
+            default: return 'play.';
+        }
+    }
+
+    let prefix = $state(settings.link.env ? getEnvPrefix(settings.link.env) : 'play.');
+    let tld = $state(settings.link.domain || 'aidungeon.link');
     let shareId = $state('');
 
     let coverLink = $state("");
     let coverMode = $state<'default' | 'none' | 'custom'>('default');
 
-    let pathData = $derived.by(() => {
-        if (!source) return {};
+    let sourceUrl = $derived.by(() => {
+        if (!source) return undefined;
         try {
-            const s = new URL(source);
-
-            if (!HOSTNAME_PATTERN.test(s.hostname)) return '';
-
-            return PATHNAME_PATTERN.exec(s.pathname)?.groups || {};
+            const url = new URL(source);
+            if (!HOSTNAME_PATTERN.test(url.hostname)) return undefined;
+            return url;
         } catch {
-            return {};
+            return undefined;
         }
+    });
+
+    let pathData = $derived.by(() => {
+        if (!sourceUrl) return {};
+        return PATHNAME_PATTERN.exec(sourceUrl.pathname)?.groups || {};
     }) as Partial<{ path: string, type: string, id: string }>;
 
-    let lastPathId: string | undefined = undefined;
-    let lastPathType: string | undefined = undefined;
+    const pathKey = $derived(pathData.id && pathData.type ? `${pathData.type}/${pathData.id}` : undefined);
+    $effect(() => {
+        // When the pathKey changes (i.e. a new scenario/adventure is pasted),
+        // reset the visibility if the new URL doesn't specify it.
+        pathKey;
+        untrack(() => {
+            if (sourceUrl && !sourceUrl.searchParams.has('published') && !sourceUrl.searchParams.has('unlisted')) {
+                visibility = undefined;
+            }
+        });
+    });
 
     $effect(() => {
-        if (!source) return;
-        try {
-            const s = new URL(source);
-            const hostMatch = HOSTNAME_PATTERN.exec(s.hostname);
-            if (hostMatch) {
-                prefix = hostMatch.groups.prefix;
-                // If we're loading an existing proxied link, use that domain
-                if (['axdungeon.com', 'aidungeon.link'].includes(hostMatch.groups.tld)) {
-                    tld = hostMatch.groups.tld;
-                } else {
-                    const currentMatch = HOSTNAME_PATTERN.exec(new URL(document.URL).hostname);
-                    // If we're on a recognizable proxied domain, use that domain
-                    if (currentMatch && ['axdungeon.com', 'aidungeon.link'].includes(currentMatch.groups.tld)) {
-                        tld = currentMatch.groups.tld;
-                    }
-                }
-            }
-            if (pathData.id !== lastPathId || pathData.type !== lastPathType) {
-                if (!s.searchParams.has('published') && !s.searchParams.has('unlisted')) {
-                    visibility = undefined;
-                }
-                lastPathId = pathData.id;
-                lastPathType = pathData.type;
-            }
-            if (s.searchParams.has('shareId')) {
-                shareId = s.searchParams.get('shareId');
-            }
-            if (s.searchParams.has('cover')) {
-                let coverParam = s.searchParams.get('cover');
-                if (coverParam === 'none') {
-                    coverMode = 'none';
-                } else if (coverParam.includes(':')) {
-                    const [platform, file] = coverParam.split(':');
-                    switch (platform) {
-                        case 'catbox':
-                            coverLink = "https://files.catbox.moe/" + file.replace(/^\/+/, "");
-                            coverMode = 'custom';
-                            break;
-                        case 'imgur':
-                            coverLink = "https://imgur.com/" + file.replace(/^\/+/, "");
-                            coverMode = 'custom';
-                            break;
-                    }
+        if (!sourceUrl) return;
+
+        const hostMatch = HOSTNAME_PATTERN.exec(sourceUrl.hostname);
+        if (hostMatch) {
+            const linkPrefix = hostMatch.groups.prefix;
+            const linkTld = hostMatch.groups.tld;
+            const isProxied = ['axdungeon.com', 'aidungeon.link'].includes(linkTld);
+
+            if (settings.link.preferExisting) {
+                prefix = linkPrefix;
+                if (isProxied) {
+                    tld = linkTld;
                 }
             } else {
-                coverMode = 'default';
+                if (settings.link.env) {
+                    prefix = getEnvPrefix(settings.link.env);
+                } else {
+                    prefix = linkPrefix;
+                }
+
+                if (settings.link.domain) {
+                    tld = settings.link.domain;
+                } else if (isProxied) {
+                    tld = linkTld;
+                }
             }
-            if (s.searchParams.get('published')) {
-                visibility = 'published';
-            } else if (s.searchParams.get('unlisted')) {
-                visibility = 'unlisted';
+
+            if (!isProxied && !settings.link.domain) {
+                const currentMatch = HOSTNAME_PATTERN.exec(new URL(document.URL).hostname);
+                // If we're on a recognizable proxied domain, use that domain
+                if (currentMatch && ['axdungeon.com', 'aidungeon.link'].includes(currentMatch.groups.tld)) {
+                    tld = currentMatch.groups.tld;
+                }
             }
-        } catch { }
+        }
+        if (sourceUrl.searchParams.has('shareId')) {
+            shareId = sourceUrl.searchParams.get('shareId')!;
+        }
+        if (sourceUrl.searchParams.has('cover')) {
+            let coverParam = sourceUrl.searchParams.get('cover')!;
+            if (coverParam === 'none') {
+                coverMode = 'none';
+            } else if (coverParam.includes(':')) {
+                const [platform, file] = coverParam.split(':');
+                switch (platform) {
+                    case 'catbox':
+                        coverLink = "https://files.catbox.moe/" + file.replace(/^\/+/, "");
+                        coverMode = 'custom';
+                        break;
+                    case 'imgur':
+                        coverLink = "https://imgur.com/" + file.replace(/^\/+/, "");
+                        coverMode = 'custom';
+                        break;
+                }
+            }
+        } else {
+            coverMode = 'default';
+        }
+        if (sourceUrl.searchParams.get('published')) {
+            visibility = 'published';
+        } else if (sourceUrl.searchParams.get('unlisted')) {
+            visibility = 'unlisted';
+        }
     });
 
     let cover = $derived.by(() => {
