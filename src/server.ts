@@ -10,6 +10,7 @@ import * as logging from "./middleware/logging.ts";
 import * as metrics from "./middleware/metrics.ts";
 import * as statics from "./middleware/statics.ts";
 import * as state from "./middleware/state.ts";
+import * as settings from "./middleware/settings.ts";
 import { AnalyticsCollector } from "./support/AnalyticsCollector.ts";
 import { MetricsCollector } from "./support/MetricsCollector.ts";
 import { AppState } from "./types/AppState.ts";
@@ -99,6 +100,11 @@ if (config.metrics.enable !== "none") {
 } else {
     log.info("Metrics disabled");
 }
+
+// Settings
+app.use(settings.middleware());
+const settingsRouter = settings.router();
+app.use(settingsRouter.routes(), settingsRouter.allowedMethods());
 
 // Dashboard
 app.use(dashboard.middleware());

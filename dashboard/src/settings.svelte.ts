@@ -73,21 +73,7 @@ class Settings {
     }
 
     syncToOther() {
-        const other = this.otherDomain;
-        if (!other) return;
-        const linkJson = JSON.stringify(this.link);
-        const proxyJson = JSON.stringify(this.proxy);
-
-        // Replace current root domain with other domain
-        const currentRoot = window.location.hostname.split('.').slice(-2).join('.');
-        const newHost = window.location.hostname.replace(currentRoot, other);
-
-        const url = new URL(window.location.href);
-        url.hostname = newHost;
-        url.pathname = "/sync";
-        url.searchParams.set("sync_link", linkJson);
-        url.searchParams.set("sync_proxy", proxyJson);
-        window.location.href = url.toString();
+        window.location.href = "/sync";
     }
 }
 

@@ -2,6 +2,16 @@ import { AIDungeonAPI } from "../api/AIDungeonAPI.ts";
 import { RelatedLinks } from "../support/RelatedLinks.ts";
 import { AnalyticsEntry, APIDataPoint, RouterDataPoint } from "./ReportingTypes.ts";
 
+export interface LinkSettings {
+    env: string;
+    domain: string;
+    preferExisting: boolean;
+}
+
+export interface ProxySettings {
+    env: string;
+}
+
 export type AppState = {
     api: AIDungeonAPI,
     metrics: {
@@ -9,5 +19,9 @@ export type AppState = {
         api?: Partial<APIDataPoint>
     },
     analytics: AnalyticsEntry,
-    links: RelatedLinks
+    links: RelatedLinks,
+    settings: {
+        link?: LinkSettings;
+        proxy?: ProxySettings;
+    }
 };
