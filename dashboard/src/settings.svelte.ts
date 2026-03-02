@@ -66,15 +66,7 @@ class Settings {
         setCookie("proxy_settings", JSON.stringify(this.proxy));
     }
 
-    get otherDomain() {
-        if (typeof window === 'undefined') return null;
-        const host = window.location.hostname;
-        if (host.includes("aidungeon.link")) return "axdungeon.com";
-        if (host.includes("axdungeon.com")) return "aidungeon.link";
-        return null;
-    }
-
-    async syncToOther(scope: 'link' | 'proxy' | 'all' = 'all') {
+    async sync(scope: 'link' | 'proxy' | 'all' = 'all') {
         if (this.syncStatus === 'syncing') return;
         this.syncStatus = 'syncing';
 
@@ -84,7 +76,7 @@ class Settings {
         const top = (window.screen.height - height) / 2;
 
         const popup = window.open(
-            `/sync?mode=popup&scope=${scope}`,
+            `/sync?scope=${scope}`,
             'sync_popup',
             `width=${width},height=${height},top=${top},left=${left}`
         );
@@ -96,6 +88,7 @@ class Settings {
         }
 
         const messageHandler = (event: MessageEvent) => {
+            console.log("Sync message received:", event.data);
             if (event.data?.type === 'sync_complete') {
                 this.syncStatus = 'success';
                 window.removeEventListener('message', messageHandler);

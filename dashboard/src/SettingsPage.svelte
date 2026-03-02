@@ -4,11 +4,13 @@
     function saveLinkSettings(e: Event) {
         e.preventDefault();
         settings.saveLink();
+        settings.sync("link");
     }
 
     function saveProxySettings(e: Event) {
         e.preventDefault();
         settings.saveProxy();
+        settings.sync("proxy");
     }
 </script>
 
@@ -63,19 +65,6 @@
             <button type="submit">Save Proxy Settings</button>
         </div>
     </form>
-
-    {#if settings.otherDomain}
-        <div class="sync-section">
-            <h3>Sync Settings</h3>
-            <p>
-                You are currently on {window.location.hostname}.
-                You can sync these settings to {settings.otherDomain}.
-            </p>
-            <button onclick={() => settings.syncToOther()}>
-                Save & Sync to {settings.otherDomain}
-            </button>
-        </div>
-    {/if}
 </main>
 
 
