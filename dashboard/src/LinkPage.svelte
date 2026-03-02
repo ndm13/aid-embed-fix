@@ -1,6 +1,5 @@
 <script lang="ts">
     import LinkBuilder from "./LinkBuilder.svelte";
-    import {HTMLMetaAttributes} from "../../../../AppData/Local/deno/npm/registry.npmjs.org/svelte/5.46.1/elements";
 
     let generatedLink: URL | undefined = $state();
     let previewCache = $state("");
@@ -41,7 +40,7 @@
                 if (!visibility) {
                     console.log("Updating visibility from data");
                     visibility = (['published', 'unlisted'] as Array<"published" | "unlisted">)
-                        .filter(e => (doc.querySelector('meta[name="aid:visibility"]') as HTMLMetaAttributes)?.content === e)
+                        .filter(e => (doc.querySelector('meta[name="aid:visibility"]') as HTMLMetaElement)?.content === e)
                         .pop();
                     console.log("Visibility is " + visibility);
                 }
