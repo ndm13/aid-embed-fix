@@ -8,6 +8,11 @@ export interface ProxySettings {
     env: string;
 }
 
+export interface Notification {
+    message: string;
+    type: 'success' | 'error' | 'info';
+}
+
 function getCookie(name: string): string | null {
     if (typeof document === 'undefined') return null;
     const value = `; ${document.cookie}`;
@@ -57,6 +62,16 @@ class Settings {
     }));
 
     syncStatus = $state<'idle' | 'syncing' | 'success' | 'error'>('idle');
+    notification = $state<Notification | null>(null);
+
+    showNotification(message: string, type: 'success' | 'error' | 'info') {
+        this.notification = { message, type };
+        setTimeout(() => {
+            if (this.notification?.message === message) {
+                this.notification = null;
+            }
+        }, 3000);
+    }
 
     saveLink() {
         setCookie("link_settings", JSON.stringify(this.link));
@@ -69,6 +84,7 @@ class Settings {
     async sync(scope: 'link' | 'proxy' | 'all' = 'all') {
         if (this.syncStatus === 'syncing') return;
         this.syncStatus = 'syncing';
+        this.notification = null;
 
         const width = 600;
         const height = 400;
@@ -83,14 +99,15 @@ class Settings {
 
         if (!popup) {
             this.syncStatus = 'error';
+            this.showNotification('Pop-up blocked. Please allow pop-ups to sync.', 'error');
             setTimeout(() => this.syncStatus = 'idle', 3000);
             return;
         }
 
         const messageHandler = (event: MessageEvent) => {
-            console.log("Sync message received:", event.data);
             if (event.data?.type === 'sync_complete') {
                 this.syncStatus = 'success';
+                this.showNotification('Settings synchronized', 'success');
                 window.removeEventListener('message', messageHandler);
                 setTimeout(() => {
                     this.syncStatus = 'idle';
@@ -106,6 +123,7 @@ class Settings {
                 window.removeEventListener('message', messageHandler);
                 if (this.syncStatus === 'syncing') {
                     this.syncStatus = 'idle';
+                    this.showNotification('Sync cancelled', 'info');
                 }
             }
         }, 500);

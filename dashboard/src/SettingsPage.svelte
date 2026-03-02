@@ -1,14 +1,18 @@
 <script lang="ts">
     import { settings } from "./settings.svelte.ts";
 
+    let activeScope = $state<'link' | 'proxy' | null>(null);
+
     function saveLinkSettings(e: Event) {
         e.preventDefault();
+        activeScope = 'link';
         settings.saveLink();
         settings.sync("link");
     }
 
     function saveProxySettings(e: Event) {
         e.preventDefault();
+        activeScope = 'proxy';
         settings.saveProxy();
         settings.sync("proxy");
     }
@@ -42,7 +46,12 @@
             </label>
         </div>
         <div class="actions">
-            <button type="submit">Save Link Settings</button>
+            {#if activeScope === 'link' && settings.notification}
+                <span class="status-message {settings.notification.type}">
+                    {settings.notification.message}
+                </span>
+            {/if}
+            <button type="submit" disabled={settings.syncStatus === 'syncing'}>Save Link Settings</button>
         </div>
     </form>
 
@@ -62,7 +71,12 @@
             </select>
         </div>
         <div class="actions">
-            <button type="submit">Save Proxy Settings</button>
+            {#if activeScope === 'proxy' && settings.notification}
+                <span class="status-message {settings.notification.type}">
+                    {settings.notification.message}
+                </span>
+            {/if}
+            <button type="submit" disabled={settings.syncStatus === 'syncing'}>Save Proxy Settings</button>
         </div>
     </form>
 </main>
@@ -103,5 +117,21 @@
         .grid-section > * {
             grid-column: span 2;
         }
+    }
+
+    .status-message {
+        align-self: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+        animation: fade-in 0.2s ease-out;
+    }
+
+    .status-message.success { color: #16a34a; }
+    .status-message.error { color: #dc2626; }
+    .status-message.info { color: #2563eb; }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 </style>
