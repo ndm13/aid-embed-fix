@@ -64,11 +64,22 @@ export function router() {
 
     router.get("/sync", async (ctx) => {
         const token = ctx.request.url.searchParams.get("token");
+        const mode = ctx.request.url.searchParams.get("mode");
+        const scope = ctx.request.url.searchParams.get("scope") || "all";
 
         // Receiver (Has token)
         if (token) {
             const data = syncTokens.get(token);
             if (!data) {
+                if (mode === "popup") {
+                    ctx.response.body = `
+                        <!DOCTYPE html>
+                        <html><body><script>
+                            window.close();
+                        </script></body></html>
+                    `;
+                    return;
+                }
                 ctx.response.status = 400;
                 ctx.response.body = "Invalid or expired sync token";
                 return;
@@ -109,6 +120,26 @@ export function router() {
                 });
             }
 
+            if (mode === "popup") {
+                ctx.response.body = `
+                    <!DOCTYPE html>
+                    <html>
+                    <body>
+                    <script>
+                        if (window.opener) {
+                            window.opener.postMessage({ type: 'sync_complete', success: true }, '*');
+                            window.close();
+                        } else {
+                            window.location.href = '/';
+                        }
+                    </script>
+                    <p>Sync complete. You can close this window.</p>
+                    </body>
+                    </html>
+                `;
+                return;
+            }
+
             ctx.response.redirect("/");
             return;
         }
@@ -130,8 +161,16 @@ export function router() {
             return;
         }
 
-        const linkCookie = await ctx.cookies.get("link_settings");
-        const proxyCookie = await ctx.cookies.get("proxy_settings");
+        // Read cookies based on scope
+        let linkCookie: string | undefined;
+        let proxyCookie: string | undefined;
+
+        if (scope === "all" || scope === "link") {
+            linkCookie = await ctx.cookies.get("link_settings");
+        }
+        if (scope === "all" || scope === "proxy") {
+            proxyCookie = await ctx.cookies.get("proxy_settings");
+        }
 
         // Generate Token
         const newToken = crypto.randomUUID();
@@ -142,12 +181,14 @@ export function router() {
         });
 
         // Construct Target URL
-        // Preserve subdomain: beta.aidungeon.link -> beta.axdungeon.com
         const prefix = currentHost.slice(0, -currentBase.length);
         const targetHost = prefix + targetBase;
 
         const targetUrl = new URL("https://" + targetHost + "/sync");
         targetUrl.searchParams.set("token", newToken);
+        if (mode) {
+            targetUrl.searchParams.set("mode", mode);
+        }
 
         ctx.response.redirect(targetUrl);
     });

@@ -56,6 +56,8 @@ class Settings {
         env: ""
     }));
 
+    syncStatus = $state<'idle' | 'syncing' | 'success' | 'error'>('idle');
+
     saveLink() {
         setCookie("link_settings", JSON.stringify(this.link));
     }
@@ -72,8 +74,48 @@ class Settings {
         return null;
     }
 
-    syncToOther() {
-        window.location.href = "/sync";
+    async syncToOther(scope: 'link' | 'proxy' | 'all' = 'all') {
+        if (this.syncStatus === 'syncing') return;
+        this.syncStatus = 'syncing';
+
+        const width = 600;
+        const height = 400;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+
+        const popup = window.open(
+            `/sync?mode=popup&scope=${scope}`,
+            'sync_popup',
+            `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+        if (!popup) {
+            this.syncStatus = 'error';
+            setTimeout(() => this.syncStatus = 'idle', 3000);
+            return;
+        }
+
+        const messageHandler = (event: MessageEvent) => {
+            if (event.data?.type === 'sync_complete') {
+                this.syncStatus = 'success';
+                window.removeEventListener('message', messageHandler);
+                setTimeout(() => {
+                    this.syncStatus = 'idle';
+                }, 3000);
+            }
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        const timer = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(timer);
+                window.removeEventListener('message', messageHandler);
+                if (this.syncStatus === 'syncing') {
+                    this.syncStatus = 'idle';
+                }
+            }
+        }, 500);
     }
 }
 
