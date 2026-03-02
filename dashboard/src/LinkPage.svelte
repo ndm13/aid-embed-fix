@@ -1,23 +1,30 @@
 <script lang="ts">
     import LinkBuilder from "./LinkBuilder.svelte";
+    import {HTMLMetaAttributes} from "../../../../AppData/Local/deno/npm/registry.npmjs.org/svelte/5.46.1/elements";
 
     let generatedLink: URL | undefined = $state();
+    let previewCache = $state("");
+    newCacheId();
     let previewHtml = $state("");
+    let visibility: "published" | "unlisted" | undefined = $state();
 
     $effect(() => {
         if (!generatedLink) {
             previewHtml = "";
             return;
         }
-        const forceBody = new URL(generatedLink.pathname, document.location.protocol + document.location.host);
+        const previewLink = new URL(generatedLink.pathname, document.location.protocol + document.location.host);
         if (generatedLink.searchParams.has("shareId"))
-            forceBody.searchParams.set("shareId", generatedLink.searchParams.get("shareId"));
+            previewLink.searchParams.set("shareId", generatedLink.searchParams.get("shareId"));
         if (generatedLink.searchParams.has("cover"))
-            forceBody.searchParams.set("cover", generatedLink.searchParams.get("cover"));
-        forceBody.searchParams.set("no_ua", "true");
-        forceBody.searchParams.set("skipDashboardCheck", "true");
+            previewLink.searchParams.set("cover", generatedLink.searchParams.get("cover"));
+        if (generatedLink.searchParams.has("published"))
+            previewLink.searchParams.set("published", generatedLink.searchParams.get("published"));
+        if (generatedLink.searchParams.has("unlisted"))
+            previewLink.searchParams.set("unlisted", generatedLink.searchParams.get("unlisted"));
+        previewLink.searchParams.set("preview", previewCache);
 
-        fetch(forceBody)
+        fetch(previewLink)
             .then((res) => res.text())
             .then((html) => {
                 const parser = new DOMParser();
@@ -30,8 +37,21 @@
                     section.innerHTML = embed.innerHTML;
                     previewHtml = section.outerHTML;
                 }
+
+                if (!visibility) {
+                    console.log("Updating visibility from data");
+                    visibility = (['published', 'unlisted'] as Array<"published" | "unlisted">)
+                        .filter(e => (doc.querySelector('meta[name="aid:visibility"]') as HTMLMetaAttributes)?.content === e)
+                        .pop();
+                    console.log("Visibility is " + visibility);
+                }
             });
     });
+
+    function newCacheId() {
+        // Generate a random hex string
+        previewCache = Math.random().toString(16).slice(2);
+    }
 
     function copyToClipboard() {
         if (!generatedLink) return;
@@ -42,12 +62,15 @@
 <div class="sxs">
     <section class="builder">
         <h4>Paste your link below to customize it!</h4>
-        <LinkBuilder bind:generatedLink />
+        <LinkBuilder bind:generatedLink bind:visibility />
     </section>
 
     {#if previewHtml}
         <section class="preview">
-            <h4>Your embed will look like this 👇</h4>
+            <header>
+                <h4>Your embed will look like this 👇</h4>
+                <button type="button" onclick={newCacheId} aria-label="Refresh Data" title="Refresh Data">🔄️</button>
+            </header>
             {@html previewHtml}
         </section>
     {/if}
@@ -100,7 +123,6 @@
     .builder {
         grid-area: builder;
         align-self: start;
-        margin-bottom: 1ex;
     }
     .output {
         grid-area: output;
@@ -110,6 +132,11 @@
     }
     .preview {
         grid-area: preview;
+    }
+    .preview header {
+        display: flex;
+        place-content: space-between;
+        width: 100%;
     }
 
     .row {

@@ -24,8 +24,6 @@
         <LinkPage />
     {:else if currentPage === 'settings'}
         <SettingsPage />
-    {:else}
-        <PrivacyPage />
     {/if}
 </main>
 
@@ -41,11 +39,17 @@
     header {
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-around;
+        justify-content: space-between;
         align-items: center;
         gap: 1rem;
-        margin: 0 0 1rem;
+        margin: 0 1rem;
+    }
+
+    @media (width < 50rem) {
+        header {
+            flex-direction: column;
+            justify-content: center;
+        }
     }
 
     h2 {
@@ -87,18 +91,21 @@
 
     main {
         margin: 0 auto;
-        border: 1ex double #222;
         padding: 1rem;
-        border-left: none;
-        border-right: none;
     }
 
     footer {
         display: flex;
-        flex-wrap: wrap;
         flex-direction: row;
-        justify-content: space-around;
+        justify-content: space-between;
         align-items: center;
         margin: 1rem;
+    }
+
+    @media (width < 30rem) {
+        footer {
+            flex-direction: column;
+            justify-content: center;
+        }
     }
 </style>

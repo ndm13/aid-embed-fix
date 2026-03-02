@@ -23,7 +23,7 @@
     <link type="application/json+oembed" href="{{ oembed | safe }}"/>
 
     <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
-    <script>window.location.replace("{{ link }}");</script>
+    {% if not preview %}<script>window.location.replace("{{ link }}");</script>{% endif %}
 
     <!-- Okay you heathens, have a nice looking page -->
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -31,8 +31,8 @@
 </head>
 <body class="embed">
 <h2><a href="{{ link }}">{{ title }}</a></h2>
-<h5>a web app by <a href="{{ profile_link }}">{{ author }}</a></h5>
-<p>{{ description }}</p>
+<h5>{{ author }}</h5>
+<p>{{ description | p }}</p>
 <img alt="A demonstration: the user posts a standard AI Dungeon sharing link in a Discord channel, then posts the text 's/i/x'. The previous post is edited and now shows a fully featured embed." src="{{ cover }}"/>
 </body>
 </html>

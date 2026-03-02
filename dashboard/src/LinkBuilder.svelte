@@ -2,7 +2,13 @@
     const HOSTNAME_PATTERN = /^(?<prefix>(play|beta|alpha)\.)(?<tld>aidungeon\.(com|link)|axdungeon\.com)$/;
     const PATHNAME_PATTERN = /^(?<path>\/(?:(?<type>scenario|adventure)\/(?<id>[\w-]+)\/[^?\s]+|(?<type>profile)\/(?<id>[\w-]+))$)/;
 
-    let { generatedLink = $bindable() }: { generatedLink?: URL } = $props();
+    let {
+        generatedLink = $bindable(),
+        visibility = $bindable()
+    }: {
+        generatedLink?: URL,
+        visibility?: 'published' | 'unlisted'
+    } = $props();
 
     let source = $state("");
 
@@ -26,6 +32,9 @@
         }
     }) as Partial<{ path: string, type: string, id: string }>;
 
+    let lastPathId: string | undefined = undefined;
+    let lastPathType: string | undefined = undefined;
+
     $effect(() => {
         if (!source) return;
         try {
@@ -43,6 +52,13 @@
                         tld = currentMatch.groups.tld;
                     }
                 }
+            }
+            if (pathData.id !== lastPathId || pathData.type !== lastPathType) {
+                if (!s.searchParams.has('published') && !s.searchParams.has('unlisted')) {
+                    visibility = undefined;
+                }
+                lastPathId = pathData.id;
+                lastPathType = pathData.type;
             }
             if (s.searchParams.has('shareId')) {
                 shareId = s.searchParams.get('shareId');
@@ -66,6 +82,11 @@
                 }
             } else {
                 coverMode = 'default';
+            }
+            if (s.searchParams.get('published')) {
+                visibility = 'published';
+            } else if (s.searchParams.get('unlisted')) {
+                visibility = 'unlisted';
             }
         } catch { }
     });
@@ -109,6 +130,13 @@
             }
             if (cover) {
                 u.searchParams.set('cover', cover);
+            }
+            if (pathData.type !== "profile") {
+                if (visibility === 'published') {
+                    u.searchParams.set('published', 'true');
+                } else if (visibility === 'unlisted') {
+                    u.searchParams.set('unlisted', 'true');
+                }
             }
             generatedLink = u;
         } catch {
@@ -181,13 +209,35 @@
                         {/if}
                     </small>
                 </div>
-            {/if}
-
-            {#if coverMode === 'custom'}
+                {#if coverMode === 'custom'}
                 <span class="hinted customCoverHint">
                     <input aria-label="custom cover" id="coverLink" type="text" bind:this={coverInput} bind:value={coverLink} placeholder="https://files.catbox.moe/ecb5xa.png" onblur={() => coverInput?.reportValidity()} />
                     <small>Supports <a target="_blank" href="https://imgur.com/upload">Imgur</a> and <a target="_blank" href="https://catbox.moe/">Catbox</a> links.</small>
                 </span>
+                {/if}
+
+                <span>Visibility:</span>
+                <div class="hinted">
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" bind:group={visibility} value="published" />
+                            Published
+                        </label>
+                        <label>
+                            <input type="radio" bind:group={visibility} value="unlisted" />
+                            Unlisted
+                        </label>
+                    </div>
+                    <small>
+                        {#if visibility === 'published'}
+                            This {pathData.type} is published.
+                        {:else if visibility === 'unlisted'}
+                            This {pathData.type} is unlisted.
+                        {:else}
+                            The {pathData.type} may be published or unlisted. We will try to figure this out for you, but if you know, you should choose one of the above!
+                        {/if}
+                    </small>
+                </div>
             {/if}
         </div>
     </details>

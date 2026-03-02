@@ -9,9 +9,10 @@ export default defineConfig({
             preprocess: vitePreprocess()
         })
     ],
+    base: "./",
     root: ".",
     build: {
-        outDir: "dist",
+        outDir: "../static/dashboard",
         emptyOutDir: true
     }
 });

@@ -8,6 +8,7 @@ import { AnalyticsCollector } from "../support/AnalyticsCollector.ts";
 export function middleware(analytics: AnalyticsCollector) {
     return async (ctx: Context<AppState>, next: Next) => {
         await next();
-        analytics.record(ctx.state.analytics as AnalyticsEntry);
+        if (!ctx.request.url.searchParams.has("preview"))
+            analytics.record(ctx.state.analytics as AnalyticsEntry);
     };
 }

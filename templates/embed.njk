@@ -18,13 +18,14 @@
 
     <link rel="icon" href="{{ icon }}"/>
     <meta name="redirect" content="{{ link | safe }}"/>
+    {% if visibility %}<meta name="aid:visibility" content="{{ visibility }}"/>{% endif %}
 
     <title>{{ title }} (@{{ author }})</title>
 
     <link type="application/json+oembed" href="{{ oembed | safe }}"/>
 
     <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
-    <script>window.location.replace("{{ link | safe }}");</script>
+    {% if not preview %}<script>window.location.replace("{{ link | safe }}");</script>{% endif %}
 
     <!-- Okay you heathens, have a nice looking page -->
     <meta name="viewport" content="width=device-width, initial-scale=1"/>

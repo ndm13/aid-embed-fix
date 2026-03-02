@@ -8,6 +8,9 @@ html {
     position: absolute;
     width: 100%;
     min-height: 100%;
+    display: flex;
+    place-content: center;
+    align-items: center;
 }
 
 .embed {
