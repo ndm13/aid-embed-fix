@@ -75,16 +75,11 @@
         flex-wrap: wrap;
         gap: 2rem;
     }
-    form, .sync-section {
+    form {
         width: min-content;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-    }
-    .sync-section {
-        border-top: 1px solid #ccc;
-        padding-top: 1rem;
-        width: 100%;
     }
     .grid-section {
         grid-template-columns: 1fr max-content;
