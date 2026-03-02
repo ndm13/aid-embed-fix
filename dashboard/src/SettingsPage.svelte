@@ -69,6 +69,14 @@
                 <option value="beta">Beta (beta.)</option>
                 <option value="alpha">Alpha (alpha.)</option>
             </select>
+            <label for="proxy-landing">
+                ...the landing page should:
+            </label>
+            <select id="proxy-landing" bind:value={settings.proxy.landing}>
+                <option value="">Redirect server-side when possible (default behavior)</option>
+                <option value="client">Always redirect client-side (use this if links get stuck)</option>
+                <option value="preview">Show a card preview with a clickable link</option>
+            </select>
         </div>
         <div class="actions">
             {#if activeScope === 'proxy' && settings.notification}

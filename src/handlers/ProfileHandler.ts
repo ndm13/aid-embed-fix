@@ -38,7 +38,7 @@ export class ProfileHandler extends EmbedHandler<UserEmbedData> {
             description: data.profile.description,
             link: this.getRedirectLink(ctx),
             icon: data.profile.thumbImageUrl,
-            preview: ctx.request.url.searchParams.has("preview"),
+            preview: this.isPreview(ctx),
             oembed: ctx.state.links.oembed({
                 title: data.profile.title,
                 author: data.profile.title,

@@ -6,6 +6,7 @@ export interface LinkSettings {
 
 export interface ProxySettings {
     env: string;
+    landing: string;
 }
 
 export interface Notification {
@@ -58,7 +59,8 @@ class Settings {
     }));
 
     proxy = $state<ProxySettings>(loadSettings("proxy_settings", {
-        env: ""
+        env: "",
+        landing: ""
     }));
 
     syncStatus = $state<'idle' | 'syncing' | 'success' | 'error'>('idle');

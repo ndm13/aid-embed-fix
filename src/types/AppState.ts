@@ -10,6 +10,7 @@ export interface LinkSettings {
 
 export interface ProxySettings {
     env: string;
+    landing: string;
 }
 
 export type AppState = {

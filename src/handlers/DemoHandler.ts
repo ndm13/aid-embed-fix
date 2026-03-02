@@ -36,7 +36,7 @@ Now you can see the link type, description, and image!
 Fully open source, click the link for details!`,
             cover: "https://github.com/ndm13/aid-embed-fix/blob/main/screenshots/sixfix_demo.gif?raw=true",
             link: this.getRedirectLink(ctx),
-            preview: ctx.request.url.searchParams.has("preview"),
+            preview: this.isPreview(ctx),
             oembed: ctx.state.links.oembed({
                 title: "Fix AI Dungeon Link Previews!",
                 type: this.oembedType

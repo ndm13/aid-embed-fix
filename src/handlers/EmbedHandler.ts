@@ -112,6 +112,10 @@ export abstract class EmbedHandler<T> implements Handler {
         return cached.data;
     }
 
+    protected isPreview(ctx: Context<AppState>) {
+        return ctx.request.url.searchParams.has("preview") || ctx.state.settings.proxy?.landing === "preview";
+    }
+
     async handle(ctx: Context<AppState>) {
         ctx.state.metrics.router.endpoint = this.name;
 
@@ -131,7 +135,7 @@ export abstract class EmbedHandler<T> implements Handler {
         };
 
         try {
-            const data = ctx.request.url.searchParams.has("preview")
+            const data = this.isPreview(ctx)
                 ? await this.getPreview(ctx, id, ctx.request.url.searchParams.get("preview") || "true")
                 : await this.fetch(ctx, id);
             ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
@@ -151,7 +155,7 @@ export abstract class EmbedHandler<T> implements Handler {
                 type: this.responseType,
                 id,
                 link: this.getRedirectLink(ctx),
-                preview: ctx.request.url.searchParams.has("preview"),
+                preview: this.isPreview(ctx),
                 oembed: ctx.state.links.oembed({
                     title: `${capitalize(this.responseType)} Not Found [${id}]`,
                     type: this.oembedType
@@ -174,6 +178,12 @@ export abstract class EmbedHandler<T> implements Handler {
     }
 
     protected shouldForward(ctx: Context<AppState>) {
+        switch (ctx.state.settings.proxy?.landing) {
+            case "client":  // Force client-side redirect
+            case "preview": // Render preview
+                return false;
+        }
+
         // Bypass check with ?no_ua
         if (ctx.request.url.searchParams.has("no_ua")) {
             return false;
