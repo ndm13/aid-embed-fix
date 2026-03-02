@@ -42,7 +42,9 @@
             </select>
             <label>
                 <input type="checkbox" bind:checked={settings.link.preferExisting}/>
-                If editing an existing link, use that link's settings instead of the above
+                <span>
+                    If editing an existing link, use that link's settings instead of the above
+                </span>
             </label>
         </div>
         <div class="actions">
@@ -108,6 +110,13 @@
     }
     label {
         min-width: 12em;
+        text-wrap: balance;
+    }
+    label:has(>input[type=checkbox]) {
+        display: flex;
+        gap: 1ex;
+        align-items: baseline;
+        text-wrap: auto;
     }
     .actions {
         margin-top: 1rem;
