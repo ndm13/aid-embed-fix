@@ -12,6 +12,7 @@ export function middleware(api: AIDungeonAPI, linkConfig: RelatedLinksConfig) {
             metrics: {
                 router: {}
             },
+            settings: {},
             analytics: {
                 timestamp: Date.now(),
                 content: {},

@@ -99,7 +99,10 @@ export abstract class EmbedHandler<T> implements Handler {
                 data,
                 id: id,
                 type: this.responseType,
-                visibility: data.published ? "published" : data.unlisted ? "unlisted" : undefined,
+                visibility:
+                    (data as Record<string, any>).published ? "published" :
+                        (data as Record<string, any>).unlisted ? "unlisted" :
+                            undefined,
                 timestamp: Date.now()
             });
             return data;

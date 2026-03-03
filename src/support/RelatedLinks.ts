@@ -77,7 +77,7 @@ export class RelatedLinks {
     }
 
     get redirectBase() {
-        switch (this.ctx.state.settings.proxy.env) {
+        switch (this.ctx.state.settings.proxy?.env) {
             case "prod": return "https://play.aidungeon.com";
             case "beta": return "https://beta.aidungeon.com";
             case "alpha": return "https://alpha.aidungeon.com";
