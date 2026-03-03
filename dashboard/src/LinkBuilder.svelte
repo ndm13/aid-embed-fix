@@ -5,13 +5,15 @@
     const HOSTNAME_PATTERN = /^(?<prefix>(play|beta|alpha)\.)(?<tld>aidungeon\.(com|link)|axdungeon\.com)$/;
     const PATHNAME_PATTERN = /^(?<path>\/(?:(?<type>scenario|adventure)\/(?<id>[\w-]+)\/[^?\s]+|(?<type>profile)\/(?<id>[\w-]+))$)/;
 
+    interface Props {
+        generatedLink?: URL;
+        visibility?: 'published' | 'unlisted';
+    }
+
     let {
         generatedLink = $bindable(),
         visibility = $bindable()
-    }: {
-        generatedLink?: URL,
-        visibility?: 'published' | 'unlisted'
-    } = $props();
+    }: Props = $props();
 
     let source = $state("");
 

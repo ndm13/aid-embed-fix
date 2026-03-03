@@ -4,8 +4,14 @@
 
     let currentPage = $state('link');
 
-    currentPage = ['#link', '#settings'].filter(e => document.location.hash === e).map(e => e.substring(1)).pop() || 'link';
+    function updatePageByHash() {
+        const hash = ['#link', '#settings'].filter(e => document.location.hash === e).map(e => e.substring(1)).pop();
+        if (hash) currentPage = hash;
+    }
+    updatePageByHash();
 </script>
+
+<svelte:window onhashchange={updatePageByHash} />
 
 <header>
     <h2>AI Dungeon Embed Fix</h2>

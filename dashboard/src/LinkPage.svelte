@@ -58,6 +58,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Link Builder | AI Dungeon Embed Fix</title>
+</svelte:head>
+
 <div class="sxs">
     <section class="builder">
         <h4>Paste your link below to customize it!</h4>

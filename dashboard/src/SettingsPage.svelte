@@ -18,6 +18,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Settings | AI Dungeon Embed Fix</title>
+</svelte:head>
+
 <main>
     <form onsubmit={saveLinkSettings}>
         <h3>Link Builder Settings</h3>
