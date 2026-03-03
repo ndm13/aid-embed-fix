@@ -215,7 +215,7 @@
             <div class="hinted">
                 <div class="row">
                     <input id="shareId" type="text" bind:value={shareId} placeholder="e.g. 'aid-discord', 'cool-subreddit'" />
-                    <button type="button" onclick={generateRandomId} aria-label="Generate random ID" title="Generate random ID">🔀</button>
+                    <button type="button" class="emoji" onclick={generateRandomId} aria-label="Generate random ID" title="Generate random ID">🔀</button>
                 </div>
                 <small>Group clicks of the same link in <a target="_blank" href="https://exwjwjqg.budibase.app/app/ai-dungeon-link-analytics/creator-analytics">Creator Dashboard</a>.</small>
             </div>

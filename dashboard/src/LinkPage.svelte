@@ -6,6 +6,7 @@
     newCacheId();
     let previewHtml = $state("");
     let visibility: "published" | "unlisted" | undefined = $state();
+    let copied = $state(false);
 
     $effect(() => {
         if (!generatedLink) {
@@ -55,6 +56,8 @@
     function copyToClipboard() {
         if (!generatedLink) return;
         navigator.clipboard.writeText(generatedLink.href);
+        copied = true;
+        setTimeout(() => copied = false, 2000);
     }
 </script>
 
@@ -72,7 +75,7 @@
         <section class="preview">
             <header>
                 <h4>Your embed will look like this 👇</h4>
-                <button type="button" onclick={newCacheId} aria-label="Refresh Data" title="Refresh Data">🔄️</button>
+                <button type="button" class="emoji" onclick={newCacheId} aria-label="Refresh Data" title="Refresh Data">🔄️</button>
             </header>
             {@html previewHtml}
         </section>
@@ -86,7 +89,7 @@
             <div class="row">
                 <label for="generated-url-input">Share Link:</label>
                 <input id="generated-url-input" type="text" value={generatedLink.href} readonly />
-                <button type="button" onclick={copyToClipboard} aria-label="Copy to clipboard" title="Copy to clipboard">📋</button>
+                <button type="button" class="emoji" onclick={copyToClipboard} aria-label="Copy to clipboard" title="Copy to clipboard">{copied ? '✅' : '📋'}</button>
             </div>
         </section>
     {/if}
