@@ -3,20 +3,16 @@ import { describe, it } from "@std/testing/bdd";
 import { Context } from "@oak/oak";
 import { RelatedLinks, RelatedLinksConfig } from "@/src/support/RelatedLinks.ts";
 import { AppState } from "@/src/types/AppState.ts";
+import { createTestContext } from "../test_utils.ts";
 
 function createMockContext(url: string): Context<AppState> {
-    return {
-        request: {
-            url: new URL(url)
-        },
-        state: {}
-    } as Context<AppState>;
+    return createTestContext({}, {}, url);
 }
 
 describe("RelatedLinks", () => {
     const config: RelatedLinksConfig = {
         oembedProtocol: "https",
-        defaultRedirectBase: "https://aidungeon.com"
+        defaultRedirectBase: "https://default.aidungeon.com"
     };
 
     describe("cover", () => {
@@ -91,41 +87,41 @@ describe("RelatedLinks", () => {
 
     describe("redirect", () => {
         it("should generate a redirect URL with specified params", () => {
-            const ctx = createMockContext("http://localhost/test/path?a=1&b=2&c=3");
+            const ctx = createMockContext("https://play.aidungeon.link/test/path?a=1&b=2&c=3");
             const relatedLinks = new RelatedLinks(ctx, config);
-            assertEquals(relatedLinks.redirect(["a", "c"]), "https://aidungeon.com/test/path?a=1&c=3");
+            assertEquals(relatedLinks.redirect(["a", "c"]), "https://play.aidungeon.com/test/path?a=1&c=3");
         });
 
         it("should generate a redirect URL with no params if none are passed", () => {
-            const ctx = createMockContext("http://localhost/test/path?a=1&b=2");
+            const ctx = createMockContext("https://play.aidungeon.link/test/path?a=1&b=2");
             const relatedLinks = new RelatedLinks(ctx, config);
-            assertEquals(relatedLinks.redirect([]), "https://aidungeon.com/test/path");
+            assertEquals(relatedLinks.redirect([]), "https://play.aidungeon.com/test/path");
         });
     });
 
     describe("redirectBase", () => {
         it("should return play.aidungeon.com for play host", () => {
-            const ctx = createMockContext("http://play.aidungeon.com/");
+            const ctx = createMockContext("https://play.aidungeon.link/");
             const relatedLinks = new RelatedLinks(ctx, config);
             assertEquals(relatedLinks.redirectBase, "https://play.aidungeon.com");
         });
 
         it("should return beta.aidungeon.com for beta host", () => {
-            const ctx = createMockContext("http://beta.aidungeon.com/");
+            const ctx = createMockContext("https://beta.aidungeon.link/");
             const relatedLinks = new RelatedLinks(ctx, config);
             assertEquals(relatedLinks.redirectBase, "https://beta.aidungeon.com");
         });
 
         it("should return alpha.aidungeon.com for alpha host", () => {
-            const ctx = createMockContext("http://alpha.aidungeon.com/");
+            const ctx = createMockContext("https://alpha.aidungeon.link/");
             const relatedLinks = new RelatedLinks(ctx, config);
             assertEquals(relatedLinks.redirectBase, "https://alpha.aidungeon.com");
         });
 
         it("should return default for other hosts", () => {
-            const ctx = createMockContext("http://localhost/");
+            const ctx = createMockContext("https://unknown.aidungeon.link/");
             const relatedLinks = new RelatedLinks(ctx, config);
-            assertEquals(relatedLinks.redirectBase, "https://aidungeon.com");
+            assertEquals(relatedLinks.redirectBase, "https://default.aidungeon.com");
         });
     });
 });
