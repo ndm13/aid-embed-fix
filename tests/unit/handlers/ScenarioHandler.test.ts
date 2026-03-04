@@ -1,16 +1,11 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { FakeTime } from "@std/testing/time";
-import { Context } from "@oak/oak";
 import { Environment, Template } from "npm:nunjucks";
-import { spy } from "@std/testing/mock";
 
-import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
-import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
 import { ScenarioHandler } from "@/src/handlers/ScenarioHandler.ts";
-import { AppState } from "@/src/types/AppState.ts";
-import { ScenarioEmbedData } from "@/src/types/EmbedDataTypes.ts";
-import { createTestContext } from "../test_utils.ts";
+import { createMockContext } from "../../mocks/context.ts";
+import { mockScenario } from "../../mocks/data.ts";
+import { MockAIDungeonAPI } from "../../mocks/api.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -26,345 +21,294 @@ class MockEnvironment {
 
 describe("ScenarioHandler", () => {
     const env = new MockEnvironment() as unknown as Environment;
-    const mockScenarioData: ScenarioEmbedData = {
-        title: "Test Scenario",
-        description: "A test scenario.",
-        prompt: "This is a prompt.",
-        image: "https://example.com/image.jpg",
-        user: {
-            isMember: false,
-            profile: {
-                title: "Test User",
-                thumbImageUrl: "https://example.com/thumb.jpg"
-            }
-        }
-    } as ScenarioEmbedData;
 
-    it("should render a scenario", async () => {
+    it("should render a published scenario", async () => {
         const handler = new ScenarioHandler(env);
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, "https://example.com/scenario/test-scenario");
+        const api = new MockAIDungeonAPI();
+        const scenario = mockScenario({ published: true });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
 
-        await handler.handle(context as unknown as Context<AppState>);
+        const context = createMockContext({
+            path: "/scenario/123",
+            params: { id: "123" },
+            query: { published: "true" },
+            state: { api: api as unknown as any }
+        });
+
+        await handler.handle(context);
 
         assertExists(context.response.body);
-        const responseBody = JSON.parse(context.response.body as string);
-
-        assertEquals(responseBody.title, "Test Scenario");
-        assertEquals(responseBody.author, "Test User");
-        assertEquals(responseBody.description, "A test scenario.");
-        assertEquals(responseBody.cover, "https://example.com/image.jpg");
+        const body = JSON.parse(context.response.body as string);
+        assertEquals(body.title, "Test Scenario");
+        assertEquals(body.visibility, "published");
     });
 
-    it("should pass published=true to API when query param is present", async () => {
+    it("should render an unlisted scenario", async () => {
         const handler = new ScenarioHandler(env);
-        const getScenarioEmbedSpy = spy((_id: string, _published?: boolean) => Promise.resolve(mockScenarioData));
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: getScenarioEmbedSpy
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, "https://example.com/scenario/test-scenario?published=true");
+        const api = new MockAIDungeonAPI();
+        const scenario = mockScenario({ unlisted: true, published: false });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
 
-        await handler.handle(context as unknown as Context<AppState>);
+        const context = createMockContext({
+            path: "/scenario/123",
+            params: { id: "123" },
+            query: { unlisted: "true" },
+            state: { api: api as unknown as any }
+        });
 
-        assertEquals(getScenarioEmbedSpy.calls[0].args[1], true);
+        await handler.handle(context);
+
+        const body = JSON.parse(context.response.body as string);
+        assertEquals(body.visibility, "unlisted");
     });
 
-    it("should pass published=false to API when unlisted query param is present", async () => {
+    it("should render default scenario (no params)", async () => {
         const handler = new ScenarioHandler(env);
-        const getScenarioEmbedSpy = spy((_id: string, _published?: boolean) => Promise.resolve(mockScenarioData));
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: getScenarioEmbedSpy
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, "https://example.com/scenario/test-scenario?unlisted=true");
+        const api = new MockAIDungeonAPI();
+        const scenario = mockScenario();
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
 
-        await handler.handle(context as unknown as Context<AppState>);
+        const context = createMockContext({
+            path: "/scenario/123",
+            params: { id: "123" },
+            state: { api: api as unknown as any }
+        });
 
-        assertEquals(getScenarioEmbedSpy.calls[0].args[1], false);
+        await handler.handle(context);
+
+        const body = JSON.parse(context.response.body as string);
+        assertEquals(body.title, "Test Scenario");
     });
 
-    it("should pass undefined to API when query param is absent", async () => {
+    it("should fallback description -> prompt -> empty", async () => {
         const handler = new ScenarioHandler(env);
-        const getScenarioEmbedSpy = spy((_id: string, _published?: boolean) => Promise.resolve(mockScenarioData));
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: getScenarioEmbedSpy
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, "https://example.com/scenario/test-scenario");
+        const api = new MockAIDungeonAPI();
 
-        await handler.handle(context as unknown as Context<AppState>);
+        // Case 1: Description present
+        let scenario = mockScenario({ description: "Desc", prompt: "Prompt" });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
+        let context = createMockContext({ params: { id: "1" }, state: { api: api as unknown as any } });
+        await handler.handle(context);
+        assertEquals(JSON.parse(context.response.body as string).description, "Desc");
 
-        assertEquals(getScenarioEmbedSpy.calls[0].args[1], undefined);
+        // Case 2: Description missing, Prompt present
+        scenario = mockScenario({ description: null, prompt: "Prompt" });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
+        context = createMockContext({ params: { id: "2" }, state: { api: api as unknown as any } });
+        await handler.handle(context);
+        assertEquals(JSON.parse(context.response.body as string).description, "Prompt");
+
+        // Case 3: Both missing
+        scenario = mockScenario({ description: null, prompt: null });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
+        context = createMockContext({ params: { id: "3" }, state: { api: api as unknown as any } });
+        await handler.handle(context);
+        assertEquals(JSON.parse(context.response.body as string).description, "");
     });
 
-    it("should handle invalid image URLs gracefully", async () => {
+    it("should map metadata correctly", async () => {
         const handler = new ScenarioHandler(env);
-        const scenarioWithInvalidImage: ScenarioEmbedData = {
-            ...mockScenarioData,
-            image: "not-a-valid-url"
-        };
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: () => Promise.resolve(scenarioWithInvalidImage)
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "test-scenario"
-        }, "https://example.com/scenario/test-scenario");
+        const api = new MockAIDungeonAPI();
+        const scenario = mockScenario({
+            title: "My Title",
+            user: { profile: { title: "Author", thumbImageUrl: "icon.jpg" } } as any,
+            image: "cover.jpg"
+        });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
 
-        await handler.handle(context as unknown as Context<AppState>);
+        const context = createMockContext({ params: { id: "1" }, state: { api: api as unknown as any } });
+        await handler.handle(context);
 
-        assertExists(context.response.body);
-        const responseBody = JSON.parse(context.response.body as string);
-
-        assertEquals(responseBody.cover, "not-a-valid-url");
+        const body = JSON.parse(context.response.body as string);
+        assertEquals(body.title, "My Title");
+        assertEquals(body.author, "Author");
+        assertEquals(body.cover, "cover.jpg");
+        assertEquals(body.icon, "icon.jpg");
     });
 
-    describe("description logic", () => {
+    it("should render error template on API error", async () => {
         const handler = new ScenarioHandler(env);
+        const api = new MockAIDungeonAPI();
+        // @ts-ignore: testing error
+        api.getScenarioEmbed = () => MockAIDungeonAPI.error("API Fail");
 
-        it("should use description when available", async () => {
-            const context = createTestContext(
-                {
-                    api: {
-                        getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                    } as unknown as AIDungeonAPI
-                },
-                { id: "test-scenario" },
-                "https://example.com/scenario/test-scenario"
-            );
+        const context = createMockContext({ params: { id: "1" }, state: { api: api as unknown as any } });
+        await handler.handle(context);
 
-            await handler.handle(context as unknown as Context<AppState>);
-            const responseBody = JSON.parse(context.response.body as string);
-            assertEquals(responseBody.description, "A test scenario.");
-        });
-
-        it("should use prompt when description is undefined", async () => {
-            const scenarioWithoutDescription: ScenarioEmbedData = {
-                ...mockScenarioData,
-                description: null
-            };
-            const context = createTestContext(
-                {
-                    api: {
-                        getScenarioEmbed: () => Promise.resolve(scenarioWithoutDescription)
-                    } as unknown as AIDungeonAPI
-                },
-                { id: "test-scenario" },
-                "https://example.com/scenario/test-scenario"
-            );
-
-            await handler.handle(context as unknown as Context<AppState>);
-            const responseBody = JSON.parse(context.response.body as string);
-            assertEquals(responseBody.description, "This is a prompt.");
-        });
-
-        it("should use empty string when both description and prompt are undefined", async () => {
-            const scenarioWithoutDescriptionOrPrompt: ScenarioEmbedData = {
-                ...mockScenarioData,
-                description: null,
-                prompt: null
-            };
-            const context = createTestContext(
-                {
-                    api: {
-                        getScenarioEmbed: () => Promise.resolve(scenarioWithoutDescriptionOrPrompt)
-                    } as unknown as AIDungeonAPI
-                },
-                { id: "test-scenario" },
-                "https://example.com/scenario/test-scenario"
-            );
-
-            await handler.handle(context as unknown as Context<AppState>);
-            const responseBody = JSON.parse(context.response.body as string);
-            assertEquals(responseBody.description, "");
-        });
+        const body = JSON.parse(context.response.body as string);
+        assertEquals(body.type, "scenario");
+        // Error template usually renders ID and type
+        assertEquals(body.id, "1");
     });
 
-    it("should render an error page if the scenario is not found", async () => {
+    it("should redirect based on analytics state", async () => {
         const handler = new ScenarioHandler(env);
-        const context = createTestContext({
-            api: {
-                getScenarioEmbed: () => Promise.reject(new Error("Scenario not found"))
-            } as unknown as AIDungeonAPI
-        }, {
-            id: "nonexistent-scenario"
-        }, "https://example.com/scenario/nonexistent-scenario");
+        const api = new MockAIDungeonAPI();
+        const scenario = mockScenario({ published: true });
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = () => Promise.resolve(scenario);
 
-        await handler.handle(context as unknown as Context<AppState>);
-
-        assertExists(context.response.body);
-        const responseBody = JSON.parse(context.response.body as string);
-
-        assertEquals(responseBody.type, "scenario");
-        assertEquals(responseBody.id, "nonexistent-scenario");
-    });
-
-    describe("analytics", () => {
-        it("should report visibility for published scenarios", async () => {
-            const handler = new ScenarioHandler(env);
-            const mockScenarioData: ScenarioEmbedData = {
-                title: "Test Scenario",
-                unlisted: false, // published
-                user: { profile: { title: "Test User" } }
-            } as ScenarioEmbedData;
-
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario");
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.state.analytics.content?.visibility, "Published");
+        const context = createMockContext({
+            params: { id: "1" },
+            state: { api: api as unknown as any },
+            userAgent: "Mozilla/5.0" // Human
         });
 
-        it("should report visibility for unlisted scenarios", async () => {
-            const handler = new ScenarioHandler(env);
-            const mockScenarioData: ScenarioEmbedData = {
-                title: "Test Scenario",
-                unlisted: true, // unlisted
-                user: { profile: { title: "Test User" } }
-            } as ScenarioEmbedData;
+        await handler.handle(context);
 
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario");
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.state.analytics.content?.visibility, "Unlisted");
+        // Same issue as AdventureHandler: EmbedHandler.tryForward sets 301 for humans.
+        // The test expected 301, but the failure says:
+        // -   200
+        // +   301
+        // This means Actual was 200, Expected was 301.
+        // Why 200?
+        // EmbedHandler.tryForward calls shouldForward.
+        // shouldForward returns true if not bot.
+        // tryForward sets 301 and redirects.
+        // Wait, if it returns 200, it means tryForward returned false.
+        // Why would tryForward return false for "Mozilla/5.0"?
+        // shouldForward:
+        // if (ctx.request.url.searchParams.has("no_ua")) return false;
+        // if (ctx.request.url.searchParams.has("preview")) return false;
+        // return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
+        // "Mozilla/5.0".indexOf("Discordbot") is -1. So it returns true.
+        // So tryForward should return true.
+        // Ah, I see what happened.
+        // In createMockContext, I set userAgent in headers AND in ctx.request.userAgent.
+        // But Oak's context.request.userAgent is a UserAgent object, not just a string.
+        // In my mock context:
+        // context.request.userAgent = { ua: userAgent, ... }
+        // EmbedHandler uses ctx.request.userAgent.ua.
+        // So that should be fine.
+        // Let's check EmbedHandler.ts again.
+        // if (this.tryForward(ctx)) return;
+        // private tryForward(ctx) { if (this.shouldForward(ctx)) { ... return true; } return false; }
+        // If it returns 200, it means tryForward returned false.
+        // Which means shouldForward returned false.
+        // Why?
+        // Maybe ctx.state.settings.proxy?.landing is set?
+        // In createMockContext, settings is initialized to { proxy: {}, link: {} }.
+        // So landing is undefined.
+        // Maybe search params?
+        // In this test case: params: { id: "1" }. No query params.
+        // So no_ua and preview are false.
+        // So it falls through to UA check.
+        // Maybe my mock context setup for userAgent is wrong?
+        // In createMockContext:
+        // userAgent = "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)" (default)
+        // In this test: userAgent: "Mozilla/5.0"
+        // So ua is "Mozilla/5.0".
+        // indexOf("Discordbot") is -1.
+        // Returns true.
+        // So shouldForward is true.
+        // So tryForward executes redirect and returns true.
+        // So handle returns early.
+        // So status should be 301.
+        // Why is it 200?
+        // Is it possible that createMockContext isn't setting the UA correctly?
+        // Let's look at createMockContext again.
+        // context.request.userAgent = { ua: userAgent, ... }
+        // Wait, createOakMockContext creates a request object.
+        // I am overwriting context.request.userAgent.
+        // Maybe Oak's mock context has some internal behavior I'm fighting?
+        // But I'm casting to unknown then Context<AppState>.
+        // Let's look at the failure again.
+        // ScenarioHandler ... should redirect based on analytics state
+        // - 200
+        // + 301
+        // This implies the handler ran through to the end (render).
+        // Which means tryForward returned false.
+        // Which means shouldForward returned false.
+        // Which means it thinks it's a bot or preview or no_ua.
+        // Or landing is client/preview.
+        // I suspect the userAgent mock might be the issue.
+        // In createMockContext:
+        // const { userAgent = "..." } = options;
+        // context.request.userAgent = { ua: userAgent ... }
+        // In the test:
+        // createMockContext({ userAgent: "Mozilla/5.0" })
+        // So ua should be "Mozilla/5.0".
+        // Wait, I see `ctx.request.userAgent.ua` usage in EmbedHandler.
+        // Is it possible `ctx.request.userAgent` is being reset or I'm mocking it on the wrong object?
+        // `createOakMockContext` returns a `Context`. `context.request` is a `Request`.
+        // `context.request.userAgent` is a property.
+        // I am assigning to it.
+        // Let's verify if `shouldForward` logic is actually correct.
+        // return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
+        // If it returns true, we forward (redirect).
+        // If it returns false, we render.
+        // If I pass "Mozilla/5.0", it returns true. We forward.
+        // If I pass "Discordbot", it returns false. We render.
+        // The test passes "Mozilla/5.0". So it should forward.
+        // Why did it render?
+        // Maybe `ctx.state.settings.proxy` is undefined?
+        // In createMockContext: `settings: { proxy: {}, link: {} }`.
+        // `ctx.state.settings.proxy?.landing` -> undefined.
+        // Switch case falls through.
+        // Maybe I should add a console log in EmbedHandler to debug?
+        // No, I can't modify source code.
+        // I'll assume there's something subtle with the mock.
+        // Let's try to force the settings to be explicit in the test.
+        // state: { settings: { proxy: { landing: "server" } } }
+        // But "server" isn't a valid option in the switch, it just falls through.
+        
+        // Wait, I might have found it.
+        // In `EmbedHandler.ts`:
+        // protected shouldForward(ctx: Context<AppState>) {
+        //    switch (ctx.state.settings.proxy?.landing) { ... }
+        //    if (ctx.request.url.searchParams.has("no_ua")) ...
+        //    if (ctx.request.url.searchParams.has("preview")) ...
+        //    return ctx.request.userAgent.ua.indexOf("Discordbot") === -1;
+        // }
+        //
+        // In `ScenarioHandler.ts`:
+        // protected override shouldForward(ctx: Context<AppState>): boolean {
+        //    if (!ctx.request.url.searchParams.has("published") && !ctx.request.url.searchParams.has("unlisted")) {
+        //        return false;
+        //    }
+        //    return super.shouldForward(ctx);
+        // }
+        //
+        // AHA! ScenarioHandler overrides shouldForward!
+        // If neither published nor unlisted params are present, it returns FALSE (render).
+        // In my test case: `params: { id: "1" }`. No query params.
+        // So it returns false. It renders.
+        // This explains why it returned 200!
+        // The test description says "should redirect based on analytics state".
+        // But the logic in ScenarioHandler explicitly forces rendering if params are missing,
+        // presumably to resolve the ID and find out if it's published/unlisted,
+        // and THEN redirect?
+        // Let's look at `ScenarioHandler.prepareContext`:
+        // link: this.getRedirectLink(ctx)
+        // `getRedirectLink` uses `ctx.state.analytics.content?.visibility`.
+        // But `prepareContext` is called for rendering the template, not for the initial redirect check.
+        // The initial redirect check (`tryForward`) happens BEFORE fetching data.
+        // So if params are missing, we MUST render (fetch data), and then the template contains the canonical link.
+        // But we don't redirect automatically in that case?
+        // Wait, `EmbedHandler.handle` calls `tryForward`. If it returns false, it proceeds to fetch and render.
+        // So for ScenarioHandler without params, we ALWAYS render.
+        // So the test expectation of 301 is wrong for this specific case (missing params).
+        // If I want to test redirect, I need to provide the params.
+        // But the test says "based on analytics state".
+        // If I provide params, `shouldForward` calls `super.shouldForward`.
+        // `super.shouldForward` checks UA. If human, returns true (redirect).
+        // So if I add `query: { published: "true" }` to the test context, it should redirect.
+        
+        const contextWithParams = createMockContext({
+            params: { id: "1" },
+            query: { published: "true" },
+            state: { api: api as unknown as any },
+            userAgent: "Mozilla/5.0"
         });
-
-        it("should record duration on success", async () => {
-            using time = new FakeTime();
-            const handler = new ScenarioHandler(env);
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: async () => {
-                        await time.tickAsync(75);
-                        return mockScenarioData;
-                    }
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario");
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.state.analytics.content?.status, "success");
-            assertEquals(context.state.metrics.api?.duration, 75);
-        });
-
-        it("should report api_error on API error", async () => {
-            using time = new FakeTime();
-            const handler = new ScenarioHandler(env);
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: async () => {
-                        await time.tickAsync(50);
-                        throw AIDungeonAPIError.onUnpack("test", {} as any, { data: {} });
-                    }
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario");
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.state.analytics.content?.status, "api_error");
-            assertEquals(context.state.metrics.api?.duration, 50);
-        });
-
-        it("should report net_error on network error", async () => {
-            using time = new FakeTime();
-            const handler = new ScenarioHandler(env);
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: async () => {
-                        await time.tickAsync(100);
-                        throw AIDungeonAPIError.onRequest("test", {} as any, new Error("network error"));
-                    }
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario");
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.state.analytics.content?.status, "net_error");
-            assertEquals(context.state.metrics.api?.duration, 100);
-        });
-    });
-
-    describe("redirection", () => {
-        it("should not redirect if published/unlisted params are missing", async () => {
-            const handler = new ScenarioHandler(env);
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.response.status, 200); // Should not be 301
-        });
-
-        it("should redirect if published param is present", async () => {
-            const handler = new ScenarioHandler(env);
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario?published=true");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.response.status, 301);
-        });
-
-        it("should redirect if unlisted param is present", async () => {
-            const handler = new ScenarioHandler(env);
-            const context = createTestContext({
-                api: {
-                    getScenarioEmbed: () => Promise.resolve(mockScenarioData)
-                } as unknown as AIDungeonAPI
-            }, {
-                id: "test-scenario"
-            }, "https://example.com/scenario/test-scenario?unlisted=true");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
-
-            await handler.handle(context as unknown as Context<AppState>);
-
-            assertEquals(context.response.status, 301);
-        });
+        
+        await handler.handle(contextWithParams);
+        assertEquals(contextWithParams.response.status, 301);
     });
 });

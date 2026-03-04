@@ -108,6 +108,10 @@ export abstract class EmbedHandler<T> implements Handler {
             return data;
         } else {
             // Update last access time and refresh LRU position
+            if (Date.now() - cached.timestamp > EmbedHandler.CACHE_TTL) {
+                EmbedHandler.previewCache.delete(cacheId);
+                return this.getPreview(ctx, id, cacheId);
+            }
             EmbedHandler.previewCache.delete(cacheId);
             EmbedHandler.previewCache.set(cacheId, cached);
             cached.timestamp = Date.now();
