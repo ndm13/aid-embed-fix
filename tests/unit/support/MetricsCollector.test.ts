@@ -10,7 +10,11 @@ describe("MetricsCollector", () => {
 
     afterEach(() => {
         collector?.cleanup();
-        time?.restore();
+        try {
+            time?.restore();
+        } catch {
+            // ignore if already restored
+        }
     });
 
     it("should record and report router metrics", () => {
@@ -45,5 +49,11 @@ describe("MetricsCollector", () => {
         // Pruning happens on access or interval. Access triggers prune.
         // If all data is pruned, it returns empty object.
         assertEquals(Object.keys(metrics).length, 0);
+    });
+
+    it("should handle empty data", () => {
+        collector = new MetricsCollector({ scopes: { router: true, api: true }, window: 1000 });
+        assertEquals(Object.keys(collector.router).length, 0);
+        assertEquals(Object.keys(collector.api).length, 0);
     });
 });

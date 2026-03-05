@@ -5,7 +5,7 @@ export class AIDungeonAPIError extends Error {
     readonly query: GraphQLQuery;
     readonly response?: GraphQLResponse<string, any>;
 
-    private constructor(message: string, query: GraphQLQuery, response?: GraphQLResponse<string, any>) {
+    constructor(message: string, query: GraphQLQuery, response?: GraphQLResponse<string, any>) {
         super(message);
         this.name = "AIDungeonAPIError";
         this.query = query;

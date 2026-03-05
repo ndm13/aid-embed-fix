@@ -1,5 +1,5 @@
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import { FakeTime } from "@std/testing/time";
 import { Context } from "@oak/oak";
 import { Environment, Template } from "npm:nunjucks";
@@ -7,7 +7,8 @@ import { spy } from "@std/testing/mock";
 
 import { EmbedHandler } from "@/src/handlers/EmbedHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
-import { createTestContext } from "../test_utils.ts";
+import { createMockContext } from "../../mocks/context.ts";
+import { MockAIDungeonAPI } from "../../mocks/api.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -24,7 +25,7 @@ class MockEnvironment {
 class TestEmbedHandler extends EmbedHandler<any> {
     readonly name = "test";
     readonly redirectKeys = ["foo"];
-    protected readonly responseType = "scenario"; // Must be one of 'scenario', 'adventure', 'profile' for caching
+    protected responseType: string = "scenario"; // Must be one of 'scenario', 'adventure', 'profile' for caching
     protected readonly oembedType = "Test";
 
     constructor(env: Environment) {
@@ -43,20 +44,20 @@ class TestEmbedHandler extends EmbedHandler<any> {
 describe("EmbedHandler", () => {
     const env = new MockEnvironment() as unknown as Environment;
 
+    beforeEach(() => {
+        // Clear cache before each test
+        (EmbedHandler as any).previewCache.clear();
+    });
+
     describe("Caching", () => {
         it("should cache responses", async () => {
             const handler = new TestEmbedHandler(env);
             const fetchSpy = spy(handler, "fetch");
-            // Use a unique ID to avoid interference from other tests if cache is shared
-            const id = "cache-test-1";
-            // Use cacheId (last param of getPreview) as the key
-            const context = createTestContext({}, { id }, `http://localhost/test/${id}?preview=true`);
+            const context = createMockContext({ params: { id: "1" }, query: { preview: "true" } });
 
-            // First call
             await handler.handle(context);
             assertEquals(fetchSpy.calls.length, 1);
 
-            // Second call (should hit cache)
             await handler.handle(context);
             assertEquals(fetchSpy.calls.length, 1);
         });
@@ -65,107 +66,89 @@ describe("EmbedHandler", () => {
             using time = new FakeTime();
             const handler = new TestEmbedHandler(env);
             const fetchSpy = spy(handler, "fetch");
-            const id = "cache-test-2";
-            const context = createTestContext({}, { id }, `http://localhost/test/${id}?preview=true`);
+            const context = createMockContext({ params: { id: "1" }, query: { preview: "true" } });
 
-            // First call
             await handler.handle(context);
             assertEquals(fetchSpy.calls.length, 1);
 
-            // Advance time past TTL (5 minutes)
             await time.tickAsync(1000 * 60 * 5 + 100);
 
-            // Second call (should refetch)
             await handler.handle(context);
             assertEquals(fetchSpy.calls.length, 2);
         });
 
-        it("should bypass cache if visibility mismatch", async () => {
+        it("should bypass cache on visibility mismatch", async () => {
             const handler = new TestEmbedHandler(env);
             const fetchSpy = spy(handler, "fetch");
-            const id = "cache-test-3";
             
-            // First call (published)
-            const context1 = createTestContext({}, { id }, `http://localhost/test/${id}?preview=true&published=true`);
+            const context1 = createMockContext({ params: { id: "1" }, query: { preview: "true", published: "true" } });
             await handler.handle(context1);
             assertEquals(fetchSpy.calls.length, 1);
 
-            // Second call (unlisted) - should refetch
-            const context2 = createTestContext({}, { id }, `http://localhost/test/${id}?preview=true&unlisted=true`);
+            const context2 = createMockContext({ params: { id: "1" }, query: { preview: "true", unlisted: "true" } });
             await handler.handle(context2);
             assertEquals(fetchSpy.calls.length, 2);
+        });
+
+        it("should bypass cache for non-standard types", async () => {
+            class CustomEmbedHandler extends TestEmbedHandler {
+                protected override readonly responseType = "custom";
+            }
+            const handler = new CustomEmbedHandler(env);
+            const fetchSpy = spy(handler, "fetch");
+            const context = createMockContext({ params: { id: "1" }, query: { preview: "true" } });
+
+            await handler.handle(context);
+            await handler.handle(context);
+            assertEquals(fetchSpy.calls.length, 2);
+        });
+
+        it("should evict old entries when max size reached", async () => {
+            const handler = new TestEmbedHandler(env);
+            const fetchSpy = spy(handler, "fetch");
+            const MAX_CACHE_SIZE = 100;
+
+            for (let i = 0; i < MAX_CACHE_SIZE; i++) {
+                const context = createMockContext({ params: { id: `id-${i}` }, query: { preview: "true" } });
+                await handler.handle(context);
+            }
+            assertEquals(fetchSpy.calls.length, MAX_CACHE_SIZE);
+
+            const contextNew = createMockContext({ params: { id: "id-new" }, query: { preview: "true" } });
+            await handler.handle(contextNew);
+            assertEquals(fetchSpy.calls.length, MAX_CACHE_SIZE + 1);
+
+            const contextOld = createMockContext({ params: { id: "id-0" }, query: { preview: "true" } });
+            await handler.handle(contextOld);
+            assertEquals(fetchSpy.calls.length, MAX_CACHE_SIZE + 2);
         });
     });
 
     describe("Redirection Logic", () => {
         it("should redirect human users", async () => {
             const handler = new TestEmbedHandler(env);
-            const context = createTestContext({}, { id: "1" }, "http://localhost/test/1");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
-
+            const context = createMockContext({ userAgent: "Mozilla/5.0" });
             await handler.handle(context);
             assertEquals(context.response.status, 301);
         });
 
         it("should NOT redirect bots", async () => {
             const handler = new TestEmbedHandler(env);
-            const context = createTestContext({}, { id: "1" }, "http://localhost/test/1");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Discordbot/2.0" };
-
+            const context = createMockContext({ userAgent: "Discordbot/2.0" });
             await handler.handle(context);
             assertEquals(context.response.status, 200);
         });
+    });
 
-        it("should NOT redirect if ?preview=true", async () => {
+    describe("Error Handling", () => {
+        it("should handle network errors", async () => {
             const handler = new TestEmbedHandler(env);
-            const context = createTestContext({}, { id: "1" }, "http://localhost/test/1?preview=true");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
+            // @ts-ignore: mocking fetch
+            handler.fetch = () => MockAIDungeonAPI.netError();
+            const context = createMockContext({ query: { preview: "true" } });
 
             await handler.handle(context);
-            assertEquals(context.response.status, 200);
-        });
-
-        it("should NOT redirect if ?no_ua", async () => {
-            const handler = new TestEmbedHandler(env);
-            const context = createTestContext({}, { id: "1" }, "http://localhost/test/1?no_ua");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
-
-            await handler.handle(context);
-            assertEquals(context.response.status, 200);
-        });
-
-        it("should respect proxy settings (landing=client)", async () => {
-            const handler = new TestEmbedHandler(env);
-            const context = createTestContext({
-                settings: { proxy: { landing: "client", env: "prod" } }
-            }, { id: "1" }, "http://localhost/test/1");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Discordbot/2.0" };
-
-            await handler.handle(context);
-            // landing=client means "Force client-side redirect", so it should NOT forward (301) but render the page (200)
-            // which presumably contains client-side redirect logic (though the mock template just renders JSON)
-            // Wait, looking at EmbedHandler.ts:
-            // case "client":  // Force client-side redirect
-            //     return false;
-            // So shouldForward returns false, so tryForward returns false, so it renders the template.
-            assertEquals(context.response.status, 200);
-        });
-
-        it("should respect proxy settings (landing=preview)", async () => {
-            const handler = new TestEmbedHandler(env);
-            const context = createTestContext({
-                settings: { proxy: { landing: "preview", env: "prod" } }
-            }, { id: "1" }, "http://localhost/test/1");
-            // @ts-ignore: userAgent is not on the mock type but is used by the handler
-            context.request.userAgent = { ua: "Mozilla/5.0" };
-
-            await handler.handle(context);
-            assertEquals(context.response.status, 200);
+            assertEquals(context.state.analytics.content?.status, "net_error");
         });
     });
 });

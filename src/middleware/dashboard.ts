@@ -24,16 +24,7 @@ export function middleware() {
                     index: "index.html"
                 });
             } catch {
-                if (ctx.request.accepts("html")) {
-                    try {
-                        await send(ctx, "index.html", { root });
-                    } catch {
-                        ctx.response.status = 404;
-                        ctx.response.body = "Dashboard build not found.";
-                    }
-                } else {
-                    ctx.response.status = 404;
-                }
+                ctx.response.status = 404;
             }
             return;
         }
