@@ -16,11 +16,11 @@
 <header>
     <h2>AI Dungeon Embed Fix</h2>
     <nav>
-        <a href="#link" onclick={() => { currentPage = 'link'; }} class:active={currentPage === 'link'}>
+        <a href="#link" class:active={currentPage === 'link'}>
             <i class="fa-solid fa-link"></i>
             <span>Fix Link</span>
         </a>
-        <a href="#settings" onclick={() => { currentPage = 'settings'; }} class:active={currentPage === 'settings'}>
+        <a href="#settings" class:active={currentPage === 'settings'}>
             <i class="fa-solid fa-gear"></i>
             <span>Settings</span>
         </a>
@@ -38,8 +38,12 @@
 <footer>
     <p>&copy; {new Date().getFullYear()} ndm13 (@burnout)</p>
     <nav>
-        <a target="_blank" href="https://discord.gg/GUPFSw85HH">Discord</a>
-        <a target="_blank" href="https://github.com/ndm13/aid-embed-fix">GitHub</a>
+        <a target="_blank" href="https://discord.gg/GUPFSw85HH" title="Discord">
+            <i class="fa-brands fa-discord"></i>
+        </a>
+        <a target="_blank" href="https://github.com/ndm13/aid-embed-fix" title="GitHub">
+            <i class="fa-brands fa-github"></i>
+        </a>
     </nav>
 </footer>
 
@@ -70,7 +74,7 @@
         gap: 1rem;
     }
 
-    nav a {
+    header nav a {
         text-decoration: none;
         color: inherit;
         padding: 0.5rem 1rem;
@@ -88,11 +92,11 @@
         font-size: 1.2rem;
     }
 
-    nav a:hover {
+    header nav a:hover {
         background-color: rgba(248, 174, 44, 0.7);
     }
 
-    nav a.active {
+    header nav a.active {
         background-color: rgba(248, 174, 44, 0.5);
         font-weight: bold;
     }
@@ -108,6 +112,10 @@
         justify-content: space-between;
         align-items: center;
         margin: 1rem;
+    }
+
+    footer nav a {
+        color: unset;
     }
 
     @media (width < 30rem) {
