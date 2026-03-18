@@ -1,13 +1,12 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
 import { AdventureHandler } from "@/src/handlers/AdventureHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { AdventureEmbedData } from "@/src/types/EmbedDataTypes.ts";
-import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
+import { createTestContext } from "../test_utils.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -19,36 +18,6 @@ class MockEnvironment {
     getTemplate(_name: string): Template {
         return new MockTemplate() as unknown as Template;
     }
-}
-
-function createTestContext(state: Partial<AppState>, params: Record<string, string>) {
-    const context = createMockContext({
-        state: {
-            metrics: {
-                router: {
-                    endpoint: "",
-                    type: ""
-                }
-            },
-            analytics: {
-                timestamp: Date.now(),
-                content: {
-                    status: "unknown"
-                }
-            },
-            ...state
-        },
-        params
-    });
-    context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
-        oembedProtocol: "https",
-        defaultRedirectBase: "https://aid.com"
-    });
-    // @ts-ignore: userAgent is not on the mock type but is used by the handler
-    context.request.userAgent = {
-        ua: "Discordbot/2.0"
-    };
-    return context;
 }
 
 describe("AdventureHandler", () => {

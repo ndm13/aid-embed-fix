@@ -5,7 +5,7 @@ import { FakeTime } from "@std/testing/time";
 import { APIResult, EndpointResponseType } from "@/src/types/ReportingTypes.ts";
 
 describe("MetricsCollector", () => {
-    let collector: MetricsCollector;
+    let collector: MetricsCollector | undefined;
 
     afterEach(() => {
         collector?.cleanup();
@@ -36,12 +36,14 @@ describe("MetricsCollector", () => {
         assertEquals(metrics.endpoints["/test"].timings.requests, 2);
         assertEquals(metrics.endpoints["/test"].timings.avg, 150);
         assertEquals(metrics.endpoints["/test"].timings.max, 200);
+        // @ts-ignore: type is dynamic
         assertEquals(metrics.endpoints["/test"].type.success, 2);
 
         assertExists(metrics.endpoints["/another"]);
         assertEquals(metrics.endpoints["/another"].timings.requests, 1);
         assertEquals(metrics.endpoints["/another"].timings.avg, 300);
         assertEquals(metrics.endpoints["/another"].timings.max, 300);
+        // @ts-ignore: type is dynamic
         assertEquals(metrics.endpoints["/another"].type.redirect, 1);
     });
 
@@ -62,12 +64,14 @@ describe("MetricsCollector", () => {
         assertEquals(metrics.methods["getAdventureEmbed"].timings.requests, 2);
         assertEquals(metrics.methods["getAdventureEmbed"].timings.avg, 100);
         assertEquals(metrics.methods["getAdventureEmbed"].timings.max, 150);
+        // @ts-ignore: results is dynamic
         assertEquals(metrics.methods["getAdventureEmbed"].results.success, 2);
 
         assertExists(metrics.methods["getUserProfile"]);
         assertEquals(metrics.methods["getUserProfile"].timings.requests, 1);
         assertEquals(metrics.methods["getUserProfile"].timings.avg, 200);
         assertEquals(metrics.methods["getUserProfile"].timings.max, 200);
+        // @ts-ignore: results is dynamic
         assertEquals(metrics.methods["getUserProfile"].results.api_error, 1);
     });
 

@@ -35,7 +35,8 @@ describe("AnalyticsCollector", () => {
         } as unknown as AIDungeonAPI;
 
         // Stub testSecret to avoid network call during creation
-        const testSecretStub = stub(AnalyticsCollector.prototype, "testSecret" as any, () => Promise.resolve());
+        // @ts-ignore: accessing private method
+        const testSecretStub = stub(AnalyticsCollector.prototype, "testSecret", () => Promise.resolve());
 
         try {
             // Instantiate collector
@@ -48,8 +49,8 @@ describe("AnalyticsCollector", () => {
         (collector as any).supabase = mockSupabase;
     });
 
-    afterEach(() => {
-        collector.cleanup();
+    afterEach(async () => {
+        await collector.cleanup();
         time.restore();
     });
 
@@ -95,7 +96,8 @@ describe("AnalyticsCollector", () => {
             title: "Test Scenario",
             user: { id: "user-1", profile: { title: "author" } }
         };
-        (api.getScenarioEmbed as any) = spy(() => Promise.resolve(scenarioData as any));
+        // @ts-ignore: stubbing method
+        api.getScenarioEmbed = spy(() => Promise.resolve(scenarioData as any));
 
         await collector.record(entry);
 
@@ -126,7 +128,8 @@ describe("AnalyticsCollector", () => {
                 title: "Test User"
             }
         };
-        (api.getUserEmbed as any) = spy(() => Promise.resolve(userData as any));
+        // @ts-ignore: stubbing method
+        api.getUserEmbed = spy(() => Promise.resolve(userData as any));
 
         await collector.record(entry);
 
@@ -148,12 +151,15 @@ describe("AnalyticsCollector", () => {
         } as any;
 
         // Create a spy that returns a promise
-        const getAdventureEmbedSpy = spy(() => Promise.resolve({
-            title: "Adventure 1",
-            userId: "user-1",
-            user: { profile: { title: "User 1" } }
-        } as any));
-        (api.getAdventureEmbed as any) = getAdventureEmbedSpy;
+        const getAdventureEmbedSpy = spy(() =>
+            Promise.resolve({
+                title: "Adventure 1",
+                userId: "user-1",
+                user: { profile: { title: "User 1" } }
+            } as any)
+        );
+        // @ts-ignore: stubbing method
+        api.getAdventureEmbed = getAdventureEmbedSpy;
 
         // First record - fetches from API
         await collector.record(entry1);
@@ -204,13 +210,15 @@ describe("AnalyticsCollector", () => {
             timestamp: Date.now()
         } as any;
 
-        (api.getUserEmbed as any) = spy(() => Promise.resolve({ id: "user-1", profile: { title: "Test User" } } as any));
+        // @ts-ignore: stubbing method
+        api.getUserEmbed = spy(() => Promise.resolve({ id: "user-1", profile: { title: "Test User" } } as any));
 
         // Record entry to populate cache
         await collector.record(entry);
 
         // Verify it's in cache (accessing private cache)
         const cache = (collector as any).cache;
+        // @ts-ignore: accessing private property
         assertEquals(!!cache["cache-test"], true);
 
         // Advance time past expiration (5000ms)
@@ -218,6 +226,7 @@ describe("AnalyticsCollector", () => {
 
         // Trigger process which calls pruneCache
         // Note: process() runs on interval, so tickAsync(6000) triggered it multiple times
+        // @ts-ignore: accessing private property
         assertEquals(!!cache["cache-test"], false);
     });
 });

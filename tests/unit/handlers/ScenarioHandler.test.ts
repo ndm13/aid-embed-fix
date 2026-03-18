@@ -2,16 +2,15 @@ import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { FakeTime } from "@std/testing/time";
 import { Context } from "@oak/oak";
-import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
 import { spy } from "@std/testing/mock";
 
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
 import { AIDungeonAPIError } from "@/src/api/AIDungeonAPIError.ts";
 import { ScenarioHandler } from "@/src/handlers/ScenarioHandler.ts";
-import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { ScenarioEmbedData } from "@/src/types/EmbedDataTypes.ts";
+import { createTestContext } from "../test_utils.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -23,43 +22,6 @@ class MockEnvironment {
     getTemplate(_name: string): Template {
         return new MockTemplate() as unknown as Template;
     }
-}
-
-function createTestContext(
-    state: Partial<AppState>,
-    params: Record<string, string>,
-    url: URL,
-    userAgent = "Discordbot/2.0"
-) {
-    const context = createMockContext({
-        state: {
-            metrics: {
-                router: {
-                    endpoint: "",
-                    type: ""
-                }
-            },
-            analytics: {
-                timestamp: Date.now(),
-                content: {
-                    status: "unknown"
-                }
-            },
-            ...state
-        },
-        params
-    });
-    // @ts-ignore: read-only property
-    context.request.url = url;
-    context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
-        oembedProtocol: "https",
-        defaultRedirectBase: "https://aid.com"
-    });
-    // @ts-ignore: userAgent is not on the mock type but is used by the handler
-    context.request.userAgent = {
-        ua: userAgent
-    };
-    return context;
 }
 
 describe("ScenarioHandler", () => {
@@ -86,7 +48,7 @@ describe("ScenarioHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             id: "test-scenario"
-        }, new URL("https://example.com/scenario/test-scenario"));
+        }, "https://example.com/scenario/test-scenario");
 
         await handler.handle(context as unknown as Context<AppState>);
 
@@ -108,7 +70,7 @@ describe("ScenarioHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             id: "test-scenario"
-        }, new URL("https://example.com/scenario/test-scenario?published=true"));
+        }, "https://example.com/scenario/test-scenario?published=true");
 
         await handler.handle(context as unknown as Context<AppState>);
 
@@ -124,7 +86,7 @@ describe("ScenarioHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             id: "test-scenario"
-        }, new URL("https://example.com/scenario/test-scenario?unlisted=true"));
+        }, "https://example.com/scenario/test-scenario?unlisted=true");
 
         await handler.handle(context as unknown as Context<AppState>);
 
@@ -140,7 +102,7 @@ describe("ScenarioHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             id: "test-scenario"
-        }, new URL("https://example.com/scenario/test-scenario"));
+        }, "https://example.com/scenario/test-scenario");
 
         await handler.handle(context as unknown as Context<AppState>);
 
@@ -159,7 +121,7 @@ describe("ScenarioHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             id: "test-scenario"
-        }, new URL("https://example.com/scenario/test-scenario"));
+        }, "https://example.com/scenario/test-scenario");
 
         await handler.handle(context as unknown as Context<AppState>);
 
@@ -180,7 +142,7 @@ describe("ScenarioHandler", () => {
                     } as unknown as AIDungeonAPI
                 },
                 { id: "test-scenario" },
-                new URL("https://example.com/scenario/test-scenario")
+                "https://example.com/scenario/test-scenario"
             );
 
             await handler.handle(context as unknown as Context<AppState>);
@@ -200,7 +162,7 @@ describe("ScenarioHandler", () => {
                     } as unknown as AIDungeonAPI
                 },
                 { id: "test-scenario" },
-                new URL("https://example.com/scenario/test-scenario")
+                "https://example.com/scenario/test-scenario"
             );
 
             await handler.handle(context as unknown as Context<AppState>);
@@ -221,7 +183,7 @@ describe("ScenarioHandler", () => {
                     } as unknown as AIDungeonAPI
                 },
                 { id: "test-scenario" },
-                new URL("https://example.com/scenario/test-scenario")
+                "https://example.com/scenario/test-scenario"
             );
 
             await handler.handle(context as unknown as Context<AppState>);
@@ -238,7 +200,7 @@ describe("ScenarioHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             id: "nonexistent-scenario"
-        }, new URL("https://example.com/scenario/nonexistent-scenario"));
+        }, "https://example.com/scenario/nonexistent-scenario");
 
         await handler.handle(context as unknown as Context<AppState>);
 
@@ -264,7 +226,7 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario"));
+            }, "https://example.com/scenario/test-scenario");
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -285,7 +247,7 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario"));
+            }, "https://example.com/scenario/test-scenario");
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -304,7 +266,7 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario"));
+            }, "https://example.com/scenario/test-scenario");
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -324,7 +286,7 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario"));
+            }, "https://example.com/scenario/test-scenario");
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -344,7 +306,7 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario"));
+            }, "https://example.com/scenario/test-scenario");
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -362,7 +324,9 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario"), "Mozilla/5.0");
+            }, "https://example.com/scenario/test-scenario");
+            // @ts-ignore: userAgent is not on the mock type but is used by the handler
+            context.request.userAgent = { ua: "Mozilla/5.0" };
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -377,7 +341,9 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario?published=true"), "Mozilla/5.0");
+            }, "https://example.com/scenario/test-scenario?published=true");
+            // @ts-ignore: userAgent is not on the mock type but is used by the handler
+            context.request.userAgent = { ua: "Mozilla/5.0" };
 
             await handler.handle(context as unknown as Context<AppState>);
 
@@ -392,7 +358,9 @@ describe("ScenarioHandler", () => {
                 } as unknown as AIDungeonAPI
             }, {
                 id: "test-scenario"
-            }, new URL("https://example.com/scenario/test-scenario?unlisted=true"), "Mozilla/5.0");
+            }, "https://example.com/scenario/test-scenario?unlisted=true");
+            // @ts-ignore: userAgent is not on the mock type but is used by the handler
+            context.request.userAgent = { ua: "Mozilla/5.0" };
 
             await handler.handle(context as unknown as Context<AppState>);
 

@@ -41,6 +41,8 @@ export class AdventureHandler extends EmbedHandler<AdventureEmbedData> {
             cover: links.cover(data.image),
             link: this.getRedirectLink(ctx),
             icon: data.user.profile.thumbImageUrl,
+            preview: this.isPreview(ctx),
+            visibility: data.published ? "published" : data.unlisted ? "unlisted" : undefined,
             oembed: links.oembed({
                 title: data.title,
                 author: data.user.profile.title,

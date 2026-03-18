@@ -17,7 +17,31 @@ type EmbedContext = Context<AppState, Record<string, any>> & {
     }
 };
 
+type CacheEntry = {
+    data: any;
+    id: string;
+    type: string;
+    visibility?: string;
+    timestamp: number;
+};
+
 export abstract class EmbedHandler<T> implements Handler {
+    protected static previewCache = new Map<string, CacheEntry>();
+    protected static readonly CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+    protected static readonly MAX_CACHE_SIZE = 100;
+
+    static {
+        const timerId = setInterval(() => {
+            const now = Date.now();
+            for (const [key, entry] of this.previewCache) {
+                if (now - entry.timestamp > this.CACHE_TTL) {
+                    this.previewCache.delete(key);
+                }
+            }
+        }, this.CACHE_TTL);
+        Deno.unrefTimer(timerId);
+    }
+    
     abstract readonly name: string;
     abstract readonly redirectKeys: string[];
 
@@ -48,6 +72,53 @@ export abstract class EmbedHandler<T> implements Handler {
         return (ctx as EmbedContext).params.id || "";
     }
 
+    protected async getPreview(ctx: Context<AppState>, id: string, cacheId: string): Promise<T> {
+        if (!['scenario', 'adventure', 'profile'].includes(this.responseType))
+            return this.fetch(ctx, id);
+
+        const cached = EmbedHandler.previewCache.get(cacheId);
+
+        const isMismatch = cached &&
+            (
+                cached.id !== id ||
+                cached.type !== this.responseType ||
+                (cached.visibility === "unlisted" && ctx.request.url.searchParams.has("published")) ||
+                (cached.visibility === "published" && ctx.request.url.searchParams.has("unlisted"))
+            );
+
+        if (!cached || isMismatch) {
+            const data = await this.fetch(ctx, id);
+
+            // Enforce max size (LRU eviction)
+            if (EmbedHandler.previewCache.size >= EmbedHandler.MAX_CACHE_SIZE) {
+                const oldestKey = EmbedHandler.previewCache.keys().next().value;
+                if (oldestKey) EmbedHandler.previewCache.delete(oldestKey);
+            }
+
+            EmbedHandler.previewCache.set(cacheId, {
+                data,
+                id: id,
+                type: this.responseType,
+                visibility:
+                    (data as Record<string, any>).published ? "published" :
+                        (data as Record<string, any>).unlisted ? "unlisted" :
+                            undefined,
+                timestamp: Date.now()
+            });
+            return data;
+        } else {
+            // Update last access time and refresh LRU position
+            EmbedHandler.previewCache.delete(cacheId);
+            EmbedHandler.previewCache.set(cacheId, cached);
+            cached.timestamp = Date.now();
+        }
+        return cached.data;
+    }
+
+    protected isPreview(ctx: Context<AppState>) {
+        return ctx.request.url.searchParams.has("preview") || ctx.state.settings.proxy?.landing === "preview";
+    }
+
     async handle(ctx: Context<AppState>) {
         ctx.state.metrics.router.endpoint = this.name;
 
@@ -67,7 +138,9 @@ export abstract class EmbedHandler<T> implements Handler {
         };
 
         try {
-            const data = await this.fetch(ctx, id);
+            const data = this.isPreview(ctx)
+                ? await this.getPreview(ctx, id, ctx.request.url.searchParams.get("preview") || "true")
+                : await this.fetch(ctx, id);
             ctx.state.metrics.api.duration = Date.now() - (ctx.state.metrics.api.timestamp || 0);
             ctx.state.metrics.router.type = "success";
             result = "success";
@@ -85,6 +158,7 @@ export abstract class EmbedHandler<T> implements Handler {
                 type: this.responseType,
                 id,
                 link: this.getRedirectLink(ctx),
+                preview: this.isPreview(ctx),
                 oembed: ctx.state.links.oembed({
                     title: `${capitalize(this.responseType)} Not Found [${id}]`,
                     type: this.oembedType
@@ -107,8 +181,18 @@ export abstract class EmbedHandler<T> implements Handler {
     }
 
     protected shouldForward(ctx: Context<AppState>) {
+        switch (ctx.state.settings.proxy?.landing) {
+            case "client":  // Force client-side redirect
+            case "preview": // Render preview
+                return false;
+        }
+
         // Bypass check with ?no_ua
         if (ctx.request.url.searchParams.has("no_ua")) {
+            return false;
+        }
+        // Always render previews
+        if (ctx.request.url.searchParams.has("preview")) {
             return false;
         }
         // Otherwise check if it's coming from Discordbot

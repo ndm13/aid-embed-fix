@@ -1,11 +1,10 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
 import { DemoHandler } from "@/src/handlers/DemoHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
-import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
+import { createTestContext } from "../test_utils.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -22,31 +21,7 @@ class MockEnvironment {
 describe("DemoHandler", () => {
     it("should render the demo page", async () => {
         const handler = new DemoHandler(new MockEnvironment() as unknown as Environment);
-        const context = createMockContext({
-            state: {
-                metrics: {
-                    router: {
-                        endpoint: "",
-                        type: ""
-                    }
-                },
-                analytics: {
-                    timestamp: Date.now(),
-                    content: {
-                        status: "unknown"
-                    }
-                }
-            },
-            params: {}
-        });
-        context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
-            oembedProtocol: "https",
-            defaultRedirectBase: "https://aid.com"
-        });
-        // @ts-ignore: userAgent is not on the mock type but is used by the handler
-        context.request.userAgent = {
-            ua: "Discordbot/2.0"
-        };
+        const context = createTestContext();
 
         await handler.handle(context as unknown as Context<AppState>);
 

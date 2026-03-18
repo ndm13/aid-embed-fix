@@ -18,13 +18,14 @@
 
     <link rel="icon" href="{{ icon }}"/>
     <meta name="redirect" content="{{ link | safe }}"/>
+    {% if visibility %}<meta name="aid:visibility" content="{{ visibility }}"/>{% endif %}
 
     <title>{{ title }} (@{{ author }})</title>
 
     <link type="application/json+oembed" href="{{ oembed | safe }}"/>
 
     <!-- Ensure that directly loading this page results in redirect (should happen at the HTTP level) -->
-    <script>window.location.replace("{{ link | safe }}");</script>
+    {% if not preview %}<script>window.location.replace("{{ link | safe }}");</script>{% endif %}
 
     <!-- Okay you heathens, have a nice looking page -->
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -32,8 +33,9 @@
 </head>
 <body class="embed">
 <h2><a href="{{ link | safe }}">{{ title }}</a></h2>
-<h5>{% if type === "scenario" %}a scenario{% elif type === "adventure" %}an adventure{% endif %} by <img alt="Profile icon for user '{{ author }}'" src="{{ icon }}" style="height: 1.5ex"/> <a href="{{ profile_link }}">{{ author }}</a></h5>
-<p>{{ description }}</p>{% if cover %}
+<h6><a href="https://play.aidungeon.com/">AI Dungeon {% if type === "scenario" %}Scenario{% elif type === "adventure" %}Adventure{% endif %}</a></h6>
+<h5><a href="{{ profile_link }}">{{ author }}</a></h5>
+<p>{{ description | cap(350) | p}}</p>{% if cover %}
 <img alt="Cover image for {{ type }} '{{ title }}'" src="{{ cover }}"/>{% endif %}
 </body>
 </html>

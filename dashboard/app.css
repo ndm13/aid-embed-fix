@@ -1,0 +1,149 @@
+html {
+    background-color: black;
+    display: flex;
+    align-items: stretch;
+}
+
+body {
+    max-width: 100%;
+    width: 70rem;
+    margin: 2ex auto;
+    box-sizing: border-box;
+    padding: 1ex;
+    font-size: 100%;
+    line-height: 1.6;
+}
+
+#app {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    place-content: space-between;
+}
+
+h3, h4 {
+    margin: 0;
+    padding: 0;
+}
+
+form {
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1em;
+}
+
+summary {
+    padding: 0.75rem;
+    border: 0.1rem solid #111;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 1ex;
+}
+details[open] summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.detail-container {
+    padding: 0.75rem;
+    border: 0.1rem solid #111;
+    border-top: none;
+    border-radius: 0 0 1ex 1ex;
+}
+
+button {
+    text-decoration: none;
+    background: none;
+    color: inherit;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #222;
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+}
+button.emoji {
+    padding: 0.1rem;
+    font-size: 1.2rem;
+}
+
+button:hover {
+    background-color: rgba(248, 174, 44, 0.7);
+}
+
+button:disabled {
+    background-color: rgba(248, 174, 44, 0.5);
+    color: #999;
+}
+
+select, input[type=text] {
+    color-scheme: light dark;
+    box-sizing: border-box;
+    padding: 0.4rem;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    width: 100%;
+}
+
+select option {
+    background-color: #fff;
+    color: #000;
+}
+
+.grid-section {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 1rem;
+    align-items: first baseline;
+}
+
+.row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.row input[type="text"], .row select {
+    flex-grow: 1;
+}
+
+.hinted {
+    display: flex;
+    flex-direction: column;
+}
+
+.hinted small {
+    color: #ccc;
+    font-style: italic;
+}
+
+.radio-group {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.radio-group label {
+    display: flex;
+    flex-grow: 1;
+    gap: 0.25rem;
+    align-items: last baseline;
+    place-items: flex-start stretch;
+    width: auto;
+    cursor: pointer;
+}
+
+.customCoverHint {
+    grid-column: 2;
+}
+
+.grid-section label:has(> input[type=checkbox]) {
+    grid-column: span 2;
+}

@@ -1,13 +1,12 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { createMockContext } from "@oak/oak/testing";
 import { Environment, Template } from "npm:nunjucks";
 import { ProfileHandler } from "@/src/handlers/ProfileHandler.ts";
 import { AppState } from "@/src/types/AppState.ts";
 import { UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
-import { RelatedLinks } from "@/src/support/RelatedLinks.ts";
 import { Context } from "@oak/oak";
 import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
+import { createTestContext } from "../test_utils.ts";
 
 class MockTemplate {
     render(context: object): string {
@@ -19,36 +18,6 @@ class MockEnvironment {
     getTemplate(_name: string): Template {
         return new MockTemplate() as unknown as Template;
     }
-}
-
-function createTestContext(state: Partial<AppState>, params: Record<string, string>, userAgent = "Discordbot/2.0") {
-    const context = createMockContext({
-        state: {
-            metrics: {
-                router: {
-                    endpoint: "",
-                    type: ""
-                }
-            },
-            analytics: {
-                timestamp: Date.now(),
-                content: {
-                    status: "unknown"
-                }
-            },
-            ...state
-        },
-        params
-    });
-    context.state.links = new RelatedLinks(context as unknown as Context<AppState>, {
-        oembedProtocol: "https",
-        defaultRedirectBase: "https://aid.com"
-    });
-    // @ts-ignore: userAgent is not on the mock type but is used by the handler
-    context.request.userAgent = {
-        ua: userAgent
-    };
-    return context;
 }
 
 describe("ProfileHandler", () => {
@@ -103,9 +72,31 @@ describe("ProfileHandler", () => {
 
     it("should redirect non-Discord user agents", async () => {
         const handler = new ProfileHandler(env);
-        const context = createTestContext({}, { username: "testuser" }, "Mozilla/5.0");
+        const context = createTestContext({}, { username: "testuser" });
         // @ts-ignore: read-only property
         context.request.url.pathname = "/profile/testuser";
+        // @ts-ignore: userAgent is not on the mock type but is used by the handler
+        context.request.userAgent = { ua: "Mozilla/5.0" };
+        let redirectedUrl = "";
+        context.response.redirect = ((url: string | URL) => {
+            redirectedUrl = url.toString();
+        }) as any;
+
+        await handler.handle(context as unknown as Context<AppState>);
+
+        assertEquals(context.response.status, 301);
+        assertEquals(redirectedUrl, "https://default.aidungeon.com/profile/testuser");
+    });
+
+    it("should override redirects when settings give a preference", async () => {
+        const handler = new ProfileHandler(env);
+        const context = createTestContext({}, { username: "testuser" });
+        // @ts-ignore: read-only property
+        context.request.url.pathname = "/profile/testuser";
+        // @ts-ignore: userAgent is not on the mock type but is used by the handler
+        context.request.userAgent = { ua: "Mozilla/5.0" };
+        // Set proxy env to prod to match expected output
+        context.state.settings.proxy!.env = "prod";
 
         let redirectedUrl = "";
         context.response.redirect = ((url: string | URL) => {
@@ -115,7 +106,7 @@ describe("ProfileHandler", () => {
         await handler.handle(context as unknown as Context<AppState>);
 
         assertEquals(context.response.status, 301);
-        assertEquals(redirectedUrl, "https://aid.com/profile/testuser");
+        assertEquals(redirectedUrl, "https://play.aidungeon.com/profile/testuser");
     });
 
     it("should not redirect with no_ua flag", async () => {
@@ -133,7 +124,9 @@ describe("ProfileHandler", () => {
             } as unknown as AIDungeonAPI
         }, {
             username: "testuser"
-        }, "Mozilla/5.0");
+        });
+        // @ts-ignore: userAgent is not on the mock type but is used by the handler
+        context.request.userAgent = { ua: "Mozilla/5.0" };
         context.request.url.searchParams.set("no_ua", "true");
 
         await handler.handle(context as unknown as Context<AppState>);
