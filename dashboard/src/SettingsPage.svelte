@@ -23,6 +23,11 @@
 </svelte:head>
 
 <main>
+    <div class="info-banner">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Your settings are stored locally on this device using cookies. They are not synchronized across devices or browsers.</span>
+    </div>
+
     <form onsubmit={saveLinkSettings} class="settings-card">
         <header>
             <h3>Link Builder</h3>
@@ -111,6 +116,27 @@
         gap: 1.5rem;
         width: 100%;
         align-items: stretch;
+    }
+
+    .info-banner {
+        flex: 1 1 100%;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        background-color: rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        border-left: 4px solid #2563eb;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        box-sizing: border-box;
+    }
+
+    .info-banner i {
+        color: #2563eb;
+        font-size: 1.25rem;
+        flex-shrink: 0;
     }
 
     .settings-card {
