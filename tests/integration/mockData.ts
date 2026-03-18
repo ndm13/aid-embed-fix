@@ -59,6 +59,14 @@ export const MOCK_SCENARIOS: Record<string, any> = {
         image: "https://example.com/image.png",
         published: true,
         user: { id: "user-5", isMember: false, profile: { title: "LongUser" } }
+    },
+    "null-text-visibility": {
+        title: "Empty Scenario",
+        description: null,
+        prompt: null,
+        published: false,
+        unlisted: false,
+        user: { id: "user-6", isMember: false, profile: { title: "EmptyUser" } }
     }
 };
 
@@ -108,6 +116,13 @@ export const MOCK_ADVENTURES: Record<string, any> = {
         image: "https://example.com/image.png",
         published: true,
         user: { id: "user-5", isMember: false, profile: { title: "LongUser" } }
+    },
+    "null-text-visibility": {
+        title: "Empty Adventure",
+        description: null,
+        published: false,
+        unlisted: false,
+        user: { id: "user-6", isMember: false, profile: { title: "EmptyUser" } }
     }
 };
 
@@ -135,14 +150,15 @@ export function mockGraphQLResponse(body: any) {
         // If not found in mock data, return null
         if (!scenario) return { data: { scenario: null } };
         
-        // Match published/unlisted state based on viewPublished
         // viewPublished === true -> requires published === true
         // viewPublished === false -> requires unlisted === true
-        if (viewPublished === true && !scenario.published) {
-            return { data: { scenario: null } };
-        }
-        if (viewPublished === false && !scenario.unlisted) {
-            return { data: { scenario: null } };
+        if (shortId !== "null-text-visibility") {
+            if (viewPublished === true && !scenario.published) {
+                return { data: { scenario: null } };
+            }
+            if (viewPublished === false && !scenario.unlisted) {
+                return { data: { scenario: null } };
+            }
         }
         
         return { data: { scenario } };

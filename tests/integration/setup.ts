@@ -30,6 +30,11 @@ globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => 
         if (bodyStr) {
             const parsed = JSON.parse(bodyStr);
             fetchGraphQLCalls.push(parsed);
+            
+            if (parsed.variables?.shortId === "server-error") {
+                return new Response(JSON.stringify({ errors: [{ message: "Internal Server Error" }] }), { status: 500, headers: { "Content-Type": "application/json" } });
+            }
+
             return new Response(JSON.stringify(mockGraphQLResponse(parsed)), { 
                 status: 200,
                 headers: { "Content-Type": "application/json" }

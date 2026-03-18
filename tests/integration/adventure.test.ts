@@ -76,6 +76,25 @@ describe("Adventure Integration", () => {
         assertStringIncludes(meta["og:description"], "...");
     });
 
+    it("should return 200 with fallback properties when description is null and visibility is hidden", async () => {
+        const request = await superoak(app);
+        const res = await createDiscordRequest(request.get("/adventure/null-text-visibility/test-tail"))
+            .expect(200);
+
+        const meta = parseMetaTags(res.text);
+        assertEquals(meta["og:description"], "");
+        assertEquals(meta["aid:visibility"], undefined);
+    });
+
+    it("should gracefully handle a hard 500 API error from the backend and return Not Found", async () => {
+        const request = await superoak(app);
+        const res = await createDiscordRequest(request.get("/adventure/server-error/test-tail"))
+            .expect(200);
+
+        const meta = parseMetaTags(res.text);
+        assertEquals(meta["og:title"], "Adventure Not Found!");
+    });
+
     it("should return 200 and format the Not Found page correctly for a missing adventure", async () => {
         const request = await superoak(app);
         const res = await createDiscordRequest(request.get("/adventure/not-found/test-tail"))

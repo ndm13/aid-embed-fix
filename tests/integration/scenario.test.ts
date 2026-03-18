@@ -42,6 +42,28 @@ describe("Scenario Integration", () => {
         assertEquals(oembed.author_name, "Anon");
     });
 
+    it("should query strictly published state when the published query parameter is present", async () => {
+        resetFetchCalls();
+        const request = await superoak(app);
+        await createDiscordRequest(request.get("/scenario/found-published/test-tail?published=true"))
+            .expect(200);
+
+        // Verify API checked ONLY published
+        assertEquals(fetchGraphQLCalls.length, 1);
+        assertEquals(fetchGraphQLCalls[0].variables.viewPublished, true);
+    });
+
+    it("should query strictly unlisted state when the unlisted query parameter is present", async () => {
+        resetFetchCalls();
+        const request = await superoak(app);
+        await createDiscordRequest(request.get("/scenario/found-unlisted/test-tail?unlisted=true"))
+            .expect(200);
+
+        // Verify API checked ONLY unlisted
+        assertEquals(fetchGraphQLCalls.length, 1);
+        assertEquals(fetchGraphQLCalls[0].variables.viewPublished, false);
+    });
+
     it("should omit cover image from meta tags and body for a scenario with no cover image", async () => {
         const request = await superoak(app);
         const res = await createDiscordRequest(request.get("/scenario/no-cover/test-tail"))
@@ -88,6 +110,25 @@ describe("Scenario Integration", () => {
         const meta = parseMetaTags(res.text);
         assert(meta["og:description"].length <= 1000, "Description should be truncated to 1000 characters or less");
         assertStringIncludes(meta["og:description"], "...");
+    });
+
+    it("should return 200 with fallback properties when description and prompt are null, and visibility is hidden", async () => {
+        const request = await superoak(app);
+        const res = await createDiscordRequest(request.get("/scenario/null-text-visibility/test-tail"))
+            .expect(200);
+
+        const meta = parseMetaTags(res.text);
+        assertEquals(meta["og:description"], "");
+        assertEquals(meta["aid:visibility"], undefined);
+    });
+
+    it("should gracefully handle a hard 500 API error from the backend and return Not Found", async () => {
+        const request = await superoak(app);
+        const res = await createDiscordRequest(request.get("/scenario/server-error/test-tail"))
+            .expect(200);
+
+        const meta = parseMetaTags(res.text);
+        assertEquals(meta["og:title"], "Scenario Not Found!");
     });
 
     it("should return 200 and format the Not Found page correctly for a missing scenario", async () => {

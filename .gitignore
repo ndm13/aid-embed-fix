@@ -8,3 +8,4 @@
 /dashboard/.vite/
 /node_modules/
 /static/dashboard/
+/tmp_*
