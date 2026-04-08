@@ -3,8 +3,17 @@
 import { mockGraphQLResponse } from "./mockData.ts";
 
 export const fetchGraphQLCalls: any[] = [];
+export const fetchSupabaseCalls: any[] = [];
+export let supabaseShouldFail = false;
+
+export function setSupabaseShouldFail(fail: boolean) {
+    supabaseShouldFail = fail;
+}
+
 export function resetFetchCalls() {
     fetchGraphQLCalls.length = 0;
+    fetchSupabaseCalls.length = 0;
+    supabaseShouldFail = false;
 }
 
 // Mock fetch before importing the server
@@ -42,17 +51,52 @@ globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => 
         }
     }
 
+    if (url.hostname === "mock.supabase.co") {
+        const bodyStr = init?.body?.toString();
+        if (bodyStr) {
+            fetchSupabaseCalls.push(JSON.parse(bodyStr));
+        }
+        
+        if (supabaseShouldFail) {
+            return new Response(JSON.stringify({ error: { message: "Internal RPC Error" } }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        return new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+
     if (["127.0.0.1", "localhost", "0.0.0.0"].includes(url.hostname)) {
         return originalFetch(input, init);
     }
     throw new Error(`Unexpected external request to ${urlStr}`);
 };
 
-// Now import the app
-const { app } = await import("../../src/server.ts");
+import { buildApp } from "../../src/server.ts";
+import { AIDungeonAPI } from "../../src/api/AIDungeonAPI.ts";
 
-// Export utilities for tests
-export { app };
+export const api = await AIDungeonAPI.create({
+    gqlEndpoint: "https://api-mock.aidungeon.com/graphql",
+    userAgent: "tests",
+    origin: "https://mock.aidungeon.com",
+    firebase: {
+        identityToolkitKey: "mock-key",
+        clientToken: "mock-client",
+        clientVersion: "mock-version"
+    }
+});
+
+export const app = buildApp({
+    api,
+    config: {
+        oembedProtocol: "https",
+        redirectBase: "https://mock.aidungeon.com"
+    }
+});
 export const DISCORD_USER_AGENT = "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)";
 
 export function createDiscordRequest(requestBuilder: any) {

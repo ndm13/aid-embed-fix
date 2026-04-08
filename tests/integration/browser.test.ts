@@ -9,7 +9,7 @@ describe("Browser User-Agent Integration", () => {
         const res = await createBrowserRequest(request.get("/scenario/found-published/test-tail?published=true").redirects(0))
             .expect(301);
             
-        assertEquals(res.header.location, "https://play.aidungeon.com/scenario/found-published/test-tail?published=true");
+        assertEquals(res.header.location, "https://mock.aidungeon.com/scenario/found-published/test-tail?published=true");
     });
 
     it("should return 301 and redirect to the frontend application for Adventures", async () => {
@@ -17,7 +17,7 @@ describe("Browser User-Agent Integration", () => {
         const res = await createBrowserRequest(request.get("/adventure/found-published/test-tail").redirects(0))
             .expect(301);
             
-        assertEquals(res.header.location, "https://play.aidungeon.com/adventure/found-published/test-tail");
+        assertEquals(res.header.location, "https://mock.aidungeon.com/adventure/found-published/test-tail");
     });
     
     it("should return 301 and redirect to the frontend application for Profiles", async () => {
@@ -25,7 +25,7 @@ describe("Browser User-Agent Integration", () => {
         const res = await createBrowserRequest(request.get("/profile/testuser").redirects(0))
             .expect(301);
             
-        assertEquals(res.header.location, "https://play.aidungeon.com/profile/testuser");
+        assertEquals(res.header.location, "https://mock.aidungeon.com/profile/testuser");
     });
 
     it("should return 301 and redirect to the GitHub repository for the Demo root route", async () => {

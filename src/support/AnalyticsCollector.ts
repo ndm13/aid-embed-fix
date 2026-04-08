@@ -65,7 +65,7 @@ export class AnalyticsCollector {
         if (!entry.content.status && id) {
             const cached = this.cache[id];
             if (cached && (Date.now() - cached.timestamp < this.config.cacheExpiration)) {
-                entry.content = cached.content;
+                entry.content = { ...cached.content };
                 entry.content.status = "cache";
             } else {
                 try {
