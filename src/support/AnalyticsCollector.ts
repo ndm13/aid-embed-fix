@@ -44,7 +44,12 @@ export class AnalyticsCollector {
 
     static async create(api: AIDungeonAPI, config: AnalyticsConfig) {
         const collector = new AnalyticsCollector(api, config);
-        await collector.testSecret();
+        try {
+            await collector.testSecret();
+        } catch (e) {
+            collector.cleanup();
+            throw e;
+        }
         return collector;
     }
 
