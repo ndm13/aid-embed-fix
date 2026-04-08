@@ -1,5 +1,5 @@
 import { describe, it } from "@std/testing/bdd";
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { superoak } from "superoak";
 import { app, parseMetaTags, createDiscordRequest, fetchOEmbed } from "./setup.ts";
 
@@ -13,7 +13,8 @@ describe("Profile Integration", () => {
         const meta = parseMetaTags(html);
 
         assertEquals(meta["og:title"], "Test User");
-        assertEquals(meta["og:description"], "Just testing things out");
+        assertStringIncludes(meta["og:description"], "Just testing things out");
+        assertStringIncludes(meta["og:description"], "A".repeat(10));
         assertEquals(meta["og:image"], "https://example.com/avatar.png");
 
         const oembed = await fetchOEmbed(html);

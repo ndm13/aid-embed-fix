@@ -21,4 +21,10 @@ describe("Demo Integration", () => {
         assertEquals(oembed.provider_name, "AI Dungeon Embed Fix");
         assertEquals(oembed.type, "rich");
     });
+
+    it("should safely bypass cache mechanics if ?preview parameter is manually passed to unsupported rendering types", async () => {
+        const request = await superoak(app);
+        await createDiscordRequest(request.get("/?preview=true"))
+            .expect(200);
+    });
 });

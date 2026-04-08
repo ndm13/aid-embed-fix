@@ -13,8 +13,9 @@ describe("Scenario Integration", () => {
         const meta = parseMetaTags(html);
 
         assertEquals(meta["og:title"], "Test Scenario");
-        assertEquals(meta["og:description"], "A test scenario description");
+        assertEquals(meta["og:description"], "A test scenario description\n\nWith multiple lines\nto test formatting...");
         assertEquals(meta["og:image"], "https://example.com/image.png");
+        assertStringIncludes(html, "A test scenario description\n    <br>\n    \n    <br>\n    With multiple lines\n    <br>\n    to test formatting...");
 
         // Validate oEmbed payload
         const oembed = await fetchOEmbed(html);
@@ -141,9 +142,42 @@ describe("Scenario Integration", () => {
         // Ensure "Not Found" message is surfaced in meta tags or inline oEmbed
         const meta = parseMetaTags(html);
         assertEquals(meta["og:title"], "Scenario Not Found!");
-        
         const oembed = await fetchOEmbed(html);
         assertEquals(oembed.title, "Embed");
         assertEquals(oembed.type, "rich");
+    });
+
+    it("should gracefully handle a hard socket disconnect (TypeError) mapping to net_error", async () => {
+        const request = await superoak(app);
+        const res = await createDiscordRequest(request.get("/scenario/net-error/test-tail"))
+            .expect(200);
+
+        const meta = parseMetaTags(res.text);
+        assertEquals(meta["og:title"], "Scenario Not Found!");
+    });
+
+    it("should natively bypass forwarding logic when ?no_ua is present regardless of user agent", async () => {
+        const request = await superoak(app);
+        // Using a non-discordbot agent that normally gets bypassed because the router logic
+        // defaults to 301 forwarding normal users. ?no_ua forces 200 explicitly.
+        await request.get("/scenario/found-published/test-tail?no_ua=true")
+            .set("User-Agent", "Mozilla/5.0")
+            .expect(200);
+    });
+
+    it("should force a local 200 rendering for normal clients if proxy.landing is configured to preview via cookies", async () => {
+        const request = await superoak(app);
+        await request.get("/scenario/found-published/test-tail")
+            .set("User-Agent", "Mozilla/5.0 / Normal Browser")
+            .set("Cookie", `proxy_settings=${encodeURIComponent(JSON.stringify({ landing: "preview" }))}`)
+            .expect(200);
+    });
+
+    it("should force a local 200 rendering for normal clients if proxy.landing is configured to client via cookies", async () => {
+        const request = await superoak(app);
+        await request.get("/scenario/found-published/test-tail")
+            .set("User-Agent", "Mozilla/5.0 / Normal Browser")
+            .set("Cookie", `proxy_settings=${encodeURIComponent(JSON.stringify({ landing: "client" }))}`)
+            .expect(200);
     });
 });

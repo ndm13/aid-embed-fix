@@ -1,3 +1,4 @@
+// deno-coverage-ignore-file
 // tests/integration/mockData.ts
 
 export const MOCK_SCENARIOS: Record<string, any> = {
@@ -5,7 +6,7 @@ export const MOCK_SCENARIOS: Record<string, any> = {
         createdAt: "2023-01-01T00:00:00.000Z",
         editedAt: "2023-01-02T00:00:00.000Z",
         title: "Test Scenario",
-        description: "A test scenario description",
+        description: "A test scenario description\n\nWith multiple lines\nto test formatting...",
         prompt: "You are a test...",
         image: "https://example.com/image.png",
         published: true,
@@ -135,7 +136,7 @@ export const MOCK_USERS: Record<string, any> = {
         followersCount: 100,
         profile: {
             title: "Test User",
-            description: "Just testing things out",
+            description: "Just testing things out\n\r" + "A".repeat(300),
             thumbImageUrl: "https://example.com/avatar.png"
         }
     }

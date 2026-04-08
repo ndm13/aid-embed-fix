@@ -110,4 +110,11 @@ describe("Adventure Integration", () => {
         assertEquals(oembed.title, "Embed");
         assertEquals(oembed.type, "rich");
     });
+
+    it("should redirect to target when the optional :read path param does not precisely match 'read'", async () => {
+        const request = await superoak(app);
+        await createDiscordRequest(request.get("/adventure/found-published/test-tail/something-invalid"))
+            .expect(302)
+            .expect("Location", "https://mock.aidungeon.com/adventure/found-published/test-tail/something-invalid");
+    });
 });
