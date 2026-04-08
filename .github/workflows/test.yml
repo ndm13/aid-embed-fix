@@ -21,5 +21,8 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Build Dashboard
+        run: deno task dashboard:build
+
       - name: Run tests
         run: deno task test
