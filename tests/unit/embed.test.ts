@@ -1,6 +1,8 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
+import { FakeTime } from "@std/testing/time";
 import { EmbedHandler } from "../../src/handlers/EmbedHandler.ts";
+import { testing } from "@oak/oak";
 
 describe("EmbedHandler Unit Tests", () => {
     // We subclass it basically to expose its static Cache and getPreview mechanics
@@ -25,7 +27,7 @@ describe("EmbedHandler Unit Tests", () => {
 
         // Public exposure for tested state
         get _previewCache() {
-            return EmbedHandler.previewCache;
+            return this.previewCache;
         }
 
         // Exposing specific protected calls
@@ -74,5 +76,32 @@ describe("EmbedHandler Unit Tests", () => {
         assertEquals(handler._previewCache.has("cache-0"), true);
         assertEquals(handler._previewCache.has("cache-100"), true);
         assertEquals(handler._previewCache.has("cache-1"), false);
+    });
+
+    it("should successfully wipe memory cleanly evaluating TTL limit caps", async () => {
+        const time = new FakeTime();
+        try {
+            const handler = new TestEmbedHandler();
+            handler._previewCache.clear();
+            
+            // Generate entries to push to cache
+            await handler.testGetPreview("id1", "cache-1");
+            time.tick(100);
+            await handler.testGetPreview("id2", "cache-2");
+            
+            assertEquals(handler._previewCache.size, 2);
+            
+            // Fast forward 10 minutes (TTL is inherently 5)
+            time.tick(600000);
+            
+            // Trigger passive eviction by asserting a new getPreview!
+            await handler.testGetPreview("id3", "cache-3");
+            
+            // Map should only contain cache-3, since 1 and 2 were swept out passively!
+            assertEquals(handler._previewCache.size, 1);
+            assertEquals(handler._previewCache.has("cache-3"), true);
+        } finally {
+            time.restore();
+        }
     });
 });

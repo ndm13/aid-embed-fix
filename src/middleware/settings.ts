@@ -5,24 +5,11 @@ import { AppState } from "../types/AppState.ts";
 const ALLOWED_DOMAINS = ["aidungeon.link", "axdungeon.com"];
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
-interface SyncToken {
+export interface SyncToken {
     link?: string;
     proxy?: string;
     timestamp: number;
 }
-
-const syncTokens = new Map<string, SyncToken>();
-
-// Clean up expired tokens every minute
-const timer = setInterval(() => {
-    const now = Date.now();
-    for (const [token, data] of syncTokens) {
-        if (now - data.timestamp > 60000) { // 1 minute expiration
-            syncTokens.delete(token);
-        }
-    }
-}, 60000);
-Deno.unrefTimer(timer);
 
 function getBaseDomain(hostname: string): string | null {
     for (const domain of ALLOWED_DOMAINS) {
@@ -59,12 +46,20 @@ export function middleware() {
     };
 }
 
-export function router() {
+export function router(syncTokens = new Map<string, SyncToken>()) {
     const router = new Router<AppState>();
 
     router.get("/sync", async (ctx) => {
         const token = ctx.request.url.searchParams.get("token");
         const scope = ctx.request.url.searchParams.get("scope") || "all";
+
+        // Passive Cache Eviction before processing sync logic
+        const now = Date.now();
+        for (const [key, data] of syncTokens) {
+            if (now - data.timestamp > 60000) {
+                syncTokens.delete(key);
+            }
+        }
 
         // Receiver (Has token)
         if (token) {
