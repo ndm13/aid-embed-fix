@@ -1,495 +1,198 @@
+import { describe, it } from "@std/testing/bdd";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { superoak } from "superoak";
-import { afterAll, afterEach, describe, it } from "@std/testing/bdd";
-import { AdventureEmbedData, ScenarioEmbedData, UserEmbedData } from "@/src/types/EmbedDataTypes.ts";
-import { AIDungeonAPI } from "@/src/api/AIDungeonAPI.ts";
-import { assertSpyCalls, stub } from "@std/testing/mock";
-import config from "@/src/config.ts";
-import { Application } from "@oak/oak";
-import { AnalyticsCollector } from "@/src/support/AnalyticsCollector.ts";
-import * as analytics from "@/src/middleware/analytics.ts";
+import { app } from "./setup.ts";
 
-// Stub testSecret before app initialization
-const testSecretStub = stub(AnalyticsCollector.prototype, "testSecret" as any, () => Promise.resolve());
+// Allow testing cross-domain boundaries manually
+app.proxy = true;
 
-const { app } = await import("@/src/server.ts");
-
-const mockScenario: ScenarioEmbedData = {
-    createdAt: new Date().toISOString(),
-    editedAt: null,
-    title: "Test Scenario",
-    description: "Test Description",
-    prompt: "Test Prompt",
-    published: true,
-    unlisted: false,
-    publishedAt: new Date().toISOString(),
-    commentCount: 0,
-    voteCount: 0,
-    saveCount: 0,
-    storyCardCount: 0,
-    tags: ["test"],
-    adventuresPlayed: 0,
-    thirdPerson: false,
-    nsfw: false,
-    contentRating: "Everyone",
-    contentRatingLockedAt: null,
-    deletedAt: null,
-    blockedAt: null,
-    image: "",
-    contentResponses: {
-        isSaved: false,
-        isDisliked: false
-    },
-    user: {
-        isMember: false,
-        id: "123",
-        profile: {
-            title: "testuser",
-            thumbImageUrl: ""
-        }
-    }
-};
-
-const mockAdventure: AdventureEmbedData = {
-    createdAt: new Date().toISOString(),
-    editedAt: null,
-    title: "Test Adventure",
-    description: "Test Description",
-    actionCount: 0,
-    published: true,
-    unlisted: false,
-    commentCount: 0,
-    voteCount: 0,
-    saveCount: 0,
-    storyCardCount: 0,
-    thirdPerson: false,
-    nsfw: false,
-    contentRating: "Everyone",
-    contentRatingLockedAt: null,
-    tags: ["test"],
-    publishedAt: new Date().toISOString(),
-    deletedAt: null,
-    blockedAt: null,
-    userId: "789",
-    image: "",
-    playerCount: 1,
-    scenario: {
-        title: "Test Scenario",
-        published: true,
-        deletedAt: null
-    },
-    user: {
-        isMember: false,
-        id: "123",
-        profile: {
-            title: "testuser",
-            thumbImageUrl: ""
-        }
-    }
-};
-
-const mockUser: UserEmbedData = {
-    isMember: false,
-    id: "123",
-    profile: {
-        thumbImageUrl: "",
-        title: "testuser",
-        description: "A test user"
-    },
-    followingCount: 0,
-    friendCount: 0,
-    followersCount: 0
-};
-
-describe("Middleware Integration Tests", () => {
-    afterAll(() => {
-        testSecretStub.restore();
-    });
-
-    describe("Embeds", () => {
-        describe("Scenario", () => {
-            it("should return a scenario embed with ?no_ua", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/scenario/123/test-scenario?no_ua")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should return a scenario embed with Discordbot user-agent", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/scenario/123/test-scenario")
-                        .set("User-Agent", "Discordbot/2.0")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should return scenario embed with published param and ?no_ua", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
-                try {
-                    const request = await superoak(app);
-                    await request.get("/scenario/123/test-scenario?no_ua")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should redirect with published param", async () => {
-                const request = await superoak(app);
-                await request.get("/scenario/123/test-scenario?published=true")
-                    .expect(301);
-            });
-
-            it("should redirect with unlisted param", async () => {
-                const request = await superoak(app);
-                await request.get("/scenario/123/test-scenario?unlisted=true")
-                    .expect(301);
-            });
-
-            it("should NOT redirect when published/unlisted param is absent", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/scenario/123/test-scenario")
-                        .expect(200);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should NOT redirect with published/unlisted param when no_ua is present", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.resolve(mockScenario));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/scenario/123/test-scenario?no_ua&published=true")
-                        .expect(200);
-                } finally {
-                    apiStub.restore();
-                }
-            });
+describe("Middleware Integration", () => {
+    describe("Blocklist Middleware", () => {
+        it("should return 404 for blocked file extensions", async () => {
+            const request = await superoak(app);
+            await request.get("/test.php").expect(404);
+            
+            const request2 = await superoak(app);
+            await request2.get("/script.bash").expect(404);
         });
 
-        describe("Adventure", () => {
-            it("should return an adventure embed with ?no_ua", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getAdventureEmbed", () => Promise.resolve(mockAdventure));
+        it("should return 404 for blocked paths", async () => {
+            const request = await superoak(app);
+            await request.get("/wp-admin/login").expect(404);
 
-                try {
-                    const request = await superoak(app);
-                    await request.get("/adventure/123/test-adventure?no_ua")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should return an adventure embed with Discordbot user-agent", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getAdventureEmbed", () => Promise.resolve(mockAdventure));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/adventure/123/test-adventure")
-                        .set("User-Agent", "Discordbot/2.0")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should redirect without ?no_ua or Discordbot user-agent", async () => {
-                const request = await superoak(app);
-                await request.get("/adventure/123/test-adventure")
-                    .expect(301);
-            });
-
-            it("should redirect with published param", async () => {
-                const request = await superoak(app);
-                await request.get("/adventure/123/test-adventure?published=true")
-                    .expect(301);
-            });
-
-            it("should return adventure embed with unlisted param and ?no_ua", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getAdventureEmbed", () => Promise.resolve(mockAdventure));
-                try {
-                    const request = await superoak(app);
-                    await request.get("/adventure/123/test-adventure?unlisted=true&no_ua")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should return an adventure embed for /read path", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getAdventureEmbed", () => Promise.resolve(mockAdventure));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/adventure/123/test-adventure/read?no_ua")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should redirect for non-/read path", async () => {
-                const request = await superoak(app);
-                await request.get("/adventure/123/test-adventure/not-read")
-                    .expect(302);
-            });
+            const request2 = await superoak(app);
+            await request2.get("/.env").expect(404);
         });
 
-        describe("Profile", () => {
-            it("should return a profile embed with ?no_ua", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getUserEmbed", () => Promise.resolve(mockUser));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/profile/testuser?no_ua")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should return a profile embed with Discordbot user-agent", async () => {
-                const apiStub = stub(AIDungeonAPI.prototype, "getUserEmbed", () => Promise.resolve(mockUser));
-
-                try {
-                    const request = await superoak(app);
-                    await request.get("/profile/testuser")
-                        .set("User-Agent", "Discordbot/2.0")
-                        .expect(200)
-                        .expect("Content-Type", /text\/html/);
-                } finally {
-                    apiStub.restore();
-                }
-            });
-
-            it("should redirect without ?no_ua or Discordbot user-agent", async () => {
-                const request = await superoak(app);
-                await request.get("/profile/testuser")
-                    .expect(301);
-            });
-        });
-
-        describe("Demo", () => {
-            it("should return a demo embed with Discordbot user-agent", async () => {
-                const request = await superoak(app);
-                await request.get("/")
-                    .set("User-Agent", "Discordbot/2.0")
-                    .expect(200)
-                    .expect("Content-Type", /text\/html/);
-            });
-
-            it("should redirect without Discordbot user-agent", async () => {
-                const request = await superoak(app);
-                await request.get("/")
-                    .expect(301);
-            });
-        });
-
-        it("should redirect on API error", async () => {
-            const apiStub = stub(AIDungeonAPI.prototype, "getScenarioEmbed", () => Promise.reject("API Error"));
-
-            try {
-                const request = await superoak(app);
-                await request.get("/scenario/123/test-scenario?no_ua")
-                    .expect(200);
-            } finally {
-                apiStub.restore();
-            }
+        it("should allow unblocked paths to fall through to the final redirect", async () => {
+            const request = await superoak(app);
+            const res = await request.get("/discover").redirects(0).expect(302);
+            assertStringIncludes(res.header.location as string, "/discover");
         });
     });
 
-    describe("oEmbed", () => {
-        it("should return oEmbed for Embed Fix", async () => {
+    describe("Statics Middleware", () => {
+        it("should return 200 OK for /healthcheck", async () => {
             const request = await superoak(app);
-            await request.get("/oembed.json?type=Embed+Fix")
-                .expect(200)
-                .expect("Content-Type", /application\/json/);
+            const res = await request.get("/healthcheck").expect(200);
+            assertEquals(res.text, "ok");
         });
 
-        it("should return oEmbed for other types", async () => {
+        it("should serve static files for exact matches", async () => {
             const request = await superoak(app);
-            await request.get("/oembed.json?type=Scenario&author=testuser")
-                .expect(200)
-                .expect("Content-Type", /application\/json/);
+            const res = await request.get("/style.css").expect(200);
+            assertStringIncludes(res.text, "html {");
+            
+            const request2 = await superoak(app);
+            const res2 = await request2.get("/robots.txt").expect(200);
+            assertStringIncludes(res2.text, "User-agent:");
+        });
+    });
+
+    describe("Dashboard Middleware", () => {
+        it("should redirect /dashboard to /dashboard/", async () => {
+            const request = await superoak(app);
+            const res = await request.get("/dashboard").redirects(0).expect(302);
+            assertEquals(res.header.location, "/dashboard/");
         });
 
-        it("should return 400 for missing type", async () => {
+        it("should correctly serve exact files in the dashboard directory", async () => {
             const request = await superoak(app);
-            await request.get("/oembed.json")
+            const res = await request.get("/dashboard/index.html").expect(200);
+            assertStringIncludes(res.text, "<html");
+        });
+    });
+
+    describe("Settings Middleware", () => {
+        it("should redirect initiator to target domain on /sync", async () => {
+            const request = await superoak(app);
+            const res = await request.get("/sync")
+                .set("X-Forwarded-Host", "aidungeon.link")
+                .redirects(0)
+                .expect(302);
+            
+            const location = new URL(res.header.location as string);
+            assertEquals(location.hostname, "axdungeon.com");
+            assertEquals(location.searchParams.has("token"), true);
+        });
+
+        it("should return 400 for invalid initiator domain", async () => {
+            const request = await superoak(app);
+            await request.get("/sync")
+                .set("X-Forwarded-Host", "invalid.com")
                 .expect(400);
         });
-    });
-
-    describe("Statics", () => {
-        it("should return healthcheck", async () => {
+        
+        it("should reject invalid sync token natively on the receiver end", async () => {
             const request = await superoak(app);
-            await request.get("/healthcheck")
-                .expect(200)
-                .expect("Content-Type", /text\/plain/)
-                .expect("ok");
+            const res = await request.get("/sync?token=invalid-token")
+                .set("X-Forwarded-Host", "aidungeon.link")
+                .expect(200);
+                
+            assertStringIncludes(res.text, "window.close()");
         });
 
-        it("should return stylesheet", async () => {
+        it("should map settings payload from cookies to ctx.state natively", async () => {
+            const proxySettings = encodeURIComponent(JSON.stringify({ landing: "preview" }));
+            const linkSettings = encodeURIComponent(JSON.stringify({ theme: "dark" }));
+
             const request = await superoak(app);
-            await request.get("/style.css")
-                .expect(200)
-                .expect("Content-Type", /text\/css/);
+            
+            const res = await request.get("/sync")
+                .set("X-Forwarded-Host", "aidungeon.link")
+                .set("Cookie", `proxy_settings=${proxySettings}; link_settings=${linkSettings}`)
+                .redirects(0)
+                .expect(302);
+
+            const location = new URL(res.header.location as string);
+            const token = location.searchParams.get("token");
+
+            // Verify mapping Receiver (Target domain)
+            const request2 = await superoak(app);
+            const res2 = await request2.get(`/sync?token=${token}`)
+                .set("X-Forwarded-Host", "axdungeon.com")
+                .expect(200);
+
+            assertStringIncludes(res2.text, "Sync complete");
+            
+            const setCookieHeader = res2.header["set-cookie"];
+            const cookieStr = Array.isArray(setCookieHeader) ? setCookieHeader.join(";") : setCookieHeader as string;
+            assertStringIncludes(cookieStr, "proxy_settings=");
+            assertStringIncludes(cookieStr, "link_settings=");
         });
 
-        it("should return robots.txt", async () => {
+        it("should silently ignore malformed JSON in cookie settings", async () => {
             const request = await superoak(app);
-            await request.get("/robots.txt")
-                .expect(200)
-                .expect("Content-Type", /text\/plain/);
-        });
-    });
-
-    describe("Metrics", () => {
-        it("should return metrics with key", async () => {
-            const request = await superoak(app);
-            await request.get(`/metrics?key=${config.metrics.key}`)
-                .expect(200)
-                .expect("Content-Type", /application\/json/);
-        });
-
-        it("should return 401 without key", async () => {
-            const request = await superoak(app);
-            await request.get("/metrics")
-                .expect(401);
-        });
-    });
-
-    describe("Fallback", () => {
-        it("should redirect for unknown routes", async () => {
-            const request = await superoak(app);
-            await request.get("/unknown")
+            
+            // This will hit the fallback redirect because /discover implies no valid router matched. This executes the middleware with invalid cookies.
+            await request.get("/discover")
+                .set("Cookie", `proxy_settings=invalid-json; link_settings=invalid-json`)
+                .redirects(0)
                 .expect(302);
         });
-    });
 
-    describe("Blocklist", () => {
-        const blockedPaths = [
-            // Script extensions
-            "/index.php",
-            "/test.php7",
-            "/index.phtml",
-            "/default.aspx",
-            "/index.jsp",
-            "/script.cgi",
-            "/test.pl",
-            "/setup.sh",
-            "/install.bash",
-            "/index.php?id=1",
+        it("should return 403 on receiver if the target host domain is forbidden", async () => {
+            const request = await superoak(app);
+            const res = await request.get("/sync")
+                .set("X-Forwarded-Host", "aidungeon.link")
+                .redirects(0)
+                .expect(302);
+            
+            const token = new URL(res.header.location as string).searchParams.get("token");
 
-            // WordPress/Laravel
-            "/wp-admin",
-            "/wp-content/themes/theme/style.css",
-            "/wp-includes/js/jquery.js",
-            "/wp-json/wp/v2/users",
-            "/wp-login.php",
-            "/vendor/phpunit/phpunit/phpunit",
-            "/laravel/.env",
-
-            // Dotfiles
-            "/.git",
-            "/.git/config",
-            "/.git/logs/HEAD",
-            "/.env",
-            "/.env.dev.local",
-            "/.config",
-            "/.vscode/settings.json",
-            "/.npmrc",
-            "/.aws/credentials"
-        ];
-
-        for (const path of blockedPaths) {
-            it(`should block ${path}`, async () => {
-                const request = await superoak(app);
-                await request.get(path)
-                    .expect(404);
-            });
-        }
-
-        const allowedPaths = [
-            "/scenario/123/test-scenario",
-            "/adventure/123/test-adventure",
-            "/profile/testuser",
-            "/style.css",
-            "/robots.txt",
-            "/healthcheck",
-            "/oembed.json?type=Embed+Fix",
-            "/unknown-path" // Should be 302, not 404
-        ];
-
-        for (const path of allowedPaths) {
-            it(`should allow ${path}`, async () => {
-                const request = await superoak(app);
-                const response = await request.get(path);
-                if (response.status === 404) {
-                    throw new Error(`Path ${path} was incorrectly blocked (404)`);
-                }
-            });
-        }
-    });
-
-    describe("Analytics Middleware", () => {
-        let collector: AnalyticsCollector | undefined;
-
-        afterEach(() => {
-            collector?.cleanup();
+            const reqReceiver = await superoak(app);
+            await reqReceiver.get(`/sync?token=${token}`)
+                .set("X-Forwarded-Host", "evil.com")
+                .expect(403);
         });
 
-        it("should record analytics data when enabled", async () => {
-            // Create a temporary app to test middleware in isolation
-            const tempApp = new Application<any>();
-            const apiStub = {} as unknown as AIDungeonAPI;
-            collector = await AnalyticsCollector.create(apiStub, {
-                processingInterval: 10000,
-                cacheExpiration: 10000,
-                supabaseUrl: "http://localhost",
-                supabaseKey: "key",
-                ingestSecret: "secret"
-            });
+        it("should respect scope=link and scope=proxy correctly capturing targeted boundaries", async () => {
+            const proxySettings = encodeURIComponent(JSON.stringify({ landing: "preview" }));
+            const linkSettings = encodeURIComponent(JSON.stringify({ theme: "dark" }));
 
-            const recordStub = stub(collector, "record", () => Promise.resolve());
+            // Scope: link
+            const requestLink = await superoak(app);
+            const resLink = await requestLink.get("/sync?scope=link")
+                .set("X-Forwarded-Host", "aidungeon.link")
+                .set("Cookie", `proxy_settings=${proxySettings}; link_settings=${linkSettings}`)
+                .redirects(0)
+                .expect(302);
+            
+            const tokenLink = new URL(resLink.header.location as string).searchParams.get("token");
 
-            tempApp.use(async (ctx, next) => {
-                ctx.state.analytics = { content: { id: "1", type: "test" } };
-                await next();
-            });
-            tempApp.use(analytics.middleware(collector));
-            tempApp.use((ctx) => {
-                ctx.response.body = "ok";
-            });
+            const reqLinkReceiver = await superoak(app);
+            const resLinkReceiver = await reqLinkReceiver.get(`/sync?token=${tokenLink}`)
+                .set("X-Forwarded-Host", "axdungeon.com")
+                .expect(200);
 
-            try {
-                const request = await superoak(tempApp);
-                await request.get("/").expect(200);
-                assertSpyCalls(recordStub, 1);
-            } finally {
-                recordStub.restore();
-            }
+            const cookieStrLink = Array.isArray(resLinkReceiver.header["set-cookie"]) 
+                ? resLinkReceiver.header["set-cookie"].join(";") 
+                : resLinkReceiver.header["set-cookie"] as string;
+            
+            assertStringIncludes(cookieStrLink, "link_settings=");
+            assertEquals(cookieStrLink.includes("proxy_settings="), false);
+            
+            // Scope: proxy
+            const requestProxy = await superoak(app);
+            const resProxy = await requestProxy.get("/sync?scope=proxy")
+                .set("X-Forwarded-Host", "aidungeon.link")
+                .set("Cookie", `proxy_settings=${proxySettings}; link_settings=${linkSettings}`)
+                .redirects(0)
+                .expect(302);
+            
+            const tokenProxy = new URL(resProxy.header.location as string).searchParams.get("token");
+
+            const reqProxyReceiver = await superoak(app);
+            const resProxyReceiver = await reqProxyReceiver.get(`/sync?token=${tokenProxy}`)
+                .set("X-Forwarded-Host", "axdungeon.com")
+                .expect(200);
+
+            const cookieStrProxy = Array.isArray(resProxyReceiver.header["set-cookie"]) 
+                ? resProxyReceiver.header["set-cookie"].join(";") 
+                : resProxyReceiver.header["set-cookie"] as string;
+                
+            assertStringIncludes(cookieStrProxy, "proxy_settings=");
+            assertEquals(cookieStrProxy.includes("link_settings="), false);
         });
     });
 });

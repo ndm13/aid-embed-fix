@@ -44,7 +44,12 @@ export class AnalyticsCollector {
 
     static async create(api: AIDungeonAPI, config: AnalyticsConfig) {
         const collector = new AnalyticsCollector(api, config);
-        await collector.testSecret();
+        try {
+            await collector.testSecret();
+        } catch (e) {
+            collector.cleanup();
+            throw e;
+        }
         return collector;
     }
 
@@ -65,7 +70,7 @@ export class AnalyticsCollector {
         if (!entry.content.status && id) {
             const cached = this.cache[id];
             if (cached && (Date.now() - cached.timestamp < this.config.cacheExpiration)) {
-                entry.content = cached.content;
+                entry.content = { ...cached.content };
                 entry.content.status = "cache";
             } else {
                 try {

@@ -78,7 +78,7 @@
         "test:unit": "deno test -P tests/unit",
         "test:integration": "deno test -P tests/integration",
         "check": "deno check --allow-import",
-        "dashboard:dev": "deno run -A --node-modules-dir npm:vite dev --config dashboard/vite.config.mts",
-        "dashboard:build": "deno run -A --node-modules-dir npm:vite build --config dashboard/vite.config.mts"
+        "dashboard:dev": "deno run -A --node-modules-dir npm:vite dev dashboard --config dashboard/vite.config.mts",
+        "dashboard:build": "deno run -A --node-modules-dir npm:vite build dashboard --config dashboard/vite.config.mts"
     }
 }

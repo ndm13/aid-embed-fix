@@ -18,23 +18,10 @@ export function middleware() {
             ctx.state.metrics.router.endpoint = "dashboard";
             ctx.state.metrics.router.type = "static";
 
-            try {
-                await send(ctx, ctx.request.url.pathname.replace(/^(\/dashboard\/)?/, "/"), {
-                    root,
-                    index: "index.html"
-                });
-            } catch {
-                if (ctx.request.accepts("html")) {
-                    try {
-                        await send(ctx, "index.html", { root });
-                    } catch {
-                        ctx.response.status = 404;
-                        ctx.response.body = "Dashboard build not found.";
-                    }
-                } else {
-                    ctx.response.status = 404;
-                }
-            }
+            await send(ctx, ctx.request.url.pathname.replace(/^(\/dashboard\/)?/, "/"), {
+                root,
+                index: "index.html"
+            });
             return;
         }
         await next();

@@ -26,22 +26,9 @@ type CacheEntry = {
 };
 
 export abstract class EmbedHandler<T> implements Handler {
-    protected static previewCache = new Map<string, CacheEntry>();
-    protected static readonly CACHE_TTL = 1000 * 60 * 5; // 5 minutes
-    protected static readonly MAX_CACHE_SIZE = 100;
-
-    static {
-        const timerId = setInterval(() => {
-            const now = Date.now();
-            for (const [key, entry] of this.previewCache) {
-                if (now - entry.timestamp > this.CACHE_TTL) {
-                    this.previewCache.delete(key);
-                }
-            }
-        }, this.CACHE_TTL);
-        Deno.unrefTimer(timerId);
-    }
-    
+    protected previewCache = new Map<string, CacheEntry>();
+    protected readonly CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+    protected readonly MAX_CACHE_SIZE = 100;
     abstract readonly name: string;
     abstract readonly redirectKeys: string[];
 
@@ -76,7 +63,7 @@ export abstract class EmbedHandler<T> implements Handler {
         if (!['scenario', 'adventure', 'profile'].includes(this.responseType))
             return this.fetch(ctx, id);
 
-        const cached = EmbedHandler.previewCache.get(cacheId);
+        const cached = this.previewCache.get(cacheId);
 
         const isMismatch = cached &&
             (
@@ -89,13 +76,21 @@ export abstract class EmbedHandler<T> implements Handler {
         if (!cached || isMismatch) {
             const data = await this.fetch(ctx, id);
 
-            // Enforce max size (LRU eviction)
-            if (EmbedHandler.previewCache.size >= EmbedHandler.MAX_CACHE_SIZE) {
-                const oldestKey = EmbedHandler.previewCache.keys().next().value;
-                if (oldestKey) EmbedHandler.previewCache.delete(oldestKey);
+            // Clean up old entries passively before processing our next insertion bounds
+            const now = Date.now();
+            for (const [key, entry] of this.previewCache) {
+                if (now - entry.timestamp > this.CACHE_TTL) {
+                    this.previewCache.delete(key);
+                }
             }
 
-            EmbedHandler.previewCache.set(cacheId, {
+            // Enforce max size (LRU eviction)
+            if (this.previewCache.size >= this.MAX_CACHE_SIZE) {
+                const oldestKey = this.previewCache.keys().next().value;
+                if (oldestKey) this.previewCache.delete(oldestKey);
+            }
+
+            this.previewCache.set(cacheId, {
                 data,
                 id: id,
                 type: this.responseType,
@@ -108,8 +103,8 @@ export abstract class EmbedHandler<T> implements Handler {
             return data;
         } else {
             // Update last access time and refresh LRU position
-            EmbedHandler.previewCache.delete(cacheId);
-            EmbedHandler.previewCache.set(cacheId, cached);
+            this.previewCache.delete(cacheId);
+            this.previewCache.set(cacheId, cached);
             cached.timestamp = Date.now();
         }
         return cached.data;
