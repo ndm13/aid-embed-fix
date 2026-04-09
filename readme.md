@@ -60,9 +60,9 @@ rating? How popular is opening links on mobile? Do people share and read adventu
 A dashboard for creators is currently in private alpha. [Join the Discord server](https://discord.gg/pjHXDsYfR6) for
 early (potentially buggy) access to content-level insights, traffic averages, best publishing times, and more!
 
-# Releases
-This project builds a [Docker image](https://github.com/ndm13/aid-embed-fix/pkgs/container/aid-embed-fix) for every
-[release](https://github.com/ndm13/aid-embed-fix/releases/latest). These images are hosted on `ghcr.io`.
+# Technical Details
+If you're not deploying, building, hacking on, or otherwise neck deep in the source code of this app, none of this
+applies to you!
 
 ## Deployment
 ### Docker (preferred)
@@ -125,17 +125,14 @@ These values are visible in `config.ts`.
 | Supabase Key                  | `--supabaseKey`           | `SUPABASE_KEY`            | The API key for the Supabase instance for analytics ingest.                                                                                                                                                                       |
 | Ingest Secret                 | `--ingestSecret`          | `INGEST_SECRET`           | The secret used by the analytics ingest RPC function.                                                                                                                                                                             |
 
-> [!TIP]
-> When changing environments, you will likely need different Firebase credentials (ITK and Token) as each instance
-> authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
+> [!IMPORTANT]
+> If using an environment other than `play`, you will likely need different Firebase credentials (ITK and Token) as each
+> instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
 
 When the server launches, it will print the interface and port on which it's listening. Query `/healthcheck` to get
 stats!
 
-## Technical Details
-This project has grown in scope from a set of duct-taped TypeScript files into a fully-fledged web app.
-
-### Structure
+## Project Structure
 - `dashboard`: A Svelte 5 single-page app that generates embeds and allows settings to be stored using cookies.
 - `src`: The root directory of the server and healthcheck apps.
   - `api`: A simple library for fetching GraphQL data from AI Dungeon and managing connection state.
@@ -150,20 +147,7 @@ This project has grown in scope from a set of duct-taped TypeScript files into a
   - `integration`: Feature-focused tests meant to cover all endpoints with full regression.
   - `unit`: Edge case coverage for critical functionality not easily covered by integration tests.
 
-### Philosophy
-This app should be as unobtrusive as possible to both the end user and to Latitude. To that end, this project
-prioritizes:
-- **Request minimization:** Cache when it makes sense, persist API user sessions, trim GraphQL payload sizes
-- **Don't get in the way:** Redirect with 301 when possible, don't pollute browser history, don't forward custom
-  URL parameters
-- **Give users what they want:** Better previews, custom covers, reliable links, analytics
-- **User autonomy:** No invasive scripts, no extensions, no Discord bots, only essential metadata is collected
-
-> [!NOTE]
-> The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only publicly
-> available data was used to make this app.
-
-### Query Parameters
+## Query Parameters
 We pass the following query parameters as required by AI Dungeon:
 
 | Parameter      | Used in endpoints         | Purpose                                                                          |
@@ -183,3 +167,16 @@ The following parameters are only used by the app and will not be forwarded:
 | `no_ua`   | All embed endpoints   | Bypasses the user agent check - treats the connection as coming from Discord                         |
 | `preview` | All embed endpoints   | Enables caching (can be busted by changing the value), always renders the page, disables redirection |
 | `cover`   | Scenarios, Adventures | Allows manually setting the cover image to be returned in the embed (via Imgur or Catbox)            |
+
+# Project Philosophy
+This app should be as unobtrusive as possible to both the end user and to Latitude. To that end, this project
+prioritizes:
+- **Request minimization:** Cache when it makes sense, persist API user sessions, trim GraphQL payload sizes
+- **Don't get in the way:** Redirect with 301 when possible, don't pollute browser history, don't forward custom
+  URL parameters
+- **Give users what they want:** Better previews, custom covers, reliable links, analytics
+- **User autonomy:** No invasive scripts, no extensions, no Discord bots, only essential metadata is collected
+
+> [!NOTE]
+> The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only publicly
+> available data was used to make this app.
