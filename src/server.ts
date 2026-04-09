@@ -1,5 +1,5 @@
 import { Application } from "@oak/oak";
-import { Environment, FileSystemLoader } from "npm:nunjucks";
+import { Environment } from "npm:nunjucks";
 
 import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
 import * as analytics from "./middleware/analytics.ts";
@@ -17,7 +17,6 @@ import { AppState } from "./types/AppState.ts";
 
 import defaultConfig from "./config.ts";
 import log from "./logging/logger.ts";
-import _ from "npm:lodash";
 
 export interface AppDeps {
     api: AIDungeonAPI;
@@ -32,7 +31,20 @@ export interface AppDeps {
 
 export function buildApp(deps: AppDeps) {
     const app = new Application<AppState>();
-    const njk = new Environment(new FileSystemLoader("templates"));
+    const njk = new Environment({
+        getSource(name: string) {
+            try {
+                const templatePath = new URL(`../templates/${name}`, import.meta.url);
+                return {
+                    src: Deno.readTextFileSync(templatePath),
+                    path: templatePath.href,
+                    noCache: false
+                };
+            } catch (_e) {
+                return null as any;
+            }
+        }
+    });
 
     // Logging and state
     app.use(state.middleware(deps.api, {

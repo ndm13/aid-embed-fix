@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.4
+        uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
@@ -37,7 +37,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(deps): update deno dependencies"
+          commit-message: "GitHub Actions: Update Deno Dependencies"
           title: "🤖 Update Deno Dependencies"
           body: |
             This pull request was automatically generated to update Deno dependencies.
