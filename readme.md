@@ -14,7 +14,7 @@ deserve! Works for user profiles, scenarios, and adventures!
 Running on `play.axdungeon.com`/`beta.axdungeon.com`/`alpha.axdungeon.com` (type `s/i/x` after posting a link) and `play.aidungeon.link`/
 `beta.aidungeon.link`/`alpha.aidungeon.link` (replace the `.com` with `.link`)!
 
-<img alt="A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version" src="/screenshots/sixfix_demo.gif" style="max-height:450px"/>
+![A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version](/screenshots/sixfix_demo.gif)
 
 # Features
 ## Pretty Embeds on Discord
@@ -42,8 +42,9 @@ or [Imgur](https://imgur.com/upload), or remove the image entirely.
 
 If the cover service is not valid, or the ID is empty, then the service will show the original cover art instead.
 
-> **Note:** AI Dungeon uses HIVE and other image content filters to moderate inappropriate content. *This explicitly
-> bypasses those filters.* Be aware of the appropriateness of the images you use and where you post them!
+> [!WARNING]
+> AI Dungeon uses HIVE and other image content filters to moderate inappropriate content. *This explicitly bypasses
+> those filters.* Be aware of the appropriateness of the images you use and where you post them!
 
 ## Long Lasting
 As of `v0.2.4`, the link fix will make its best effort to figure out whether or not your content is published before
@@ -124,8 +125,9 @@ These values are visible in `config.ts`.
 | Supabase Key                  | `--supabaseKey`           | `SUPABASE_KEY`            | The API key for the Supabase instance for analytics ingest.                                                                                                                                                                       |
 | Ingest Secret                 | `--ingestSecret`          | `INGEST_SECRET`           | The secret used by the analytics ingest RPC function.                                                                                                                                                                             |
 
-> [!TIP] When changing environments, you will likely need different Firebase credentials (ITK and Token) as each
-> instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
+> [!TIP]
+> When changing environments, you will likely need different Firebase credentials (ITK and Token) as each instance
+> authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
 
 When the server launches, it will print the interface and port on which it's listening. Query `/healthcheck` to get
 stats!
@@ -157,8 +159,9 @@ prioritizes:
 - **Give users what they want:** Better previews, custom covers, reliable links, analytics
 - **User autonomy:** No invasive scripts, no extensions, no Discord bots, only essential metadata is collected
 
-> [!NOTE] The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only
-> publicly available data was used to make this app.
+> [!NOTE]
+> The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only publicly
+> available data was used to make this app.
 
 ### Query Parameters
 We pass the following query parameters as required by AI Dungeon:
