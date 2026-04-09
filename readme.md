@@ -131,24 +131,52 @@ When the server launches, it will print the interface and port on which it's lis
 stats!
 
 ## Technical Details
-There are two core components to the project: the [AI Dungeon API](/src/api/AIDungeonAPI.ts) and an 
-[Oak middleware webserver](/src/server.ts). Everything else is scaffolding.
+This project has grown in scope from a set of duct-taped TypeScript files into a fully-fledged web app.
 
-The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. These queries
-have been stripped to retrieve a minimal amount of information - much less than a typical page load. Firebase sessions
-are reduced by keeping an anonymous session active during high use times and letting it expire/creating a new one
-during off-peak hours. The design is otherwise completely stateless: no persistent storage, easy scalability.
+### Structure
+- `dashboard`: A Svelte 5 single-page app that generates embeds and allows settings to be stored using cookies.
+- `src`: The root directory of the server and healthcheck apps.
+  - `api`: A simple library for fetching GraphQL data from AI Dungeon and managing connection state.
+  - `handlers`: Business logic for mapping API data to a request.
+  - `logging`: Makes the console easy to read.
+  - `middleware`: Processes the network requests, adds metadata to context.
+  - `support`: Helper classes and functions.
+  - `types`: Taking advantage of TypeScript for robust data handling.
+- `static`: Files that will directly be served by the app. `dashboard` builds to a subfolder here.
+- `templates`: Nunjuck templates for rendering HTML payloads.
+- `tests`: Integration-first coverage of functionality.
+  - `integration`: Feature-focused tests meant to cover all endpoints with full regression.
+  - `unit`: Edge case coverage for critical functionality not easily covered by integration tests.
 
-Requests are redirected to the origin site when possible. When a page is requested by a non-Discord user agent, a 301
-redirect is issued (this behavior can be bypassed by adding `no_ua` as a query parameter, if testing another platform).
-If the page *is* loaded by a browser, a JavaScript redirect will take place immediately, with history replacement. And
-if for some reason all logic fails and the user sees the page we present to Discord, it still looks nice enough.
+### Philosophy
+This app should be as unobtrusive as possible to both the end user and to Latitude. To that end, this project
+prioritizes:
+- **Request minimization:** Cache when it makes sense, persist API user sessions, trim GraphQL payload sizes
+- **Don't get in the way:** Redirect with 301 when possible, don't pollute browser history, don't forward custom
+  URL parameters
+- **Give users what they want:** Better previews, custom covers, reliable links, analytics
+- **User autonomy:** No invasive scripts, no extensions, no Discord bots, only essential metadata is collected
+
+> **Note:** The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only
+> publicly available data was used to make this app.
 
 ### Query Parameters
-We pass `share` for profile, scenario, and adventure queries, and `contentType` for profile queries. All other query
-parameters are discarded when forwarding the request.
+We pass the following query parameters as required by AI Dungeon:
 
-## For Contributors
-My biggest blind spot is testing. Discord is a big community for AI Dungeon, but I'm sure there are other platforms
-where links are shared with subpar embeds. Please go ahead and test them (with `?no_ua` on the end) and let me know if
-they work well or need additional properties. I'm open for pull requests too, if anyone wants to put in some work!
+| Parameter      | Used in endpoints         | Purpose                                                                          |
+|----------------|---------------------------|----------------------------------------------------------------------------------|
+| `share`        | All content items         | Used by AI Dungeon to determine if the link was generated from the Share feature |
+| `source`       | Scenarios, Adventures     | Used by AI Dungeon to determine the page the link was shared from                |
+| `contentType`  | Profiles                  | Determines the tab to show when opening the profile                              |
+| `sort`         | Profiles                  | Determines how the tab's content should be sorted                                |
+| `published`    | Scenarios, Adventures     | Determines whether or not the content is published                               |
+| `unlisted`     | Scenarios, Adventures     | Determines whether or not the content is unlisted                                |
+| `page`, `size` | Adventures (with `/read`) | Determines how far into an adventure the reading view should be                  |
+
+The following parameters are only used by the app and will not be forwarded:
+
+| Parameter | Used in endpoints     | Purpose                                                                                              |
+|-----------|-----------------------|------------------------------------------------------------------------------------------------------|
+| `no_ua`   | All embed endpoints   | Bypasses the user agent check - treats the connection as coming from Discord                         |
+| `preview` | All embed endpoints   | Enables caching (can be busted by changing the value), always renders the page, disables redirection |
+| `cover`   | Scenarios, Adventures | Allows manually setting the cover image to be returned in the embed (via Imgur or Catbox)            |
