@@ -70,10 +70,32 @@
                 "SUPABASE_KEY",
                 "INGEST_SECRET"
             ]
+        },
+        "healthcheck": {
+            "net": true,
+            "env": [
+                "FIREBASE_ITK",
+                "FIREBASE_CLIENT_VERSION",
+                "FIREBASE_CLIENT_TOKEN",
+                "ORIGIN",
+                "GQL_ENDPOINT",
+                "USER_AGENT",
+                "OEMBED_PROTOCOL",
+                "LISTEN",
+                "METRICS",
+                "METRICS_KEY",
+                "LOG_LEVEL",
+                "ANALYTICS",
+                "SUPABASE_URL",
+                "SUPABASE_KEY",
+                "INGEST_SECRET"
+            ]
         }
     },
     "tasks": {
         "start": "deno run --permission-set=server src/server.ts",
+        "compile:server": "deno compile --permission-set=server --include static/ --include templates/",
+        "compile:healthcheck": "deno compile --permission-set=healthcheck",
         "test": "deno test -P --coverage=coverage",
         "test:unit": "deno test -P tests/unit",
         "test:integration": "deno test -P tests/integration",

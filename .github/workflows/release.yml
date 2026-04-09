@@ -5,7 +5,7 @@ on:
     types: ['published']
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 env:
@@ -13,6 +13,49 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  build-binaries:
+    name: Build Standalone Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-pc-windows-msvc
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+
+      - name: Set default version string
+        run: |
+          sed -i -e 's/dev-build/${{ github.event.release.tag_name }}/g' src/config.ts
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.4.x
+
+      - name: Compile Binary
+        run: |
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            SUFFIX=".exe"
+          else
+            SUFFIX=""
+          fi
+          deno task compile:server --target ${{ matrix.target }} --output server-${{ matrix.target }}$SUFFIX src/server.ts
+          
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            SUFFIX=".exe"
+          else
+            SUFFIX=""
+          fi
+          gh release upload ${{ github.event.release.tag_name }} server-${{ matrix.target }}$SUFFIX
+
   release:
     name: Release New Docker Image
     runs-on: ubuntu-latest
