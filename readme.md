@@ -124,8 +124,8 @@ These values are visible in `config.ts`.
 | Supabase Key                  | `--supabaseKey`           | `SUPABASE_KEY`            | The API key for the Supabase instance for analytics ingest.                                                                                                                                                                       |
 | Ingest Secret                 | `--ingestSecret`          | `INGEST_SECRET`           | The secret used by the analytics ingest RPC function.                                                                                                                                                                             |
 
-Note that when changing environments, you will likely need different Firebase credentials (ITK and Token) as each
-instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
+> [!TIP] When changing environments, you will likely need different Firebase credentials (ITK and Token) as each
+> instance authenticates as a separate app. Each environment also uses a separate GraphQL endpoint.
 
 When the server launches, it will print the interface and port on which it's listening. Query `/healthcheck` to get
 stats!
@@ -157,7 +157,7 @@ prioritizes:
 - **Give users what they want:** Better previews, custom covers, reliable links, analytics
 - **User autonomy:** No invasive scripts, no extensions, no Discord bots, only essential metadata is collected
 
-> **Note:** The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only
+> [!NOTE] The AI Dungeon API was reverse engineered from authentication/GraphQL queries on `play.aidungeon.com`. Only
 > publicly available data was used to make this app.
 
 ### Query Parameters
