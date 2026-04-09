@@ -16,12 +16,19 @@ Running on `play.axdungeon.com`/`beta.axdungeon.com`/`alpha.axdungeon.com` (type
 
 <img alt="A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version" src="/screenshots/sixfix_demo.gif" style="max-height:450px"/>
 
-## Examples
-| Type                   | Default Implementation                                                                                                                                                                                                            | Fixed Version                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/scenario/:id/:slug`  | ![A screenshot of a Discord embed: title text 'AI Dungeon'; description 'AI Dungeon, an infinitely generated text adventure...'; a small image to the right side showing a screenshot of the homepage](/screenshots/standard.png) | ![A screenshot of a Discord embed: site name 'AI Dungeon Scenario'; author name 'aidungeon'; title text 'Original Quickstart'; description 'The set of classic prompts featuring various characters in Larion, zombie curing scientists and more!'; a large image of an isometric dungeon underneath](/screenshots/original_quickstart.png)                                                                                                                                                                                                                                                                      |
-| `/adventure/:id/:slug` | ![A screenshot of a Discord embed: title text 'AI Dungeon'; description 'AI Dungeon, an infinitely generated text adventure...'; a small image to the right side showing a screenshot of the homepage](/screenshots/standard.png) | ![A screenshot of a Discord embed: site name 'AI Dungeon Adventure'; author name 'uxbnkuribo'; title text 'An Unforgettable Luncheon with a guest appearance by Chief Wiggum'; description 'Seymour Skinner has Superintendent Chalmers over for an unforgettable luncheon. Only one problem- Chief Wiggum and the Springfield police force show up almost immediately! Will Chief Wiggum's presence hinder Skinner's ability to steam a good ham?'; a large image of Skinner and Chalmers sitting at a table with the Aurora Borealis in the background underneath](/screenshots/an_unforgettable_luncheon.png) |
-| `/profile/:username`   | ![A screenshot of a Discord embed: title text 'AI Dungeon'; description 'AI Dungeon, an infinitely generated text adventure...'; a small image to the right side showing a screenshot of the homepage](/screenshots/standard.png) | ![A screenshot of a Discord embed: site name 'AI Dungeon Profile': title text 'aidungeon'; description 'Official AI Dungeon account.'; a small image to the right side showing the AI Dungeon logo profile icon'](/screenshots/aidungeon.png)                                                                                                                                                                                                                                                                                                                                                                    |
+# Features
+## Pretty Embeds on Discord
+This is the primary reason to use this service. By default, the embeds don't show much information:
+
+![A screenshot of a Discord embed: title text 'AI Dungeon'; description 'AI Dungeon, an infinitely generated text adventure...'; a small image to the right side showing a screenshot of the homepage](/screenshots/standard.png)
+
+With the embed fixer, people can see the content type, title, and description along with the cover art!
+
+| Type                   | Preview                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/scenario/:id/:slug`  | ![A screenshot of a Discord embed: site name 'AI Dungeon Scenario'; author name 'aidungeon'; title text 'Original Quickstart'; description 'The set of classic prompts featuring various characters in Larion, zombie curing scientists and more!'; a large image of an isometric dungeon underneath](/screenshots/original_quickstart.png)                                                                                                                                                                                                                                                                      |
+| `/adventure/:id/:slug` | ![A screenshot of a Discord embed: site name 'AI Dungeon Adventure'; author name 'uxbnkuribo'; title text 'An Unforgettable Luncheon with a guest appearance by Chief Wiggum'; description 'Seymour Skinner has Superintendent Chalmers over for an unforgettable luncheon. Only one problem- Chief Wiggum and the Springfield police force show up almost immediately! Will Chief Wiggum's presence hinder Skinner's ability to steam a good ham?'; a large image of Skinner and Chalmers sitting at a table with the Aurora Borealis in the background underneath](/screenshots/an_unforgettable_luncheon.png) |
+| `/profile/:username`   | ![A screenshot of a Discord embed: site name 'AI Dungeon Profile': title text 'aidungeon'; description 'Official AI Dungeon account.'; a small image to the right side showing the AI Dungeon logo profile icon'](/screenshots/aidungeon.png)                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Custom Covers
 As of `v0.2.1`, you can now override the default cover returned by AI Dungeon. You use an image hosted on [Catbox](https://catbox.moe/)
@@ -38,7 +45,21 @@ If the cover service is not valid, or the ID is empty, then the service will sho
 > **Note:** AI Dungeon uses HIVE and other image content filters to moderate inappropriate content. *This explicitly
 > bypasses those filters.* Be aware of the appropriateness of the images you use and where you post them!
 
-## Releases
+## Long Lasting
+As of `v0.2.4`, the link fix will make its best effort to figure out whether or not your content is published before
+forwarding to AI Dungeon. This means old links created before the publishing flow update will still work if they were
+shared using the link fix service!
+
+## Sharing Insights (currently in alpha)
+Since the service was already recording metrics to prevent spam and abuse (including passing that along to Latitude), a
+pilot program is being built out to share the more useful bits of data. A [platform-wide dashbaord](https://exwjwjqg.budibase.app/app/ai-dungeon-link-analytics/#/all)
+is currently in public alpha that tries to answer common questions about AI Dungeon: how much traffic comes from what
+rating? How popular is opening links on mobile? Do people share and read adventures? The results may surprise you!
+
+A dashboard for creators is currently in private alpha. [Join the Discord server](https://discord.gg/pjHXDsYfR6) for
+early (potentially buggy) access to content-level insights, traffic averages, best publishing times, and more!
+
+# Releases
 This project builds a [Docker image](https://github.com/ndm13/aid-embed-fix/pkgs/container/aid-embed-fix) for every
 [release](https://github.com/ndm13/aid-embed-fix/releases/latest). These images are hosted on `ghcr.io`.
 
@@ -59,22 +80,22 @@ docker run -p 8000:8000 --restart unless-stopped ghcr.io/ndm13/aid-embed-fix
 ```
 
 ### Compile and run locally
-The server requires the contents of the `static` and `templates` folders when compiled.
 ```shell
 git clone https://github.com/ndm13/aid-embed-fix.git  # or download files manually
 cd aid-embed-fix
 deno install
-deno compile --allow-env --allow-read --allow-net server.ts
+deno task dashboard:build # if using the dashboard
+deno task compile:server ./src/server.ts
 ./server
 ```
 
 ### Run the `server.ts` file directly
-The server additionally requires the contents of the `src` folder when being run through Deno.
 ```shell
 git clone https://github.com/ndm13/aid-embed-fix.git  # or download files manually
 cd aid-embed-fix
 deno install
-deno run --allow-env --allow-read --allow-net ./src/server.ts
+deno task dashboard:build # if using the dashboard
+deno task start
 ```
 
 ## Configuration
