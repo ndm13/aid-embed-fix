@@ -25,7 +25,7 @@ jobs:
           - x86_64-pc-windows-msvc
     steps:
       - name: Setup repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set default version string
         run: |
@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set default version string
         run: |
