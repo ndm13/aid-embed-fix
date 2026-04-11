@@ -20,7 +20,7 @@ export function router() {
     router.get("/(style.css|robots.txt)", async (ctx) => {
         ctx.state.metrics.router.endpoint = "static";
         ctx.state.metrics.router.type = "static";
-        await serveStatic(ctx, "../../static");
+        await serveStatic(ctx, "./static");
     });
 
     return router;
