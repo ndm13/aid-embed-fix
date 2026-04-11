@@ -3,7 +3,7 @@ import { Next } from "@oak/oak/middleware";
 import { AppState } from "../types/AppState.ts";
 import { serveStatic } from "../support/vfs.ts";
 
-const root = "./static/dashboard";
+const root = "../../static/dashboard";
 
 export function middleware() {
     return async (ctx: Context<AppState>, next: Next) => {
