@@ -1,6 +1,7 @@
-import { Context, send } from "@oak/oak";
+import { Context } from "@oak/oak";
 import { Next } from "@oak/oak/middleware";
 import { AppState } from "../types/AppState.ts";
+import { serveStatic } from "../support/vfs.ts";
 
 const root = "./static/dashboard";
 
@@ -18,10 +19,8 @@ export function middleware() {
             ctx.state.metrics.router.endpoint = "dashboard";
             ctx.state.metrics.router.type = "static";
 
-            await send(ctx, ctx.request.url.pathname.replace(/^(\/dashboard\/)?/, "/"), {
-                root,
-                index: "index.html"
-            });
+            const rewritePath = ctx.request.url.pathname.replace(/^(\/dashboard\/)?/, "/");
+            await serveStatic(ctx, root, rewritePath, "/index.html");
             return;
         }
         await next();

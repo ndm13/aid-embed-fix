@@ -13,6 +13,7 @@ import * as state from "./middleware/state.ts";
 import * as settings from "./middleware/settings.ts";
 import { AnalyticsCollector } from "./support/AnalyticsCollector.ts";
 import { MetricsCollector } from "./support/MetricsCollector.ts";
+import { nunjucksVfsLoader } from "./support/vfs.ts";
 import { AppState } from "./types/AppState.ts";
 
 import defaultConfig from "./config.ts";
@@ -31,20 +32,7 @@ export interface AppDeps {
 
 export function buildApp(deps: AppDeps) {
     const app = new Application<AppState>();
-    const njk = new Environment({
-        getSource(name: string) {
-            try {
-                const templatePath = new URL(`../templates/${name}`, import.meta.url);
-                return {
-                    src: Deno.readTextFileSync(templatePath),
-                    path: templatePath.href,
-                    noCache: false
-                };
-            } catch (_e) {
-                return null as any;
-            }
-        }
-    });
+    const njk = new Environment(nunjucksVfsLoader('../../templates'));
 
     // Logging and state
     app.use(state.middleware(deps.api, {

@@ -10,6 +10,7 @@
     "jsr:@std/bytes@1": "1.0.6",
     "jsr:@std/cli@*": "1.0.9",
     "jsr:@std/cli@1.0.21": "1.0.21",
+    "jsr:@std/cli@^1.0.28": "1.0.28",
     "jsr:@std/crypto@1": "1.0.5",
     "jsr:@std/crypto@^1.0.5": "1.0.5",
     "jsr:@std/data-structures@^1.0.0-rc.1": "1.0.10",
@@ -18,19 +19,26 @@
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/encoding@^1.0.5": "1.0.5",
     "jsr:@std/fmt@^1.0.5": "1.0.9",
+    "jsr:@std/fmt@^1.0.9": "1.0.9",
     "jsr:@std/fmt@~0.225.4": "0.225.6",
     "jsr:@std/fs@^1.0.0-rc.1": "1.0.23",
     "jsr:@std/fs@^1.0.11": "1.0.23",
     "jsr:@std/fs@^1.0.22": "1.0.23",
+    "jsr:@std/fs@^1.0.23": "1.0.23",
+    "jsr:@std/html@^1.0.5": "1.0.5",
     "jsr:@std/http@1": "1.0.25",
+    "jsr:@std/http@^1.0.12": "1.0.25",
     "jsr:@std/internal@1": "1.0.12",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/io@~0.225.2": "0.225.3",
     "jsr:@std/log@~0.224.14": "0.224.14",
     "jsr:@std/media-types@1": "1.1.0",
+    "jsr:@std/media-types@^1.1.0": "1.1.0",
+    "jsr:@std/net@^1.0.6": "1.0.6",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@1.0.0-rc.2": "1.0.0-rc.2",
     "jsr:@std/path@^1.1.4": "1.1.4",
+    "jsr:@std/streams@^1.0.17": "1.0.17",
     "jsr:@std/testing@^1.0.17": "1.0.17",
     "jsr:@std/testing@~0.225.3": "0.225.3",
     "npm:@deno/vite-plugin@2.0.2": "2.0.2_vite@5.4.21__@types+node@24.2.0_@types+node@24.2.0",
@@ -55,8 +63,8 @@
         "jsr:@std/bytes",
         "jsr:@std/crypto@1",
         "jsr:@std/encoding@1",
-        "jsr:@std/http",
-        "jsr:@std/media-types"
+        "jsr:@std/http@1",
+        "jsr:@std/media-types@1"
       ]
     },
     "@oak/oak@17.2.0": {
@@ -65,8 +73,8 @@
         "jsr:@oak/commons",
         "jsr:@std/assert@1",
         "jsr:@std/bytes",
-        "jsr:@std/http",
-        "jsr:@std/media-types",
+        "jsr:@std/http@1",
+        "jsr:@std/media-types@1",
         "jsr:@std/path@1",
         "npm:path-to-regexp"
       ]
@@ -98,6 +106,9 @@
     "@std/cli@1.0.21": {
       "integrity": "cd25b050bdf6282e321854e3822bee624f07aca7636a3a76d95f77a3a919ca2a"
     },
+    "@std/cli@1.0.28": {
+      "integrity": "74ef9b976db59ca6b23a5283469c9072be6276853807a83ec6c7ce412135c70a"
+    },
     "@std/crypto@1.0.3": {
       "integrity": "a2a32f51ddef632d299e3879cd027c630dcd4d1d9a5285d6e6788072f4e51e7f"
     },
@@ -125,6 +136,9 @@
         "jsr:@std/path@^1.1.4"
       ]
     },
+    "@std/html@1.0.5": {
+      "integrity": "4e2d693f474cae8c16a920fa5e15a3b72267b94b84667f11a50c6dd1cb18d35e"
+    },
     "@std/http@1.0.8": {
       "integrity": "6ea1b2e8d33929967754a3b6d6c6f399ad6647d7bbb5a466c1eaf9b294a6ebcd",
       "dependencies": [
@@ -134,7 +148,15 @@
     "@std/http@1.0.25": {
       "integrity": "577b4252290af1097132812b339fffdd55fb0f4aeb98ff11bdbf67998aa17193",
       "dependencies": [
-        "jsr:@std/encoding@^1.0.10"
+        "jsr:@std/cli@^1.0.28",
+        "jsr:@std/encoding@^1.0.10",
+        "jsr:@std/fmt@^1.0.9",
+        "jsr:@std/fs@^1.0.23",
+        "jsr:@std/html",
+        "jsr:@std/media-types@^1.1.0",
+        "jsr:@std/net",
+        "jsr:@std/path@^1.1.4",
+        "jsr:@std/streams"
       ]
     },
     "@std/internal@1.0.10": {
@@ -160,6 +182,9 @@
     "@std/media-types@1.1.0": {
       "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
     },
+    "@std/net@1.0.6": {
+      "integrity": "110735f93e95bb9feb95790a8b1d1bf69ec0dc74f3f97a00a76ea5efea25500c"
+    },
     "@std/path@1.0.0-rc.2": {
       "integrity": "39f20d37a44d1867abac8d91c169359ea6e942237a45a99ee1e091b32b921c7d"
     },
@@ -171,6 +196,9 @@
       "dependencies": [
         "jsr:@std/internal@^1.0.12"
       ]
+    },
+    "@std/streams@1.0.17": {
+      "integrity": "7859f3d9deed83cf4b41f19223d4a67661b3d3819e9fc117698f493bf5992140"
     },
     "@std/testing@0.225.3": {
       "integrity": "348c24d0479d44ab3dbb4f26170f242e19f24051b45935d4a9e7ca0ab7e37780",
@@ -1074,6 +1102,7 @@
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/cli@1.0.21",
       "jsr:@std/crypto@^1.0.5",
+      "jsr:@std/http@^1.0.12",
       "jsr:@std/log@~0.224.14",
       "jsr:@std/testing@^1.0.17",
       "jsr:@std/testing@~0.225.3",
