@@ -14,6 +14,8 @@ deserve! Works for user profiles, scenarios, and adventures!
 Running on `play.axdungeon.com`/`beta.axdungeon.com`/`alpha.axdungeon.com` (type `s/i/x` after posting a link) and `play.aidungeon.link`/
 `beta.aidungeon.link`/`alpha.aidungeon.link` (replace the `.com` with `.link`)!
 
+Want to get started? Check out the [new dashboard](https://play.aidungeon.link/dashboard)!
+
 ![A demo video showing posting a scenario link, typing s/i/x, then the link changing to the better embed version](/screenshots/sixfix_demo.gif)
 
 # Features
