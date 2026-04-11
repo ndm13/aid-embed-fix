@@ -36,6 +36,9 @@ jobs:
         with:
           deno-version: v2.7.x
 
+      - name: Build Dashboard
+        run: deno task dashboard:build
+
       - name: Compile Binary
         run: |
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then
