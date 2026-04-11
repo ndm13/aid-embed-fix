@@ -3,8 +3,6 @@ import { Next } from "@oak/oak/middleware";
 import { AppState } from "../types/AppState.ts";
 import { serveStatic } from "../support/vfs.ts";
 
-const root = "./static/dashboard";
-
 export function middleware() {
     return async (ctx: Context<AppState>, next: Next) => {
         if (ctx.request.url.searchParams.has("preview")) return await next();
@@ -20,7 +18,7 @@ export function middleware() {
             ctx.state.metrics.router.type = "static";
 
             const rewritePath = ctx.request.url.pathname.replace(/^(\/dashboard\/)?/, "/");
-            await serveStatic(ctx, root, rewritePath, "/index.html");
+            await serveStatic(ctx, "../../static/dashboard", rewritePath, "/index.html");
             return;
         }
         await next();

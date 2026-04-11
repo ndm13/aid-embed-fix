@@ -1,8 +1,10 @@
 import { Context } from "@oak/oak";
 import { serveDir } from "@std/http/file-server";
+import { fromFileUrl } from "@std/path";
 import { Loader } from "npm:nunjucks";
 
-export async function serveStatic(ctx: Context<any>, fsRoot: string, rewritePath?: string, fallbackIndex?: string) {
+export async function serveStatic(ctx: Context<any>, vfsPath: string, rewritePath?: string, fallbackIndex?: string) {
+    const fsRoot = fromFileUrl(new URL(vfsPath, import.meta.url));
     const url = new URL(ctx.request.url.href);
     if (rewritePath !== undefined) {
         url.pathname = rewritePath;
