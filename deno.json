@@ -2,7 +2,7 @@
     "imports": {
         "@/": "./",
         "@deno/vite-plugin": "npm:@deno/vite-plugin@2.0.2",
-        "@std/cli/parse-args": "jsr:@std/cli@1.0.21/parse-args",
+        "@std/cli/parse-args": "jsr:@std/cli@1.0.29/parse-args",
         "@std/log": "jsr:@std/log@^0.224.14",
         "@std/crypto": "jsr:@std/crypto@^1.0.5",
         "@std/http/file-server": "jsr:@std/http@^1.0.12/file-server",
