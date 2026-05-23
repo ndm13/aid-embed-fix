@@ -19,7 +19,7 @@
         "superoak": "https://deno.land/x/superoak@5.0.0/mod.ts",
         "esm-env": "npm:esm-env@1.2.2",
         "svelte": "npm:svelte@^5.55.2",
-        "vite": "npm:vite@^5.4.21"
+        "vite": "npm:vite@^8.0.14"
     },
     "fmt": {
         "exclude": [".github", "*.md"],
