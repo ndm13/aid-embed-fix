@@ -177,7 +177,9 @@ export class AnalyticsCollector {
         await this.process();
         if (this.buffer.length > 0) {
             log.warn("Unable to send analytics to Supabase, logging to console instead.");
-            console.log(JSON.stringify(this.buffer));
+            this.buffer
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .forEach(e => console.log(JSON.stringify(e)));
         }
     }
 }
