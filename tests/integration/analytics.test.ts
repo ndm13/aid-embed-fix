@@ -8,13 +8,13 @@ import { AnalyticsCollector } from "../../src/support/AnalyticsCollector.ts";
 
 describe("Analytics Integration", () => {
     let originalDateNow: () => number;
-    
+
     beforeEach(() => {
         resetFetchCalls();
         setSupabaseShouldFail(false);
         originalDateNow = Date.now;
     });
-    
+
     afterEach(() => {
         Date.now = originalDateNow;
     });
@@ -51,12 +51,12 @@ describe("Analytics Integration", () => {
             await createDiscordRequest((await superoak(app)).get("/scenario/found-published/test-tail?preview=true")).expect(200);
             // GraphQL Error -> api_error
             await createDiscordRequest((await superoak(app)).get("/scenario/server-error/test-tail")).expect(200);
-            
+
             // Adventure success
             await createDiscordRequest((await superoak(app)).get("/adventure/found-published/test-tail")).expect(200);
             // Profile success
             await createDiscordRequest((await superoak(app)).get("/profile/found-user")).expect(200);
-            
+
             // Invalid content type manually pushed to test TypeError catch block
             await analyticsCollector?.record({
                 content: { id: "invalid-id", type: "unknown-type" },
@@ -72,9 +72,9 @@ describe("Analytics Integration", () => {
 
             const ingestRequest = fetchSupabaseCalls[1];
             assertExists(ingestRequest, "Supabase API call should log successfully");
-            
+
             const payload = ingestRequest.payload;
-            
+
             // Expected payload items:
             // 0: found-published, 1: found-published (cache), 2: not-found
             // 3: found-unlisted, 4: server-error, 5: adventure, 6: profile, 7: unknown-type
@@ -85,17 +85,17 @@ describe("Analytics Integration", () => {
             assertEquals(payload[0].content.status, "success");
 
             assertEquals(payload[1].content.id, "found-published");
-            assertEquals(payload[1].content.status, "success"); 
+            assertEquals(payload[1].content.status, "success");
 
             assertEquals(payload[2].content.id, "not-found");
             assertEquals(payload[2].content.status, "api_error");
 
             assertEquals(payload[3].content.id, "found-unlisted");
             assertEquals(payload[3].content.status, "success");
-            
+
             assertEquals(payload[4].content.id, "server-error");
             assertEquals(payload[4].content.status, "api_error");
-            
+
             assertEquals(payload[5].content.type, "adventure");
             assertEquals(payload[5].content.id, "found-published");
             assertEquals(payload[5].content.status, "success");
@@ -103,21 +103,21 @@ describe("Analytics Integration", () => {
             assertEquals(payload[6].content.type, "profile");
             assertEquals(payload[6].content.id, "found-user");
             assertEquals(payload[6].content.status, "success");
-            
+
             assertEquals(payload[7].content.type, "unknown-type");
             assertEquals(payload[7].content.status, "api_error");
 
         } finally {
             abortController.abort();
             // Suppress double cleanup error print if running
-            await analyticsCollector?.cleanup(); 
+            await analyticsCollector?.cleanup();
         }
     });
 
     it("should handle AnalyticsCollector internal cache misses, hits, and expiration automatically", async () => {
         let currentTime = 1000000000000;
         Date.now = () => currentTime;
-        
+
         const analyticsCollector = await AnalyticsCollector.create(api, {
             supabaseUrl: "https://mock.supabase.co",
             supabaseKey: "mock-key",
@@ -168,7 +168,7 @@ describe("Analytics Integration", () => {
 
             const payload = fetchSupabaseCalls[1].payload;
             assertEquals(payload.length, 3);
-            
+
             assertEquals(payload[0].content.status, "success");
             assertEquals(payload[1].content.status, "cache");
             assertEquals(payload[2].content.status, "success");
@@ -211,7 +211,7 @@ describe("Analytics Integration", () => {
 
             // Simulate RPC endpoint failure
             setSupabaseShouldFail(true);
-            
+
             // Force a process, which will fail and re-buffer
             // Because cleanup shuts things down, it sees the failed re-buffering and dumps it using console.log
             await analyticsCollector?.cleanup();
