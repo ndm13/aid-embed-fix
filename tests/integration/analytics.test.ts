@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
-import { assertEquals, assertExists, assertMatch } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { superoak } from "superoak";
 
 import { buildApp } from "../../src/server.ts";
@@ -126,7 +126,7 @@ describe("Analytics Integration", () => {
             cacheExpiration: 3600000
         });
 
-        const app = buildApp({
+        buildApp({
             api,
             analyticsCollector,
             config: {
@@ -187,7 +187,7 @@ describe("Analytics Integration", () => {
             cacheExpiration: 3600000
         });
 
-        const app = buildApp({
+        buildApp({
             api,
             analyticsCollector,
             config: {
@@ -241,7 +241,7 @@ describe("Analytics Integration", () => {
             cacheExpiration: 3600000
         });
 
-        const app = buildApp({
+        buildApp({
             api,
             analyticsCollector,
             config: {
