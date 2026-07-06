@@ -178,7 +178,61 @@ describe("Analytics Integration", () => {
         }
     });
 
+    it("should strip null characters from payloads before sending to Supabase", async () => {
+        const analyticsCollector = await AnalyticsCollector.create(api, {
+            supabaseUrl: "https://mock.supabase.co",
+            supabaseKey: "mock-key",
+            ingestSecret: "mock-secret",
+            processingInterval: 300000,
+            cacheExpiration: 3600000
+        });
+
+        const app = buildApp({
+            api,
+            analyticsCollector,
+            config: {
+                oembedProtocol: "https",
+                redirectBase: "https://mock.aidungeon.com"
+            }
+        });
+        const abortController = new AbortController();
+
+        try {
+            // Record an entry with null characters
+            await analyticsCollector?.record({
+                content: { id: "id\0with\0nulls", type: "scenario" },
+                request: { params: { "key\0with\0nulls": "value\0with\0nulls" } } as any,
+                timestamp: Date.now()
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            await analyticsCollector?.cleanup();
+
+            const ingestRequest = fetchSupabaseCalls[1];
+            assertExists(ingestRequest, "Supabase API call should have been made");
+
+            const payload = ingestRequest.payload;
+            assertEquals(payload.length, 1);
+
+            // Check that null characters are stripped
+            const entry = payload[0];
+            assertEquals(entry.content.id, "idwithnulls");
+            assertEquals(entry.request.params["keywithnulls"], "valuewithnulls");
+            assertEquals(Object.keys(entry.request.params)[0], "keywithnulls");
+
+        } finally {
+            abortController.abort();
+            await analyticsCollector?.cleanup();
+        }
+    });
+
     it("should gracefully handle external ingestion failures by re-buffering and dumping to console on exit", async () => {
+        let currentTime = 1000000000000;
+        Date.now = () => {
+            currentTime += 100; // Increment time on each call
+            return currentTime;
+        };
+
         const analyticsCollector = await AnalyticsCollector.create(api, {
             supabaseUrl: "https://mock.supabase.co",
             supabaseKey: "mock-key",
@@ -198,30 +252,123 @@ describe("Analytics Integration", () => {
         const abortController = new AbortController();
 
         const originalLog = console.log;
-        let loggedOutput = "";
-        console.log = (msg: string) => { loggedOutput += msg; };
+        const loggedOutput: string[] = [];
+        console.log = (msg: string) => { loggedOutput.push(msg); };
 
         try {
+            const time1 = Date.now();
+            const time2 = Date.now();
+
+            // Record two entries, ensuring insertion order is different from timestamp order
+            await analyticsCollector?.record({
+                content: { id: "found-unlisted", type: "scenario" },
+                request: { params: {} } as any,
+                timestamp: time2
+            });
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
             await analyticsCollector?.record({
                 content: { id: "found-published", type: "scenario" },
                 request: { params: {} } as any,
-                timestamp: Date.now()
+                timestamp: time1
             });
             await new Promise((resolve) => setTimeout(resolve, 50));
 
             // Simulate RPC endpoint failure
             setSupabaseShouldFail(true);
 
-            // Force a process, which will fail and re-buffer
-            // Because cleanup shuts things down, it sees the failed re-buffering and dumps it using console.log
+            // This will fail, re-buffer, and then the cleanup's shutdown logic will dump to console
             await analyticsCollector?.cleanup();
 
-            assertMatch(loggedOutput, /found-published/);
+            // Filter for the JSON logs we expect, as other logs may be present
+            const jsonLogs = loggedOutput
+                .map(line => {
+                    try { return JSON.parse(line); } catch { return null; }
+                })
+                .filter(item => item && (item.content?.id === "found-published" || item.content?.id === "found-unlisted"));
+
+            // Should be two separate log entries
+            assertEquals(jsonLogs.length, 2);
+
+            // Entries should be sorted by timestamp ascending
+            assertEquals(jsonLogs[0].content.id, "found-published");
+            assertEquals(jsonLogs[1].content.id, "found-unlisted");
 
         } finally {
             console.log = originalLog;
             abortController.abort();
             await analyticsCollector?.cleanup();
+        }
+    });
+
+    it("should handle sanitization and RPC failures separately", async () => {
+        let currentTime = 1000000000000;
+        Date.now = () => {
+            currentTime += 100;
+            return currentTime;
+        };
+
+        const analyticsCollector = await AnalyticsCollector.create(api, {
+            supabaseUrl: "https://mock.supabase.co",
+            supabaseKey: "mock-key",
+            ingestSecret: "mock-secret",
+            processingInterval: 300000,
+            cacheExpiration: 3600000
+        });
+
+        const originalLog = console.log;
+        const loggedOutput: string[] = [];
+        console.log = (msg: string) => { loggedOutput.push(msg); };
+
+        try {
+            // Record a mix of valid and invalid entries
+            await analyticsCollector.record({
+                content: { id: "valid-entry-1", type: "scenario" },
+                request: { params: {} } as any,
+                timestamp: Date.now()
+            });
+            await analyticsCollector.record({
+                content: { id: "invalid-entry", type: "scenario" },
+                request: { params: {} } as any,
+                timestamp: null as any // This will cause a sanitization error
+            });
+            await analyticsCollector.record({
+                content: { id: "valid-entry-2", type: "scenario" },
+                request: { params: {} } as any,
+                timestamp: Date.now()
+            });
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            // Simulate an RPC failure
+            setSupabaseShouldFail(true);
+            await analyticsCollector.cleanup();
+
+            // Find the warning message indices to split the logs
+            const bufferWarningIndex = loggedOutput.findIndex(l => l.includes("Unable to send analytics to Supabase"));
+            const failedWarningIndex = loggedOutput.findIndex(l => l.includes("Failed to sanitize") && l.includes("entries"));
+
+            assertExists(bufferWarningIndex > -1, "Warning for buffered entries should be present");
+            assertExists(failedWarningIndex > -1, "Warning for failed entries should be present");
+
+            // Extract and parse the logs for the buffered (RPC failed) entries
+            const bufferedLogLines = loggedOutput.slice(bufferWarningIndex + 1, failedWarningIndex);
+            const bufferedEntries = bufferedLogLines.map(line => JSON.parse(line));
+            
+            assertEquals(bufferedEntries.length, 2);
+            assertEquals(bufferedEntries[0].content.id, "valid-entry-1");
+            assertEquals(bufferedEntries[1].content.id, "valid-entry-2");
+
+            // Extract and parse the logs for the failed (sanitization failed) entries
+            const failedLogLines = loggedOutput.slice(failedWarningIndex + 1);
+            const failedEntries = failedLogLines.map(line => JSON.parse(line));
+
+            assertEquals(failedEntries.length, 1);
+            assertEquals(failedEntries[0].content.id, "invalid-entry");
+
+        } finally {
+            console.log = originalLog;
+            await analyticsCollector.cleanup();
         }
     });
 });
