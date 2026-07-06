@@ -14,6 +14,7 @@ export async function serveStatic(ctx: Context<any>, vfsPath: string, rewritePat
     let res = await serveDir(req, {
         fsRoot,
         showIndex: true,
+        quiet: true
     });
 
     if (res.status === 404 && fallbackIndex) {
@@ -25,6 +26,7 @@ export async function serveStatic(ctx: Context<any>, vfsPath: string, rewritePat
         res = await serveDir(fallbackReq, {
             fsRoot,
             showIndex: true,
+            quiet: true
         });
     }
 
