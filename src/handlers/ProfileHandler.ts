@@ -1,5 +1,5 @@
 import { Context } from "@oak/oak";
-import { Environment } from "npm:nunjucks";
+import { Environment } from "nunjucks";
 
 import { AppState } from "../types/AppState.ts";
 import { UserEmbedData } from "../types/EmbedDataTypes.ts";

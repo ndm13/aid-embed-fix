@@ -1,5 +1,5 @@
 import { Application } from "@oak/oak";
-import { Environment } from "npm:nunjucks";
+import { Environment } from "nunjucks";
 
 import { AIDungeonAPI } from "./api/AIDungeonAPI.ts";
 import * as analytics from "./middleware/analytics.ts";

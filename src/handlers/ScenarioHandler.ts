@@ -1,6 +1,6 @@
 import { Context } from "@oak/oak";
-import _ from "npm:lodash";
-import { Environment } from "npm:nunjucks";
+import _ from "lodash";
+import { Environment } from "nunjucks";
 
 import { AppState } from "../types/AppState.ts";
 import { ScenarioEmbedData } from "../types/EmbedDataTypes.ts";
