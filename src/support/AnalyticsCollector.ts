@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 import { AnalyticsEntry, Content } from "../types/ReportingTypes.ts";
 import { AIDungeonAPI } from "../api/AIDungeonAPI.ts";
@@ -17,6 +17,23 @@ type CacheEntry = {
     content: Partial<Content>,
     timestamp: number
 };
+
+function stripNull<T>(payload: T): T {
+    if (typeof payload === "string")
+        return payload.replace(/\0/g, "") as T; // T is string
+
+    if (Array.isArray(payload))
+        return payload.map(item => stripNull(item)) as T; // T is array
+
+    if (payload !== null && typeof payload === "object") {
+        const cleaned: Record<string, any> = {};
+        for (const [key, value] of Object.entries(payload))
+            cleaned[key.replace(/\0/g, "")] = stripNull(value);
+        return cleaned as T; // T is Record<string, any> (object)
+    }
+
+    return payload;
+}
 
 export class AnalyticsCollector {
     private readonly buffer: AnalyticsEntry[] = [];
@@ -127,7 +144,7 @@ export class AnalyticsCollector {
         try {
             const { error } = await this.supabase.rpc("ingest_analytics", {
                 secret: this.config.ingestSecret,
-                payload: entriesToProcess
+                payload: stripNull(entriesToProcess)
             });
             if (error) throw error;
             log.info(`Successfully sent ${entriesToProcess.length} analytics entries to Supabase`);
