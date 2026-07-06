@@ -46,7 +46,7 @@
     "jsr:@std/testing@^1.0.17": "1.0.17",
     "jsr:@std/testing@~0.225.3": "0.225.3",
     "npm:@deno/vite-plugin@2.0.2": "2.0.2_vite@5.4.21__@types+node@24.2.0_@types+node@24.2.0",
-    "npm:@supabase/supabase-js@*": "2.87.1",
+    "npm:@supabase/supabase-js@^2.110.0": "2.110.0",
     "npm:@sveltejs/vite-plugin-svelte@^4.0.4": "4.0.4_svelte@5.55.2_vite@5.4.21__@types+node@24.2.0_@types+node@24.2.0",
     "npm:@types/node@*": "24.2.0",
     "npm:esm-env@*": "1.2.2",
@@ -535,42 +535,43 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@supabase/auth-js@2.87.1": {
-      "integrity": "sha512-6RDeOf5TVoaXFtEstN188ykp3pXLZaU9qoAWfx8dc50FFAAqt+kcFJ96V0IvSmcpb4mDAWcpTJ7BegmVDn/WIw==",
+    "@supabase/auth-js@2.110.0": {
+      "integrity": "sha512-Mi288WCTp6wxMFCOu/UgzgHEXODjdl2uVTLqK11eanzGZaldU3RyP8Am+ZbNuVzFP+5+iOvppxzv7N5Ym84xTg==",
       "dependencies": [
         "tslib"
       ]
     },
-    "@supabase/functions-js@2.87.1": {
-      "integrity": "sha512-rWmYo4gRD0XAjMhYDlz7IH67bp4TIQ1UE4VqwIQtl1gGPwtLDq6wcRnu7jLKlXx0Gtrknw/eoiHYG9//XrCTzQ==",
+    "@supabase/functions-js@2.110.0": {
+      "integrity": "sha512-Fde5wlY8ZZy+9yqrWlQHo8MacSyUBArBEtN2boB4thJQigPnQD/cc61qZN0n3I1L0gwhWtHYwIMnOBKxSvF6Hw==",
       "dependencies": [
         "tslib"
       ]
     },
-    "@supabase/postgrest-js@2.87.1": {
-      "integrity": "sha512-Yzu5eL3iGmZW0C/8x+vEojAOou63FI9oVw8HI8YOq63+5yM8g8aGh7Y1E2vbXFb7+gHGsPqLnaC6dPhrYt7qBA==",
+    "@supabase/phoenix@0.4.4": {
+      "integrity": "sha512-Gt0pqoXuIqX/8dvG0OKp/wMCobXNH3klNbUPBNyOfN0YA1IswrM3HyWFMOPk1Jy+BRaIyDPcFx4jLBwHNmlyfQ=="
+    },
+    "@supabase/postgrest-js@2.110.0": {
+      "integrity": "sha512-ZbC1QZL3jcvBUfVKjJbgRM27G4Mg3Zzqdm44m5pJafe1e52Cli793EOnwQucomBAGEUDd03Nzaf7XV3ji/XexQ==",
       "dependencies": [
         "tslib"
       ]
     },
-    "@supabase/realtime-js@2.87.1": {
-      "integrity": "sha512-XvLtEznxmYZXA7LYuy5zbSXpSYjDLJq2wQeRh3MzON2OR4U8Kq+RtPz2E2Wi8HEzvBfsc+nNu1TG8LQ9+3DRkA==",
+    "@supabase/realtime-js@2.110.0": {
+      "integrity": "sha512-Wn2AWpneZuDFTkp/65tqctvoh+3JvyTjMam8sTMqVWy5BgkU8zAvFwilPYPPPhkINeKF8NAJKP7FclJ2iGCUMw==",
       "dependencies": [
-        "@types/phoenix",
-        "@types/ws",
-        "tslib",
-        "ws"
+        "@supabase/phoenix",
+        "tslib"
       ]
     },
-    "@supabase/storage-js@2.87.1": {
-      "integrity": "sha512-0Uc8tNV4yzkNNmp1inpXru0RB4a7ECq05G2S6BDvSpMxTxJrDVJ4vVDwyhqB8ZZ+O9+8prHaQYoByQeuDnwpFQ==",
+    "@supabase/storage-js@2.110.0": {
+      "integrity": "sha512-71+gU3HrhiylAhftY6FmO5PPdcsScnVcS766CVD+vTYK9qTDLbrx8FhgBYbqGm3iV/wkTfzrNJfjGsMeFRkJRQ==",
       "dependencies": [
         "iceberg-js",
         "tslib"
       ]
     },
-    "@supabase/supabase-js@2.87.1": {
-      "integrity": "sha512-tVgqZqnHZVum584KuUKSQZgcy6ZkhVd6gG8QWg2QfIXH9HmXdamauxdVsLXwaNPJxEdOyfAfwIyi5XUsiVYWtg==",
+    "@supabase/supabase-js@2.110.0": {
+      "integrity": "sha512-8yI84VJiEVW4zxZpLUmxXmjzQ7O2St9X/ymzlBETDHTURPWG3LmvbSiibq+7dqAJmyoUfxZnSfXeM4HCM8s4XQ==",
       "dependencies": [
         "@supabase/auth-js",
         "@supabase/functions-js",
@@ -616,17 +617,8 @@
         "undici-types"
       ]
     },
-    "@types/phoenix@1.6.7": {
-      "integrity": "sha512-oN9ive//QSBkf19rfDv45M7eZPi0eEXylht2OLEXicu5b4KoQ1OzXIw+xDSGWxSxe1JmepRR/ZH283vsu518/Q=="
-    },
     "@types/trusted-types@2.0.7": {
       "integrity": "sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw=="
-    },
-    "@types/ws@8.18.1": {
-      "integrity": "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==",
-      "dependencies": [
-        "@types/node"
-      ]
     },
     "@typescript-eslint/types@8.58.1": {
       "integrity": "sha512-io/dV5Aw5ezwzfPBBWLoT+5QfVtP8O7q4Kftjn5azJ88bYyp/ZMCsyW1lpKK46EXJcaYMZ1JtYj+s/7TdzmQMw=="
@@ -895,9 +887,6 @@
         "vite"
       ]
     },
-    "ws@8.18.3": {
-      "integrity": "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="
-    },
     "zimmerframe@1.1.4": {
       "integrity": "sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ=="
     }
@@ -1116,6 +1105,7 @@
       "jsr:@std/testing@^1.0.17",
       "jsr:@std/testing@~0.225.3",
       "npm:@deno/vite-plugin@2.0.2",
+      "npm:@supabase/supabase-js@^2.110.0",
       "npm:@sveltejs/vite-plugin-svelte@^4.0.4",
       "npm:esm-env@1.2.2",
       "npm:lodash@^4.18.1",

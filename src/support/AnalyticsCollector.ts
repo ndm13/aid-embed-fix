@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "npm:@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 import { AnalyticsEntry, Content } from "../types/ReportingTypes.ts";
 import { AIDungeonAPI } from "../api/AIDungeonAPI.ts";
@@ -18,8 +18,28 @@ type CacheEntry = {
     timestamp: number
 };
 
+type SupabaseAnalyticsEntry = Omit<AnalyticsEntry, "timestamp"> & { timestamp: string };
+
+function stripNullBytes<T>(payload: T): T {
+    if (typeof payload === "string")
+        return payload.replace(/\0/g, "") as T; // T is string
+
+    if (Array.isArray(payload))
+        return payload.map(item => stripNullBytes(item)) as T; // T is array
+
+    if (payload !== null && typeof payload === "object") {
+        const cleaned: Record<string, any> = {};
+        for (const [key, value] of Object.entries(payload))
+            cleaned[key.replace(/\0/g, "")] = stripNullBytes(value);
+        return cleaned as T; // T is Record<string, any> (object)
+    }
+
+    return payload;
+}
+
 export class AnalyticsCollector {
     private readonly buffer: AnalyticsEntry[] = [];
+    private readonly failed: AnalyticsEntry[] = [];
     private readonly cache: Record<string, CacheEntry> = {};
     private readonly supabase: SupabaseClient<any, "ingest", any>;
     private readonly timerId: number;
@@ -115,14 +135,29 @@ export class AnalyticsCollector {
             return;
         }
 
-        const entriesToProcess = this.buffer.map((entry: any) => {
-            const processed = { ...entry };
-            if (typeof processed.timestamp === "number") {
-                processed.timestamp = new Date(processed.timestamp).toISOString();
+        const clean = [] as AnalyticsEntry[];
+        const entriesToProcess = [] as SupabaseAnalyticsEntry[];
+        this.buffer.splice(0).forEach(entry => {
+            try {
+                const prepared = {
+                    ...stripNullBytes({
+                        ...entry,
+                        timestamp: new Date(entry.timestamp ?? "").toISOString()
+                    }),
+                };
+                clean.push(entry); // If it didn't error, give us a fallback if the RPC fails later
+                entriesToProcess.push(prepared);
+            } catch (error) {
+                log.error("Failed to sanitize analytics entry:");
+                log.error(entry);
+                log.error(error);
+                this.failed.push(entry);
             }
-            return processed;
         });
-        this.buffer.length = 0;
+
+        if (entriesToProcess.length === 0) {
+            return;
+        }
 
         try {
             const { error } = await this.supabase.rpc("ingest_analytics", {
@@ -134,7 +169,7 @@ export class AnalyticsCollector {
         } catch (error) {
             log.error("Error sending analytics to Supabase, re-buffering entries");
             log.error(error);
-            this.buffer.push(...entriesToProcess);
+            this.buffer.push(...clean);
         }
     }
 
@@ -177,7 +212,15 @@ export class AnalyticsCollector {
         await this.process();
         if (this.buffer.length > 0) {
             log.warn("Unable to send analytics to Supabase, logging to console instead.");
-            console.log(JSON.stringify(this.buffer));
+            this.buffer
+                .sort((a, b) => a.timestamp - b.timestamp)  // sort ascending
+                .forEach(e => console.log(JSON.stringify(e)));
+        }
+        if (this.failed.length > 0) {
+            log.warn(`Failed to sanitize ${this.failed.length} entries, logging to console instead.`);
+            this.failed
+                .sort((a, b) => a.timestamp - b.timestamp)  // sort ascending
+                .forEach(e => console.log(JSON.stringify(e)));
         }
     }
 }
