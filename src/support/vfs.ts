@@ -1,7 +1,7 @@
 import { Context } from "@oak/oak";
 import { serveDir } from "@std/http/file-server";
 import { fromFileUrl } from "@std/path";
-import { Loader } from "npm:nunjucks";
+import { Loader } from "nunjucks";
 
 export async function serveStatic(ctx: Context<any>, vfsPath: string, rewritePath?: string, fallbackIndex?: string) {
     const fsRoot = fromFileUrl(new URL(vfsPath, import.meta.url));

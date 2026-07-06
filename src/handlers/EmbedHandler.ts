@@ -1,6 +1,6 @@
 import { Context } from "@oak/oak";
-import _ from "npm:lodash";
-import { Environment, Template } from "npm:nunjucks";
+import _ from "lodash";
+import { Environment, Template } from "nunjucks";
 
 import { AIDungeonAPIError } from "../api/AIDungeonAPIError.ts";
 import { Handler } from "./Handler.ts";

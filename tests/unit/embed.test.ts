@@ -2,7 +2,6 @@ import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 import { EmbedHandler } from "../../src/handlers/EmbedHandler.ts";
-import { testing } from "@oak/oak";
 
 describe("EmbedHandler Unit Tests", () => {
     // We subclass it basically to expose its static Cache and getPreview mechanics
