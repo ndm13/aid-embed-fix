@@ -1,6 +1,5 @@
 # Better AI Dungeon Embeds
 [![Release status](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/release.yml)
-[![Check for Deno Updates](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/update-deps.yml)
 [![CodeQL](https://github.com/ndm13/aid-embed-fix/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/github-code-scanning/codeql)
 [![Automated Testing](https://github.com/ndm13/aid-embed-fix/actions/workflows/test.yml/badge.svg)](https://github.com/ndm13/aid-embed-fix/actions/workflows/test.yml)
 <br>
