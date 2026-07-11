@@ -80,7 +80,7 @@ jobs:
           gh release upload ${{ github.event.release.tag_name }} ./artifacts/server-*
 
   release-docker:
-    name: Build & Push Docker Image
+    name: ${{ github.event_name == 'release' && 'Build & Push Docker Image' || 'Build Docker Image' }}
     runs-on: ubuntu-latest
     steps:
       - name: Setup repo
