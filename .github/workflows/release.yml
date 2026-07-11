@@ -1,8 +1,10 @@
-name: Release
+name: Build and Release
 
 on:
   release:
-    types: ['published']
+    types: [published]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -29,7 +31,11 @@ jobs:
 
       - name: Set default version string
         run: |
-          sed -i -e 's/dev-build/${{ github.event.release.tag_name }}/g' src/config.ts
+          VERSION="${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.sha }}"
+          if [[ "${VERSION}" =~ ^[0-9a-f]{40}$ ]]; then
+            VERSION="sha-${VERSION:0:7}"
+          fi
+          sed -i -e "s/dev-build/${VERSION}/g" src/config.ts
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -47,31 +53,49 @@ jobs:
             SUFFIX=""
           fi
           deno task compile:server --target ${{ matrix.target }} --output server-${{ matrix.target }}$SUFFIX src/server.ts
-          
-      - name: Upload Release Asset
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-${{ matrix.target }}
+          path: server-${{ matrix.target }}*
+
+  release-binaries:
+    name: Upload Binaries to Release
+    needs: build-binaries
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          pattern: server-*
+          merge-multiple: true
+
+      - name: Upload Release Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
-            SUFFIX=".exe"
-          else
-            SUFFIX=""
-          fi
-          gh release upload ${{ github.event.release.tag_name }} server-${{ matrix.target }}$SUFFIX
+          gh release upload ${{ github.event.release.tag_name }} ./artifacts/server-*
 
-  release:
-    name: Release New Docker Image
+  release-docker:
+    name: Build & Push Docker Image
     runs-on: ubuntu-latest
-
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
 
       - name: Set default version string
         run: |
-          sed -i -e 's/dev-build/${{ github.event.release.tag_name }}/g' src/config.ts
+          VERSION="${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.sha }}"
+          if [[ "${VERSION}" =~ ^[0-9a-f]{40}$ ]]; then
+            VERSION="sha-${VERSION:0:7}"
+          fi
+          sed -i -e "s/dev-build/${VERSION}/g" src/config.ts
 
       - name: Log in to the Container registry
+        if: github.event_name == 'release'
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
           registry: ${{ env.REGISTRY }}
@@ -88,6 +112,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
