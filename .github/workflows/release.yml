@@ -74,11 +74,16 @@ jobs:
           pattern: server-*
           merge-multiple: true
 
+      - name: List downloaded files
+        run: ls -R ./artifacts
+
       - name: Upload Release Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh release upload ${{ github.event.release.tag_name }} ./artifacts/server-*
+          echo "Uploading assets to release tag: ${{ github.event.release.tag_name }}"
+          gh release upload ${{ github.event.release.tag_name }} ./artifacts/server-* --clobber
 
   release-docker:
     name: ${{ github.event_name == 'release' && 'Build & Push Docker Image' || 'Build Docker Image' }}
