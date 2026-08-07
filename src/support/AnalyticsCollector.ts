@@ -20,6 +20,8 @@ type CacheEntry = {
 
 type SupabaseAnalyticsEntry = Omit<AnalyticsEntry, "timestamp"> & { timestamp: string };
 
+const encoder = new TextEncoder();
+
 function stripNullBytes<T>(payload: T): T {
     if (typeof payload === "string")
         return payload.replace(/\0/g, "") as T; // T is string
@@ -135,9 +137,27 @@ export class AnalyticsCollector {
             return;
         }
 
+        const MAX_BYTES = 100 * 1024; // 100KB limit
+        let currentBatchBytes = 0;
+        let batchCount = 0;
+
+        for (let i = 0; i < this.buffer.length; i++) {
+            const entry = this.buffer[i];
+            const entryBytes = encoder.encode(JSON.stringify(entry)).length;
+
+            if (currentBatchBytes + entryBytes > MAX_BYTES && batchCount > 0) {
+                break;
+            }
+
+            currentBatchBytes += entryBytes;
+            batchCount++;
+        }
+
+        const rawBatch = this.buffer.splice(0, batchCount);
         const clean = [] as AnalyticsEntry[];
         const entriesToProcess = [] as SupabaseAnalyticsEntry[];
-        this.buffer.splice(0).forEach(entry => {
+
+        rawBatch.forEach(entry => {
             try {
                 const prepared = {
                     ...stripNullBytes({
@@ -145,7 +165,7 @@ export class AnalyticsCollector {
                         timestamp: new Date(entry.timestamp ?? "").toISOString()
                     }),
                 };
-                clean.push(entry); // If it didn't error, give us a fallback if the RPC fails later
+                clean.push(entry); 
                 entriesToProcess.push(prepared);
             } catch (error) {
                 log.error("Failed to sanitize analytics entry:");
@@ -159,18 +179,55 @@ export class AnalyticsCollector {
             return;
         }
 
+        await this.sendWithBisection(entriesToProcess, clean);
+    }
+
+    private async sendWithBisection(payloads: SupabaseAnalyticsEntry[], originalEntries: AnalyticsEntry[]) {
+        if (payloads.length === 0) return;
+
         try {
             const { error } = await this.supabase.rpc("ingest_analytics", {
                 secret: this.config.ingestSecret,
-                payload: entriesToProcess
+                payload: payloads
             });
+
             if (error) throw error;
-            log.info(`Successfully sent ${entriesToProcess.length} analytics entries to Supabase`);
+            log.info(`Successfully sent ${payloads.length} analytics entries to Supabase`);
+            
         } catch (error) {
-            log.error("Error sending analytics to Supabase, re-buffering entries");
-            log.error(error);
-            this.buffer.push(...clean);
+            if (this.isCloudflareBlock(error)) {
+                log.warn(`Cloudflare WAF triggered on batch of ${payloads.length}. Isolating...`);
+                
+                if (payloads.length === 1) {
+                    log.error("Identified poison pill triggering WAF:");
+                    log.error(payloads[0]);
+                    this.failed.push(originalEntries[0]);
+                    return;
+                }
+
+                const mid = Math.floor(payloads.length / 2);
+                
+                const leftPayloads = payloads.slice(0, mid);
+                const leftOriginal = originalEntries.slice(0, mid);
+                await this.sendWithBisection(leftPayloads, leftOriginal);
+
+                const rightPayloads = payloads.slice(mid);
+                const rightOriginal = originalEntries.slice(mid);
+                await this.sendWithBisection(rightPayloads, rightOriginal);
+                
+            } else {
+                log.error("Error sending analytics to Supabase, re-buffering entries");
+                log.error(error);
+                this.buffer.push(...originalEntries);
+            }
         }
+    }
+
+    private isCloudflareBlock(error: any): boolean {
+        if (!error) return false;
+        const errorString = typeof error === 'string' ? error : JSON.stringify(error);
+        return errorString.includes("Attention Required! | Cloudflare") || 
+               errorString.includes("Cloudflare Ray ID");
     }
 
     private async fetchContent(type: "scenario" | "adventure" | "profile", id: string, published?: boolean): Promise<Content> {
